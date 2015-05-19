@@ -217,28 +217,26 @@ private:
 	 */
 	int			reset();
 
-	/**
-	 * Perform the on-sensor scale calibration routine.
-	 *
-	 * @note The sensor will continue to provide measurements, these
-	 *	 will however reflect the uncalibrated sensor state until
-	 *	 the calibration routine has been completed.
-	 *
-	 * @param enable set to 1 to enable self-test strap, 0 to disable
-	 */
-	int			calibrate(struct file *filp, unsigned enable);
+	int			sample_excited(struct file *filp, float averages[3]);
 
 	/**
 	 * Perform the on-sensor scale calibration routine.
 	 *
 	 * @note The sensor will continue to provide measurements, these
-	 *	 will however reflect the uncalibrated sensor state until
-	 *	 the calibration routine has been completed.
+	 *	 will however reflect excited data which does not correspond to
+	 *	 any magnetic field until the calibration routine has been completed.
+	 *
+	 * @param filp opened file pointer to the mag device
+	 */
+	int			calibrate(struct file *filp);
+
+	/**
+	 * Switch on/off the artificial magnetic field emulation on the sensor
 	 *
 	 * @param enable set to 1 to enable self-test positive strap, -1 to enable
 	 *        negative strap, 0 to set to normal mode
 	 */
-	int			set_excitement(unsigned enable);
+	int			set_excitement(int enable);
 
 	/**
 	 * Set the sensor range.
@@ -691,10 +689,10 @@ HMC5883::ioctl(struct file *filp, int cmd, unsigned long arg)
 		return 0;
 
 	case MAGIOCCALIBRATE:
-		return calibrate(filp, arg);
+		return calibrate(filp);
 
 	case MAGIOCEXSTRAP:
-		return set_excitement(arg);
+		return set_excitement((int) arg);
 
 	case MAGIOCSELFTEST:
 		return check_calibration();
@@ -925,29 +923,122 @@ out:
 	return ret;
 }
 
-int HMC5883::calibrate(struct file *filp, unsigned enable)
-{
-	struct mag_report report;
-	ssize_t sz;
-	int ret = 1;
-	uint8_t good_count = 0;
-	int prev_rate = -1, prev_range = -1;
+int HMC5883::sample_excited(struct file * filp, float averages[3]) {
 
-	// XXX do something smarter here
-	int fd = (int)enable;
+	int fd = ::open(HMC5883L_DEVICE_PATH_EXT, O_RDONLY);
+	int res = OK, ret;
+	int good_count = 0;
+	struct mag_report report;
+	float sum_excited[3] = {0.0f, 0.0f, 0.0f};
+	float low_bound = 0.62208, high_bound = 1.472;
+
+	// discard 10 samples to let the sensor settle
+	for (uint8_t i = 0; i < 10; i++) {
+		struct pollfd fds;
+
+		/* wait for data to be ready */
+		fds.fd = fd;
+		fds.events = POLLIN;
+		ret = ::poll(&fds, 1, 2000);
+
+		if (ret != 1) {
+			warn("timed out waiting for sensor data");
+			if (ret == OK) {
+				res = -1;
+			}
+			else {
+				res = ret;
+			}
+			break;
+		}
+
+		/* now go get it */
+		ret = read(filp, (char*) (&report), sizeof(report));
+
+		if (ret != sizeof(report)) {
+			warn("periodic read failed");
+			res = -EIO;
+			break;
+		}
+	}
+
+	if (res == OK) {
+		/* read the sensor up to 50x, stopping when we have 10 good values */
+		for (uint8_t i = 0; i < 50 && good_count < 10; i++) {
+			struct pollfd fds;
+
+			/* wait for data to be ready */
+			fds.fd = fd;
+			fds.events = POLLIN;
+			ret = ::poll(&fds, 1, 2000);
+
+			if (ret != 1) {
+				warn("timed out waiting for sensor data");
+				if (ret == OK) {
+					res = -1;
+				}
+				else {
+					res = ret;
+				}
+				break;
+			}
+
+			/* now go get it */
+			ret = read(filp, (char*) (&report), sizeof(report));
+
+			if (ret != sizeof(report)) {
+				warn("periodic read failed");
+				res = -EIO;
+				break;
+			}
+
+			if (fabsf(report.x) > low_bound && fabsf(report.x) < high_bound
+					&& fabsf(report.y) > low_bound && fabsf(report.y) < high_bound
+					&& fabsf(report.z) > low_bound && fabsf(report.z) < high_bound) {
+				good_count++;
+				sum_excited[0] += report.x;
+				sum_excited[1] += report.y;
+				sum_excited[2] += report.z;
+			}
+
+			//warnx("periodic read %u", i);
+			//warnx("measurement: %.6f  %.6f  %.6f", (double)report.x, (double)report.y, (double)report.z);
+		}
+
+		if (res == OK) {
+			if (good_count < 5) {
+				warn("failed calibration, too few good positive samples");
+				res = -EIO;
+			}
+			else {
+				for (uint8_t i = 0; i < 3; ++i) {
+					averages[i] = sum_excited[i] / good_count;
+				}
+			}
+		}
+	}
+	return res;
+}
+
+int HMC5883::calibrate(struct file *filp)
+{
+	int prev_rate = -1, prev_range = -1;
+	int ret = 1;
 
 	mag_calibration_s calib_previous;
-
 	mag_calibration_s calib_null;
 
-	float sum_excited[3] = {0.0f, 0.0f, 0.0f};
+	/*
+	 * According to the data sheet X and Y should contain 1.16 and
+	 * Z should contain 1.08. But, possibly, it's an error
+	 * as axis order in the register is: X, Z, Y and Y contains 1.08 instead.
+	 * BUT after all the flipping-tripping magic in the collect function, X ends up
+	 * having -Y values, Z = Z and Y = X. Thus, we should use X = -1.08, Z = 1.16
+	 * and Y = 1.16 values as reference... and pray it works.
+	 */
+	float expected_cal_x2[3] = { -1.08f * 2.0f, 1.16f * 2.0f, 1.16f * 2.0f };
+	float avg_positive[3], avg_negative[3];
 
-	/* expected axis scaling. The datasheet says that 766 will
-	 * be places in the X and Y axes and 713 in the Z
-	 * axis. Experiments show that in fact 766 is placed in X,
-	 * and 713 in Y and Z. This is relative to a base of 660
-	 * LSM/Ga, giving 1.16 and 1.08 */
-	float expected_cal[3] = { 1.16f, 1.08f, 1.08f };
 
 	warnx("starting mag scale calibration");
 
@@ -981,7 +1072,7 @@ int HMC5883::calibrate(struct file *filp, unsigned enable)
 	}
 
 	if (OK != ioctl(filp, MAGIOCEXSTRAP, 1)) {
-		warnx("failed to enable sensor calibration mode");
+		warnx("failed to enable sensor positive excitement mode");
 		ret = 1;
 		goto out;
 	}
@@ -998,73 +1089,21 @@ int HMC5883::calibrate(struct file *filp, unsigned enable)
 		goto out;
 	}
 
-	// discard 10 samples to let the sensor settle
-	for (uint8_t i = 0; i < 10; i++) {
-		struct pollfd fds;
-
-		/* wait for data to be ready */
-		fds.fd = fd;
-		fds.events = POLLIN;
-		ret = ::poll(&fds, 1, 2000);
-
-		if (ret != 1) {
-			warn("timed out waiting for sensor data");
-			goto out;
-		}
-
-		/* now go get it */
-		sz = ::read(fd, &report, sizeof(report));
-
-		if (sz != sizeof(report)) {
-			warn("periodic read failed");
-			ret = -EIO;
-			goto out;
-		}
+	ret = sample_excited(filp, avg_positive);
+	if (ret != OK) {
+		warnx("Failed positive excitement sampling");
+		goto out;
 	}
 
-	/* read the sensor up to 50x, stopping when we have 10 good values */
-	for (uint8_t i = 0; i < 50 && good_count < 10; i++) {
-		struct pollfd fds;
-
-		/* wait for data to be ready */
-		fds.fd = fd;
-		fds.events = POLLIN;
-		ret = ::poll(&fds, 1, 2000);
-
-		if (ret != 1) {
-			warn("timed out waiting for sensor data");
-			goto out;
-		}
-
-		/* now go get it */
-		sz = ::read(fd, &report, sizeof(report));
-
-		if (sz != sizeof(report)) {
-			warn("periodic read failed");
-			ret = -EIO;
-			goto out;
-		}
-		float cal[3] = {fabsf(expected_cal[0] / report.x),
-				fabsf(expected_cal[1] / report.y),
-				fabsf(expected_cal[2] / report.z)};
-
-		if (cal[0] > 0.7f && cal[0] < 1.35f &&
-		    cal[1] > 0.7f && cal[1] < 1.35f &&
-		    cal[2] > 0.7f && cal[2] < 1.35f) {
-			good_count++;
-			sum_excited[0] += cal[0];
-			sum_excited[1] += cal[1];
-			sum_excited[2] += cal[2];
-		}
-
-		//warnx("periodic read %u", i);
-		//warnx("measurement: %.6f  %.6f  %.6f", (double)report.x, (double)report.y, (double)report.z);
-		//warnx("cal: %.6f  %.6f  %.6f", (double)cal[0], (double)cal[1], (double)cal[2]);
+	if (OK != ioctl(filp, MAGIOCEXSTRAP, (unsigned long) -1)) {
+		warnx("failed to enable sensor negative excitement mode");
+		ret = 1;
+		goto out;
 	}
 
-	if (good_count < 5) {
-		warn("failed calibration");
-		ret = -EIO;
+	ret = sample_excited(filp, avg_negative);
+	if (ret != OK) {
+		warnx("Failed negative excitement sampling");
 		goto out;
 	}
 
@@ -1075,19 +1114,12 @@ int HMC5883::calibrate(struct file *filp, unsigned enable)
 	      (double)sum_excited[2]/good_count);
 #endif
 
-	float scaling[3];
+	// set scaling on the device
+	for (uint8_t i = 0; i < 3; ++i) {
+		calib_previous.scales(i) = fabsf(expected_cal_x2[i] / (avg_positive[i] - avg_negative[i]));
+	}
 
-	scaling[0] = sum_excited[0] / good_count;
-	scaling[1] = sum_excited[1] / good_count;
-	scaling[2] = sum_excited[2] / good_count;
-
-	warnx("axes scaling: %.6f  %.6f  %.6f", (double)scaling[0], (double)scaling[1], (double)scaling[2]);
-
-	/* set scaling in device */
-	calib_previous.scales(0) = scaling[0];
-	calib_previous.scales(1) = scaling[1];
-	calib_previous.scales(2) = scaling[2];
-
+	//warnx("axes scaling: %.6f  %.6f  %.6f", (double)calib_previous.scales(0), (double)calib_previous.scales(1), (double)calib_previous.scales(2));
 	ret = OK;
 
 out:
@@ -1097,13 +1129,13 @@ out:
 	}
 
 	/* set back to normal mode */
-	if (prev_rate > 0 && OK != ::ioctl(fd, SENSORIOCSPOLLRATE, prev_rate)) {
+	if (prev_rate > 0 && OK != ioctl(filp, SENSORIOCSPOLLRATE, prev_rate)) {
 		warnx("failed to restore mag poll rate");
 	}
-	if (prev_range > 0 && OK != ::ioctl(fd, MAGIOCSRANGE, prev_range)) {
+	if (prev_range > 0 && OK != ioctl(filp, MAGIOCSRANGE, prev_range)) {
 		warnx("failed to restore mag range");
 	}
-	if (OK != ::ioctl(fd, MAGIOCEXSTRAP, 0)) {
+	if (OK != ioctl(filp, MAGIOCEXSTRAP, 0)) {
 		warnx("failed to disable sensor calibration mode");
 	}
 
@@ -1189,7 +1221,7 @@ int HMC5883::check_calibration()
 	return (!_calibrated);
 }
 
-int HMC5883::set_excitement(unsigned enable)
+int HMC5883::set_excitement(int enable)
 {
 	int ret;
 	/* arm the excitement strap */
@@ -1198,14 +1230,11 @@ int HMC5883::set_excitement(unsigned enable)
 	if (OK != ret)
 		perf_count(_comms_errors);
 
-	if (((int)enable) < 0) {
-		_conf_reg |= 0x01;
-
-	} else if (enable > 0) {
-		_conf_reg |= 0x02;
-
-	} else {
-		_conf_reg &= ~0x03;
+	_conf_reg &= ~0x03; // no bias by default
+	if (enable > 0) {
+		_conf_reg |= 0x01; // positive bias
+	} else if (enable != 0) {
+		_conf_reg |= 0x02; // negative bias
 	}
 
         // ::printf("set_excitement enable=%d regA=0x%x\n", (int)enable, (unsigned)_conf_reg);
