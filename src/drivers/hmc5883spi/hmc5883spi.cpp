@@ -33,6 +33,7 @@ extern "C" { __EXPORT int hmc5883spi_main(int argc, char *argv[]); }
 
 #include <systemlib/perf_counter.h>
 #include <systemlib/err.h>
+#include <systemlib/param/param.h>
 
 #include <drivers/drv_mag.h>
 #include <drivers/drv_hrt.h>
@@ -1036,7 +1037,18 @@ int HMC5883::calibrate(struct file *filp)
 	 * having -Y values, Z = Z and Y = X. Thus, we should use X = -1.08, Z = 1.16
 	 * and Y = 1.16 values as reference... and pray it works.
 	 */
-	float expected_cal_x2[3] = { -1.08f * 2.0f, 1.16f * 2.0f, 1.16f * 2.0f };
+
+	// float expected_cal_x2[3] = { -1.08f * 2.0f, 1.16f * 2.0f, 1.16f * 2.0f };
+	float expected_cal_x2[3];
+
+	float cal_param;
+	param_get(param_find("SENS_MAG_XPECT_X"), &cal_param);
+	expected_cal_x2[0] = cal_param * 2;
+	param_get(param_find("SENS_MAG_XPECT_Y"), &cal_param);
+	expected_cal_x2[1] = cal_param * 2;
+	param_get(param_find("SENS_MAG_XPECT_Z"), &cal_param);
+	expected_cal_x2[2] = cal_param * 2;
+
 	float avg_positive[3], avg_negative[3];
 
 

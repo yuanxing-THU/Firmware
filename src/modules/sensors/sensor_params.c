@@ -1032,3 +1032,18 @@ PARAM_DEFINE_FLOAT(RC_FOLLOW_TH, 0.5f);
  * 0 - MPU6000
  */
 PARAM_DEFINE_INT32(SENS_DISABLE_MPU, 0);
+
+/**
+ * Specifies expected value returned by excited magnetometer on X axis
+ */
+PARAM_DEFINE_FLOAT(SENS_MAG_XPECT_X, -1.08);
+
+/**
+ * Specifies expected value returned by excited magnetometer on Y axis
+ */
+PARAM_DEFINE_FLOAT(SENS_MAG_XPECT_Y, 1.16);
+
+/**
+ * Specifies expected value returned by excited magnetometer on Z axis
+ */
+PARAM_DEFINE_FLOAT(SENS_MAG_XPECT_Z, 1.16);
