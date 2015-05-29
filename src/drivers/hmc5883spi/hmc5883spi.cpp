@@ -1169,6 +1169,11 @@ out:
 int HMC5883::check_scale()
 {
 	bool scale_valid;
+	int do_scales_param = 1;
+	param_get(param_find("A_CALIB_MAG_SCAL"), &do_scales_param);
+	if (do_scales_param <= 0) {
+		return false;
+	}
 
 	if ((-FLT_EPSILON + 1.0f < _calibration.scales(0) && _calibration.scales(0) < FLT_EPSILON + 1.0f) &&
 		(-FLT_EPSILON + 1.0f < _calibration.scales(1) && _calibration.scales(1) < FLT_EPSILON + 1.0f) &&
