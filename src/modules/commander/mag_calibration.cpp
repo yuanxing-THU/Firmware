@@ -80,15 +80,24 @@ int do_mag_calibration(int mavlink_fd)
 
 	int res = OK;
 
-	/* erase old calibration */
+	int do_scales_param = 1;
+	param_get(param_find("A_CALIB_MAG_SCAL"), &do_scales_param);
+
 	int fd = open(MAG_DEVICE_PATH, O_RDONLY);
+
+	// In case we want to skip scale calibration, read current scales and reset only offsets
+	if (do_scales_param <= 0) {
+		res = ioctl(fd, MAGIOCGSCALE, (long unsigned int) &calib_null);
+		calib_null.offsets.set(0.0f);
+	}
+	/* erase old calibration */
 	res = ioctl(fd, MAGIOCSSCALE, (long unsigned int)&calib_null);
 
 	if (res != OK) {
 		mavlink_log_critical(mavlink_fd, CAL_FAILED_RESET_CAL_MSG);
 	}
 
-	if (res == OK) {
+	if (res == OK && do_scales_param > 0) {
 		/* calibrate range */
 		res = ioctl(fd, MAGIOCCALIBRATE, fd);
 

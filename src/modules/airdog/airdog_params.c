@@ -129,3 +129,11 @@ PARAM_DEFINE_FLOAT(A_LAND_MIN_V, 0.3f);
 PARAM_DEFINE_INT32(A_MAX_PWM, 0);
 
 PARAM_DEFINE_INT32(A_DO_FRAME_BUTT, 1);
+
+/**
+ * @descr: Parameter defining if magnetometer built-in scale calibration should be used. Used on values >0.
+ *
+ * @min: 0
+ * @max: 1
+ */
+PARAM_DEFINE_INT32(A_CALIB_MAG_SCAL, 1);

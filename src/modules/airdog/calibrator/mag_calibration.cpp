@@ -60,12 +60,20 @@ inline void cleanup(int fd, bool reset_calibration) {
 CALIBRATION_RESULT do_mag_builtin_calibration() {
 	int fd = open(MAG_DEVICE_PATH, O_RDONLY);
 	mag_calibration_s zero_calibration;
+	int do_scales_param = 1;
+	param_get(param_find("A_CALIB_MAG_SCAL"), &do_scales_param);
+
+	// If we want to skip built-in calibration - reset only offsets, but not scales
+	if (do_scales_param <= 0) {
+		ioctl(fd, MAGIOCGSCALE, (unsigned long int) &zero_calibration);
+		zero_calibration.offsets.set(0.0f);
+	}
 	if (ioctl(fd, MAGIOCSSCALE, (unsigned long int) &zero_calibration) != 0) {
 		// This is critical, but still no need to reset the calibration to previous values
 		cleanup(fd,false);
 		return (CALIBRATION_RESULT::SCALE_RESET_FAIL);
 	}
-	if (ioctl(fd, MAGIOCCALIBRATE, fd) != 0) {
+	if (do_scales_param > 0 && ioctl(fd, MAGIOCCALIBRATE, fd) != 0) {
 		// This still is not critical - it is possible internal calibration is not available
 		// Internal calibration routines should reset calibration to previous values in case of failure
 
