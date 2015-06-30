@@ -1,5 +1,6 @@
 #include <nuttx/config.h>
 
+
 #include <sys/ioctl.h>
 
 #include <fcntl.h>
@@ -11,6 +12,10 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+
+#include <activity/activity_change_manager.hpp>
+#include <activity/activity_file_manager.hpp>
+#include <activity/activity_lib_constants.h>
 
 extern "C" __EXPORT int
 main(int argc, const char * const * argv);
@@ -25,8 +30,11 @@ streq(const char *a, const char *b) {
 static void
 usage()
 {
-    printf("Usage:\n"
-        "\tclh pairing [on|off|toggle|status]\n"
+    fprintf(stderr, "Usage:\n"
+        "   clh pairing\t[on|off|toggle]\n"
+        "       activity\t[test|receive_init|receive_modify|\n"
+        "   \t\t print_orb|file_to_orb|orb_to_file|\n"
+        "   \t\t get_path|set_file_state|fill_files]"
         "\n"
     );
 }
@@ -104,6 +112,12 @@ void pairing_toggle() {
 
 }
 
+bool test_activity_manager(const int activity_number = 5);
+bool init_receive_fake_activity_params();
+bool modify_receive_fake_activity_params();
+bool print_activity_params_orb_content();
+bool fill_activity_files();
+
 int
 main(int argc, char const * const * argv)
 {
@@ -124,19 +138,44 @@ main(int argc, char const * const * argv)
 
         if (argc < 3) usage();
         else if (streq(argv[2], "on")) {
-
             pairing_on();
-        
         } else if (streq(argv[2], "off")) {
-
             pairing_off();
-
-        } else if (streq(argv[2], "toggle")) {
-
+        } else if (streq(argv[3], "toggle")) {
             pairing_toggle();
-            
         } else {
+            usage();
+        }
+    
+    } else if (streq(argv[1], "activity")) {
 
+        if (streq(argv[2], "test")) {
+            if (argc == 4)
+            {
+                const int activ_number = atoi(argv[3]);
+                test_activity_manager(activ_number);
+            }
+            test_activity_manager();
+        } else if (streq(argv[2], "receive_init")) {
+            init_receive_fake_activity_params();
+        } else if (streq(argv[2], "receive_modify")) {
+            modify_receive_fake_activity_params();
+        } else if (streq(argv[2], "print_orb")) {
+            print_activity_params_orb_content();
+        } else if (streq(argv[2], "file_to_orb")) {
+            Activity::Files::activity_file_to_orb(1); 
+        } else if (streq(argv[2], "orb_to_file")) {
+            Activity::Files::activity_orb_to_file(1);
+        } else if (streq(argv[2], "get_path")) {
+            char path[PATH_MAX];
+            Activity::Files::get_path(1,0,path);
+            printf("%s\n", path);
+        } else if (streq(argv[2], "set_file_state")) {
+            Activity::Files::set_file_state();
+        } else if (streq(argv[2], "fill_files")){
+            fill_activity_files(); 
+        }
+        else {
             usage();
         }
     
@@ -145,4 +184,181 @@ main(int argc, char const * const * argv)
     }
 
 	return 0;
+}
+
+bool
+test_activity_manager(const int activity_number){
+
+
+    auto A = Activity::getActivityChangeManager(activity_number, true);
+    init_receive_fake_activity_params();
+    if (A.params_updated()) { 
+
+        printf("So far so good .\n");
+
+        char val[32];
+        char display_name[32];
+
+        auto *param = A.get_current_param();
+
+        for (int i=0;i<20;i++) {
+
+            param->get_param_name(display_name, 32);
+            param->get_display_value(val, 32);
+            printf("%s : %s\n", display_name, val);
+
+            for (int j=0;j<2;j++) {
+                param->get_next_value(val, 32);
+                printf("%s : %s\n", display_name, val);
+            }
+
+            param->save_value();
+
+            int last = param->get_id();
+            param = A.get_next_visible_param();
+
+            if (last > param->get_id())
+                break;
+        }
+
+        A.save_params();
+
+        modify_receive_fake_activity_params();
+
+        while (!A.params_updated()) {}
+
+        if (A.params_updated()){
+            printf("Params received ! \n ");
+        }
+
+        printf("Prev PART.\n"); 
+
+        param = A.get_current_param();
+
+        memset(val, 0, sizeof(val));
+
+        for (int i=0;i<9;i++) {
+
+            param->get_param_name(display_name, 32);
+            param->get_display_value(val, 32);
+            printf("%s : %s\n", display_name, val);
+
+            for (int j=0;j<10;j++) {
+                param->get_prev_value(val, 32);
+                printf("%s : %s\n", display_name, val);
+            }
+
+            param->save_value();
+            param = A.get_prev_visible_param();
+
+        }
+
+        A.save_params();
+
+        modify_receive_fake_activity_params();
+
+        while (!A.params_updated()) {}
+
+        if (A.params_updated()){
+            printf("Params received ! \n ");
+        }
+
+        printf("Cancel param PART.\n"); 
+
+        param = A.get_current_param();
+        memset(val, 0, sizeof(val));
+
+        for (int i=0;i<9;i++) {
+
+            param->get_param_name(display_name, 32);
+            param->get_display_value(val, 32);
+            printf("%s : %s\n", display_name, val);
+
+            for (int j=0;j<10;j++) {
+                param->get_prev_value(val, 32);
+                printf("%s : %s\n", display_name, val);
+            }
+
+            param->cancel_value();
+            param = A.get_prev_visible_param();
+
+        }
+
+        A.save_params();
+
+        modify_receive_fake_activity_params();
+
+        while (!A.params_updated()) {}
+
+        if (A.params_updated()){
+            printf("Params received ! \n ");
+        }
+
+    } 
+}
+
+bool
+modify_receive_fake_activity_params() {
+
+    activity_params_s activity_params;
+
+    int activity_params_sub = orb_subscribe(ORB_ID(activity_params));
+	orb_copy(ORB_ID(activity_params), activity_params_sub, &activity_params);
+
+    activity_params.type = ACTIVITY_PARAMS_RECEIVED; 
+
+    for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++)
+        activity_params.values[i]+=1.0f;
+
+    int pub = orb_advertise(ORB_ID(activity_params), &activity_params);
+
+    printf("Moddified %d\n", pub);
+}
+
+bool
+init_receive_fake_activity_params() {
+
+    activity_params_s activity_params;
+    activity_params.type = ACTIVITY_PARAMS_RECEIVED; 
+
+    for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++)
+        activity_params.values[i]=1.0f;
+
+    int pub = orb_advertise(ORB_ID(activity_params), &activity_params);
+    printf("Published %d\n", pub);
+
+}
+
+bool
+print_activity_params_orb_content() {
+
+	int activity_params_sub = orb_subscribe(ORB_ID(activity_params));
+
+    activity_params_s activity_params;
+	orb_copy(ORB_ID(activity_params), activity_params_sub, &activity_params);
+
+    for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++){
+        printf("%f: %.5f\n", (double)i, (double)activity_params.values[i]);
+    }
+
+    return true;
+}
+
+
+bool 
+fill_activity_files(){
+
+    for (int i=0;i<Activity::ACTIVITIES_COUNT;i++) {
+        char pathname[PATH_MAX];
+        Activity::Files::get_path(i,0,pathname);
+
+        printf("%s\n", pathname);
+        FILE * f = fopen(pathname, "w");
+
+        for (int j=0;j<Activity::ALLOWED_PARAM_COUNT;j++) {
+            fprintf(f, "%i:%f\n", (int)j, (double)i);
+            printf("%i:%f\n", (int)j, (double)i);
+        }
+        fclose(f);
+    }
 }

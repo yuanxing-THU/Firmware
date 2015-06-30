@@ -301,3 +301,8 @@ ORB_DEFINE(bt_link_status, struct bt_link_status_s);
 
 #include "topics/follow_offset.h"
 ORB_DEFINE(follow_offset, struct follow_offset_s);
+
+#include "topics/activity_params.h"
+ORB_DEFINE(activity_params, struct activity_params_s);
+ORB_DEFINE(activity_params_sndr, struct activity_params_sndr_s);
+ORB_DEFINE(activity_request_sndr, struct activity_request_sndr_s);

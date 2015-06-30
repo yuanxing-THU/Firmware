@@ -7,4 +7,11 @@ MODULE_COMMAND		= clh
 
 SRCS			= main.cpp
 
-CXXFLAGS		+= -std=c++11 -Dmain=${MODULE_COMMAND}_main
+EXTRACXXFLAGS += -std=c++11 \
+			-Dmain=${MODULE_COMMAND}_main \
+			#-flto \
+# end of EXTRACXXFLAGS
+
+MODULE_STACKSIZE = 5200
+
+MAXOPTIMIZATION = -Os

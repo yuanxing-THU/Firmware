@@ -278,3 +278,9 @@ PARAM_DEFINE_FLOAT(A_GOOD_TRG_EPV, 0.0f);
  * Enables the calibration on 1, other values - disabled
  */
 PARAM_DEFINE_INT32(A_CALIB_GYRO_ARM, 0);
+
+/**
+ * Number of current activity
+ * @group airdog
+ */
+PARAM_DEFINE_INT32(A_ACTIVITY, 0);

@@ -275,6 +275,10 @@ public:
     orb_advert_t _pass_drone_parameter_pub;
 
 
+    int activity_params_sub;
+    int activity_request_sndr_sub;
+    int activity_params_sndr_sub;
+
     int get_drone_parameter_sub;
     int set_drone_parameter_sub;
 

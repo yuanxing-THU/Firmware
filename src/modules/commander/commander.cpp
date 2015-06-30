@@ -115,9 +115,12 @@
 #include "rc_calibration.h"
 #include "airspeed_calibration.h"
 #include "commander_error.h"
+
 #include "flight_time_check.hpp"
 
 static Flight_time_check g_flight_time_check;
+
+#include "activity/dog_activity_manager.hpp"
 
 /* oddly, ERROR is not defined for c++ */
 #ifdef ERROR
@@ -202,6 +205,8 @@ typedef enum {
 } low_prio_task_t;
 
 static low_prio_task_t low_prio_task = LOW_PRIO_TASK_NONE;
+
+Activity::DogActivityManager activity_manager;
 
 /**
  * The daemon app only briefly exists to start
@@ -703,15 +708,11 @@ bool handle_command(struct vehicle_status_s *status_local
 	case VEHICLE_CMD_NAV_REMOTE_CMD: {
 			transition_result_t main_ret = TRANSITION_NOT_CHANGED;
 
-			/*
-			if (cmd->param1 == REMOTE_CMD_PLAY_PAUSE) {
-				if(status_local->main_state == MAIN_STATE_LOITER) {
-					main_ret = main_state_transition(status_local, MAIN_STATE_ABS_FOLLOW);
-				} else {
-					main_ret = main_state_transition(status_local, MAIN_STATE_LOITER);
-				}
-			}
-			*/
+            if (cmd->param1 == REMOTE_CMD_SWITCH_ACTIVITY) {
+
+                activity_manager.set_activity(cmd->param2);
+            
+            }
 
             /* process user camera controll */
             if (cmd->param1 == REMOTE_CMD_CAM_UP
@@ -720,11 +721,6 @@ bool handle_command(struct vehicle_status_s *status_local
                     || cmd->param1 == REMOTE_CMD_CAM_RIGHT
                     || cmd->param1 == REMOTE_CMD_CAM_RESET) {
 
-                //bool updated;
-                //orb_check(_user_camera_offset_sub, &updated);
-                //if (updated) {
-                //    orb_copy(ORB_ID(camera_user_offsets), _user_camera_offset_sub, &camera_offset);
-                //}
                 switch((int)(cmd->param1)) {
                     case REMOTE_CMD_CAM_UP:
                         camera_offset->pitch_offset++;
@@ -867,6 +863,7 @@ bool handle_command(struct vehicle_status_s *status_local
 int commander_thread_main(int argc, char *argv[])
 {
 
+
 	/* not yet initialized */
 	commander_initialized = false;
 
@@ -886,6 +883,7 @@ int commander_thread_main(int argc, char *argv[])
 	param_t _param_ef_throttle_thres = param_find("COM_EF_THROT");
 	param_t _param_ef_current2throttle_thres = param_find("COM_EF_C2T");
 	param_t _param_ef_time_thres = param_find("COM_EF_TIME");
+
 
 	float battery_warning_level;
 	float battery_critical_level;
@@ -1283,7 +1281,15 @@ int commander_thread_main(int argc, char *argv[])
 	bool trg_eph_good;
 	bool trg_epv_good;
 
+    activity_manager = Activity::DogActivityManager();
+
 	while (!thread_should_exit) {
+ 
+        if (activity_manager.is_inited()) 
+            activity_manager.check_incoming_params();
+        else
+            activity_manager.init();
+
 
 		if (mavlink_fd < 0 && counter % (1000000 / MAVLINK_OPEN_INTERVAL) == 0) {
 			/* try to open the mavlink log device every once in a while */
@@ -1338,6 +1344,7 @@ int commander_thread_main(int argc, char *argv[])
 
 				/* check and update system / component ID */
 				param_get(_param_system_id, &(status.system_id));
+                
 				param_get(_param_component_id, &(status.component_id));
 
 				status.circuit_breaker_engaged_power_check =
@@ -3436,3 +3443,4 @@ bool execute_preflight_storage_read(vehicle_command_s cmd)
     }
 
 }
+

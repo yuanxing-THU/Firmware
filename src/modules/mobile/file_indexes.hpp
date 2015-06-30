@@ -2,7 +2,7 @@
 
 #include <limits.h>
 
-#include <activity/file.hpp>
+#include "activity/activity_file_manager.hpp"
 
 #include "protocol.h"
 
@@ -47,7 +47,7 @@ get_activity_filename(file_index_t index, filename_buf_t & pathname)
 	using namespace AirDog;
 	uint8_t activity, attribute;
 	parse_activity_index(index, activity, attribute);
-	return activity::file::get_path(activity, attribute, pathname);
+	return Activity::Files::get_path(activity, attribute, pathname);
 }
 
 bool
@@ -56,7 +56,7 @@ is_activity_index_valid(file_index_t index)
 	using namespace AirDog;
 	uint8_t activity, attribute;
 	parse_activity_index(index, activity, attribute);
-	return activity::file::has_valid_id(activity, attribute);
+	return Activity::Files::has_valid_id(activity, attribute);
 }
 
 bool
@@ -65,7 +65,7 @@ is_activity_file_valid(const char tmp_path[], file_index_t index)
 	using namespace AirDog;
 	uint8_t activity, attribute;
 	parse_activity_index(index, activity, attribute);
-	return activity::file::has_valid_content(activity, attribute, tmp_path);
+	return Activity::Files::has_valid_content(activity, attribute, tmp_path);
 }
 
 

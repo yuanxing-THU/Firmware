@@ -155,6 +155,7 @@ MODULES		+= lib/conversion
 #MODULES		+= lib/ecl
 #MODULES		+= lib/external_lgpl
 #MODULES		+= lib/launchdetection
+MODULES		+= lib/activity
 
 # Hardware test
 #MODULES			+= examples/hwtest

@@ -152,6 +152,7 @@ LIBRARIES	+= lib/mathlib/CMSIS
 #MODULES		+= lib/ecl
 #MODULES		+= lib/external_lgpl
 #MODULES		+= lib/launchdetection
+MODULES		+= lib/activity
 
 #
 # OBC challenge
