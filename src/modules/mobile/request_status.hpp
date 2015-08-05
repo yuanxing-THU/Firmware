@@ -5,6 +5,7 @@
 
 #include "protocol.h"
 
+#include "request_base.hpp"
 #include "uorb_base.hpp"
 
 struct StatusOverall
@@ -14,7 +15,7 @@ struct StatusOverall
 };
 
 static inline void
-battery(StatusOverall & self, StatusOverallReply & r)
+battery(const StatusOverall & self, StatusOverallReply & r)
 {
 	auto status = orb_read(self.status);
 	if (status.battery_remaining <= 0) { r.battery_level = 0; }
@@ -23,18 +24,31 @@ battery(StatusOverall & self, StatusOverallReply & r)
 }
 
 static inline void
-position(StatusOverall & self, StatusOverallReply & r)
+position(const StatusOverall & self, StatusOverallReply & r)
 {
 	auto gpos = orb_read(self.gpos);
 	r.gps_error_horizontal = gpos.eph;
 	r.gps_error_vertical = gpos.epv;
 }
 
-StatusOverallReply &&
-reply(StatusOverall & self)
+static inline void
+fill_reply(const StatusOverall & self, StatusOverallReply & r)
 {
-	StatusOverallReply r;
 	battery(self, r);
 	position(self, r);
-	return std::move(r);
+}
+
+template <>
+struct Request< CMD_STATUS_OVERALL >
+{
+	using value_type = void;
+};
+
+template <typename Device>
+void
+reply(Request< CMD_STATUS_OVERALL >, Device & dev, const StatusOverall & status)
+{
+	StatusOverallReply r;
+	fill_reply(status, r);
+	write(dev, &r, sizeof r);
 }
