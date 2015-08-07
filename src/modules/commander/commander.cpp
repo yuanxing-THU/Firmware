@@ -113,6 +113,7 @@
 #include "baro_calibration.h"
 #include "rc_calibration.h"
 #include "airspeed_calibration.h"
+#include "commander_error.h"
 
 /* oddly, ERROR is not defined for c++ */
 #ifdef ERROR
@@ -256,6 +257,11 @@ bool execute_preflight_storage_write(vehicle_command_s cmd);
 
 void answer_command(struct vehicle_command_s &cmd, enum VEHICLE_CMD_RESULT result);
 
+int commander_set_error(int error_code)
+{
+	status.error_code = error_code;
+	status.error_stamp++;
+}
 
 int commander_main(int argc, char *argv[])
 {
@@ -263,7 +269,22 @@ int commander_main(int argc, char *argv[])
 		usage("missing command");
 	}
 
-	if (!strcmp(argv[1], "start")) {
+	if (!strcmp(argv[1], "error") && argc == 3) {
+		long int code = 0;
+		char *endptr = nullptr;
+		code = strtol(argv[2], &endptr, 10);
+
+		if (endptr == nullptr || *endptr == 0)
+		{
+			commander_set_error((int)code);
+		}
+		else
+		{
+			warnx("Wrong error code format. Digits only.");
+		}
+		exit(0);
+	}
+	else if (!strcmp(argv[1], "start")) {
 
 		if (thread_running) {
 			warnx("commander already running");
@@ -343,7 +364,7 @@ void usage(const char *reason)
 		fprintf(stderr, "%s\n", reason);
 	}
 
-	fprintf(stderr, "usage: daemon {start|stop|status} [-p <additional params>]\n\n");
+	fprintf(stderr, "usage: daemon {start|stop|status|error} [-p <additional params>]\n\n");
 	exit(1);
 }
 
