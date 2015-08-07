@@ -256,7 +256,14 @@ do_mag(int argc, char *argv[])
 				warnx("mag calibration and self test OK");
 			}
 
+		} else if (argc == 1 && !strcmp(argv[0], "built-in")) {
+			ret = ioctl(fd, MAGIOCCALIBRATE, 0);
+
+			if (ret) {
+				warnx("mag built-in calibration failed!");
+			}
 		} else {
+
 			errx(1, "wrong or no arguments given. Try: \n\n\t'check' for the self test\n\t");
 		}
 
