@@ -245,6 +245,9 @@ int do_mag_calibration(int mavlink_fd)
 			calibration.offsets(1) = sphere_y;
 			calibration.offsets(2) = sphere_z;
 
+			// Correct calculated offsets as in driver offsets are applied first and we've calculated scales first
+			calibration.offsets = calibration.offsets.edivide(calibration.scales);
+
 			res = ioctl(fd, MAGIOCSSCALE, (long unsigned int)&calibration);
 
 			if (res != OK) {

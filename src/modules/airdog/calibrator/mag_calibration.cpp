@@ -103,6 +103,8 @@ CALIBRATION_RESULT do_mag_offset_calibration(unsigned int sample_count, unsigned
 	}
 
 	sphere_fit_least_squares(res_stats, calibration.offsets);
+	// Correct calculated offsets as in driver offsets are applied first and we've calculated scales first
+	calibration.offsets = calibration.offsets.edivide(calibration.scales);
 
 	// Fill calibration conditions before setting parameters, errors are ignored
 	fill_calibration_conditions(&calibration);
