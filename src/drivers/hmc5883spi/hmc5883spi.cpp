@@ -1039,16 +1039,19 @@ int HMC5883::calibrate(struct file *filp)
 	 */
 
 	// float expected_cal_x2[3] = { -1.08f * 2.0f, 1.16f * 2.0f, 1.16f * 2.0f };
-	float expected_cal_x2[3];
+	float expected_cal[3];
 
-	float cal_param;
-	param_get(param_find("SENS_MAG_XPECT_X"), &cal_param);
-	expected_cal_x2[0] = cal_param * 2;
-	param_get(param_find("SENS_MAG_XPECT_Y"), &cal_param);
-	expected_cal_x2[1] = cal_param * 2;
-	param_get(param_find("SENS_MAG_XPECT_Z"), &cal_param);
-	expected_cal_x2[2] = cal_param * 2;
+	float cal_float_param;
+	param_get(param_find("SENS_MAG_XPECT_X"), &cal_float_param);
+	expected_cal[0] = cal_float_param;
+	param_get(param_find("SENS_MAG_XPECT_Y"), &cal_float_param);
+	expected_cal[1] = cal_float_param;
+	param_get(param_find("SENS_MAG_XPECT_Z"), &cal_float_param);
+	expected_cal[2] = cal_float_param;
+	int cal_int_param = 0;
+	param_get(param_find("SENS_MAG_XCT_OFF"), &cal_int_param);
 
+	bool do_built_in_offsets = (cal_int_param > 0);
 	float avg_positive[3], avg_negative[3];
 
 
@@ -1119,16 +1122,33 @@ int HMC5883::calibrate(struct file *filp)
 		goto out;
 	}
 
-#if 0
-	warnx("measurement avg: %.6f  %.6f  %.6f",
-	      (double)sum_excited[0]/good_count,
-	      (double)sum_excited[1]/good_count,
-	      (double)sum_excited[2]/good_count);
-#endif
-
-	// set scaling on the device
+	float tmp;
 	for (uint8_t i = 0; i < 3; ++i) {
-		calib_previous.scales(i) = fabsf(expected_cal_x2[i] / (avg_positive[i] - avg_negative[i]));
+		// swap the results to support all the rotations
+		if (avg_negative[i] > avg_positive[i]) {
+			tmp = avg_negative[i];
+			avg_negative[i] = avg_positive[i];
+			avg_positive[i] = tmp;
+		}
+
+		expected_cal[i] = fabsf(expected_cal[i]);
+	}
+	if (do_built_in_offsets) {
+		// set offsets on the device
+		float target_value;
+		for (uint8_t i = 0; i < 3; ++i) {
+			target_value = (avg_positive[i] - avg_negative[i]) / 2.0f;
+			calib_previous.offsets(i) = avg_positive[i] - target_value;
+			calib_previous.scales(i) = expected_cal[i] / target_value;
+		}
+		// warnx("axes built-in offsets: %.6f   %.6f   %.6f", (double)calib_previous.offsets(0), (double)calib_previous.offsets(1), (double)calib_previous.offsets(2));
+	}
+	else {
+		// set scaling on the device
+		for (uint8_t i = 0; i < 3; ++i) {
+			// double the expected, as we're measuring double the range
+			calib_previous.scales(i) = expected_cal[i] * 2.0f / (avg_positive[i] - avg_negative[i]);
+		}
 	}
 
 	//warnx("axes scaling: %.6f  %.6f  %.6f", (double)calib_previous.scales(0), (double)calib_previous.scales(1), (double)calib_previous.scales(2));
