@@ -52,6 +52,7 @@
 
 #include <uORB/uORB.h>
 #include <uORB/topics/position_setpoint_triplet.h>
+#include <uORB/topics/vehicle_command.h>
 
 #include "loiter.h"
 #include "navigator.h"
@@ -707,6 +708,17 @@ Loiter::start_follow() {
         commander_request_s *commander_request = _navigator->get_commander_request();
         commander_request->request_type = V_MAIN_STATE_CHANGE;
         commander_request->main_state = MAIN_STATE_CABLE_PARK;
+        _navigator->set_commander_request_updated();
+    } else if (_parameters.afol_mode == 3) {
+        commander_request_s *commander_request = _navigator->get_commander_request();
+        commander_request->request_type = V_MAIN_STATE_CHANGE;
+        commander_request->main_state = MAIN_STATE_FRONT_FOLLOW;
+        _navigator->set_commander_request_updated();
+
+    } else if (_parameters.afol_mode == 4) {
+        commander_request_s *commander_request = _navigator->get_commander_request();
+        commander_request->request_type = V_MAIN_STATE_CHANGE;
+        commander_request->main_state = MAIN_STATE_CIRCLE_AROUND;
         _navigator->set_commander_request_updated();
     }
 }

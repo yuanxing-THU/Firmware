@@ -298,3 +298,6 @@ ORB_DEFINE(bt_svc_out, struct bt_svc_out_s);
 ORB_DEFINE(bt_evt_status, struct bt_evt_status_s);
 ORB_DEFINE(bt_link_status, struct bt_link_status_s);
 //ORB_DEFINE(bt_channels, struct bt_channels_s);
+
+#include "topics/follow_offset.h"
+ORB_DEFINE(follow_offset, struct follow_offset_s);

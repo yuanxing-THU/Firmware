@@ -72,6 +72,7 @@
 #include <uORB/topics/target_global_position.h>
 #include <uORB/topics/position_restriction.h>
 #include <uORB/topics/user_camera_offsets.h>
+#include <uORB/topics/follow_offset.h>
 #include <systemlib/param/param.h>
 #include <systemlib/err.h>
 #include <systemlib/systemlib.h>
@@ -136,9 +137,9 @@ private:
 	int		_local_pos_sp_sub;		/**< offboard local position setpoint */
 	int		_global_vel_sp_sub;		/**< offboard global velocity setpoint */
 	int		_target_pos_sub;		/**< target global position subscription */
-    int     _vcommand_sub;          /**< vehicle command subscription */
     int     _vehicle_status_sub;    /**< vehicle status subscription */
     int 	_pos_restrict_sub;		/**< position restriction subscribtion */
+    int 	_follow_offset_sub;		/**< offset for follow offset modes*/
 
 	orb_advert_t	_att_sp_pub;			/**< attitude setpoint publication */
 	orb_advert_t	_local_pos_sp_pub;		/**< vehicle local position setpoint publication */
@@ -158,6 +159,7 @@ private:
 	struct actuator_controls_s			_cam_control;	/**< camera control */
 	struct position_restriction_s		_pos_restrict;	/**< position restriction*/
     struct camera_user_offsets_s        _cam_offset;    /**< user defined camera offset */
+    struct follow_offset_s              _orb_follow_offset; /** < follow offset for offset follow modes > */
 
 	struct {
         param_t cam_pitch_step;
@@ -325,15 +327,12 @@ private:
 
 	LocalPositionPredictor	_tpos_predictor;
 
-    int32_t old_follow_rpt_alt = 0;
-    int32_t old_follow_use_alt = 0;
-
 	bool _ground_setpoint_corrected = false;
 	bool _ground_position_invalid = false;
 	float _ground_position_available_drop = 0;
 
-	struct vehicle_command_s _vcommand;
     struct vehicle_status_s _vstatus;
+
 
 	perf_counter_t _loop_perf;
 
@@ -470,15 +469,6 @@ private:
      */
     bool       update_vehicle_status();
 
-    /*
-     *  Check vehicle_command topic and update _vcommand if it's updated
-     */
-    bool       update_vehicle_command();
-
-    /*
-     *  Execute vcommand to modify _follow_offset
-     */
-    void       vcommand_modify_follow_offset();
 };
 
 namespace pos_control
@@ -510,6 +500,7 @@ MulticopterPositionControl::MulticopterPositionControl() :
 	_local_pos_sub(-1),
 	_pos_sp_triplet_sub(-1),
 	_global_vel_sp_sub(-1),
+	_follow_offset_sub(-1),
 
 /* publications */
 	_att_sp_pub(-1),
@@ -727,16 +718,6 @@ MulticopterPositionControl::parameters_update(bool force)
 		_params.follow_use_alt = (i != 0);
 		param_get(_params_handles.follow_rpt_alt, &i);
 		_params.follow_rpt_alt = (i != 0);
-        int32_t new_follow_rpt_alt = _params.follow_rpt_alt;
-        int32_t new_follow_use_alt = _params.follow_use_alt;
-        // If NAV_RPT_ALT or NAV_USE_ALT changes our Z offset calculations change, so we need recalculation
-        if (old_follow_rpt_alt != new_follow_rpt_alt || old_follow_use_alt != new_follow_use_alt){
-            update_target_pos();
-            _reset_follow_offset = true;
-            reset_follow_offset();
-        }
-        old_follow_rpt_alt = _params.follow_rpt_alt;
-        old_follow_use_alt = _params.follow_use_alt;
 
         param_get(_params_handles.sonar_correction_on, &i);
         _params.sonar_correction_on = i;
@@ -858,6 +839,13 @@ MulticopterPositionControl::poll_subscriptions()
     if (updated) {
         orb_copy(ORB_ID(vehicle_status), _vehicle_status_sub, &_vstatus);
     }
+
+    orb_check(_follow_offset_sub, &updated);
+
+    if (updated) {
+        orb_copy(ORB_ID(follow_offset), _follow_offset_sub, &_orb_follow_offset);
+    }
+
 }
 
 float
@@ -937,15 +925,10 @@ MulticopterPositionControl::reset_follow_offset()
 			pos(0) = _pos_sp(0);
 			pos(1) = _pos_sp(1);
 		}
+
 		pos(2) = _reset_alt_sp ? _pos(2) : _pos_sp(2);
 
-
 		_follow_offset = pos - _tpos;
-
-        // If target does not repeat altitude - offset is calculated from ref_alt
-        if (!_params.follow_rpt_alt){
-            _follow_offset(2) = _pos(2) - _ref_alt;
-        }
 
 		mavlink_log_info(_mavlink_fd, "[mpc] reset follow offs: %.2f, %.2f, %.2f",
 				(double)_follow_offset(0), (double)_follow_offset(1), (double)_follow_offset(2));
@@ -965,131 +948,6 @@ MulticopterPositionControl::update_vehicle_status()
             return false;
     }
     return false;
-}
-
-bool
-MulticopterPositionControl::update_vehicle_command()
-{
-	bool vcommand_updated = false;
-	orb_check(_vcommand_sub, &vcommand_updated);
-
-	if (vcommand_updated) {
-
-		if (orb_copy(ORB_ID(vehicle_command), _vcommand_sub, &_vcommand) == OK) {
-			return true;
-		}
-		else
-			return false;
-	}
-
-	return false;
-}
-
-
-void
-MulticopterPositionControl::vcommand_modify_follow_offset() {
-
-	vehicle_command_s cmd = _vcommand;
-
-	if (cmd.command == VEHICLE_CMD_NAV_REMOTE_CMD) {
-
-		REMOTE_CMD remote_cmd = (REMOTE_CMD)cmd.param1;
-
-		math::Vector<3> offset =_follow_offset;
-
-		switch(remote_cmd){
-
-			case REMOTE_CMD_UP: {
-
-				_follow_offset.data[2] -= _params.loi_step_len;
-				break;
-			}
-			case REMOTE_CMD_DOWN: {
-
-				_follow_offset.data[2] += _params.loi_step_len;
-				break;
-			}
-			case REMOTE_CMD_LEFT: {
-
-				math::Matrix<3, 3> R_phi;
-
-				double radius = sqrt(offset(0) * offset(0) + offset(1) * offset(1));
-
-				// derived from formula: ( step / ( sqrt(x^2 + y^2)*2PI ) ) *  2PI
-				// radius: (sqrt(x^2 + y^2)
-				// circumference C: (radius * 2* PI)
-				// step length fraction of C: step/C
-				// angle of step fraction in radians: step/C * 2PI
-				double alpha = (double)_params.loi_step_len / radius;
-
-				// vector yaw rotation +alpha or -alpha depending on left or right
-				R_phi.from_euler(0.0f, 0.0f, -alpha);
-				math::Vector<3> offset_new  = R_phi * offset;
-
-				_follow_offset = offset_new;
-
-				break;
-			}
-			case REMOTE_CMD_RIGHT: {
-
-				math::Matrix<3, 3> R_phi;
-
-				double radius = sqrt(offset(0) * offset(0) + offset(1) * offset(1));
-
-				// derived from formula: ( step / ( sqrt(x^2 + y^2)*2PI ) ) *  2PI
-				// radius: (sqrt(x^2 + y^2)
-				// circumference C: (radius * 2* PI)
-				// step length fraction of C: step/C
-				// angle of step fraction in radians: step/C * 2PI
-				double alpha = (double)_params.loi_step_len / radius;
-
-				// vector yaw rotation +alpha or -alpha depending on left or right
-				R_phi.from_euler(0.0f, 0.0f, +alpha);
-				math::Vector<3> offset_new  = R_phi * offset;
-
-				_follow_offset = offset_new;
-
-				break;
-			}
-			case REMOTE_CMD_CLOSER: {
-
-				// Calculate vector angle from target to device with atan2(y, x)
-				float alpha = atan2f(offset(1), offset(0));
-
-				// Create vector in the same direction, with loiter_step length
-				math::Vector<3> offset_delta(
-						cosf(alpha) * _params.loi_step_len,
-						sinf(alpha) * _params.loi_step_len,
-						0);
-
-				math::Vector<3> offset_new = offset - offset_delta;
-
-				_follow_offset = offset_new;
-
-				break;
-
-			}
-
-			case REMOTE_CMD_FURTHER: {
-
-				// Calculate vector angle from target to device with atan2(y, x)
-				float alpha = atan2(offset(1), offset(0));
-
-				// Create vector in the same direction, with loiter_step length
-				math::Vector<3> offset_delta(
-						cosf(alpha) * _params.loi_step_len,
-						sinf(alpha) * _params.loi_step_len,
-						0);
-
-				math::Vector<3> offset_new = offset + offset_delta;
-
-				_follow_offset = offset_new;
-
-				break;
-			}
-
-		}
-	}
 }
 
 void
@@ -1762,10 +1620,11 @@ MulticopterPositionControl::control_follow(float dt)
 
 	/* update position setpoint and feed-forward velocity if not repeating target altitude */
 	if (!_params.follow_rpt_alt) {
-		//_pos_sp(2) = -(_alt_start - _ref_alt + _params.follow_talt_offs) + _follow_offset(2);
-        _pos_sp(2) = _ref_alt + _follow_offset(2);
+
+        _pos_sp(2) = _pos(2);
         _vel_ff_t(2) = 0.0f;
         _sp_move_rate(2) -= _tvel(2);
+
 	}
 }
 
@@ -1878,9 +1737,9 @@ MulticopterPositionControl::task_main()
 	_local_pos_sp_sub = orb_subscribe(ORB_ID(vehicle_local_position_setpoint));
 	_global_vel_sp_sub = orb_subscribe(ORB_ID(vehicle_global_velocity_setpoint));
 	_target_pos_sub = orb_subscribe(ORB_ID(target_global_position));
-	_vcommand_sub = orb_subscribe(ORB_ID(vehicle_command));
     _vehicle_status_sub = orb_subscribe(ORB_ID(vehicle_status));
     _pos_restrict_sub = orb_subscribe(ORB_ID(position_restriction));
+    _follow_offset_sub = orb_subscribe(ORB_ID(follow_offset));
 
 	parameters_update(true);
 
@@ -1995,10 +1854,14 @@ MulticopterPositionControl::task_main()
 			_sp_move_rate.zero();
 			_att_rates_ff.zero();
 
-            if (update_vehicle_command()) {
-                if (_control_mode.flag_control_follow_target && _control_mode.flag_control_leash_control_offset){
-                    vcommand_modify_follow_offset();
-                }
+            if (_control_mode.flag_control_offset_follow) {
+
+                _reset_follow_offset = false;
+                
+                _follow_offset(0) = _orb_follow_offset.x;
+                _follow_offset(1) = _orb_follow_offset.y;
+                _follow_offset(2) = _orb_follow_offset.z;
+
             }
 
 			/* select control source */

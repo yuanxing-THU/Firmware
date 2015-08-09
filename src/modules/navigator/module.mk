@@ -66,6 +66,7 @@ SRCS		= navigator_main.cpp \
 		  land.cpp \
 		  preflight_motor_check.cpp \
 		  preflight_motor_check_params.c
+		  offset_follow.cpp
 
 MODULE_STACKSIZE = 1200
 

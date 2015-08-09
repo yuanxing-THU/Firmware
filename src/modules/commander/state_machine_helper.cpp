@@ -374,8 +374,10 @@ main_state_transition(struct vehicle_status_s *status, main_state_t new_main_sta
             }
             break;
         }
-
 	case MAIN_STATE_ABS_FOLLOW:
+    case MAIN_STATE_KITE_LITE:
+    case MAIN_STATE_CIRCLE_AROUND:
+    case MAIN_STATE_FRONT_FOLLOW:
         {
             /* need global position estimate */
             if (status->condition_global_position_valid && status->condition_target_position_valid) {
@@ -772,6 +774,10 @@ bool set_nav_state(struct vehicle_status_s *status, const bool data_link_loss_en
 	case MAIN_STATE_CABLE_PARK:
 	case MAIN_STATE_ABS_FOLLOW:
 	case MAIN_STATE_AUTO_PATH_FOLLOW:
+    case MAIN_STATE_CIRCLE_AROUND:
+    case MAIN_STATE_KITE_LITE:
+    case MAIN_STATE_FRONT_FOLLOW:
+
 		float target_visibility_timeout_1;
 		param_get(param_find("A_TRGT_VSB_TO_1"), &target_visibility_timeout_1);
 		if ((!status->condition_target_position_valid &&
@@ -799,7 +805,17 @@ bool set_nav_state(struct vehicle_status_s *status, const bool data_link_loss_en
                 case MAIN_STATE_AUTO_PATH_FOLLOW:
                     status->nav_state = NAVIGATION_STATE_AUTO_PATH_FOLLOW;
                     break;
+                case MAIN_STATE_KITE_LITE:
+                    status->nav_state = NAVIGATION_STATE_KITE_LITE;
+                    break;
+                case MAIN_STATE_CIRCLE_AROUND:
+                    status->nav_state = NAVIGATION_STATE_CIRCLE_AROUND;
+                    break;
+                case MAIN_STATE_FRONT_FOLLOW:
+                    status->nav_state = NAVIGATION_STATE_FRONT_FOLLOW;
+                    break;
             }
+
         }
         break;
 

@@ -121,6 +121,7 @@ Navigator::Navigator() :
 	_mission_result_pub(-1),
 	_att_sp_pub(-1),
 	_commander_request_pub(-1),
+    _follow_offset_pub(-1),
 	_vstatus{},
 	_control_mode{},
 	_global_pos{},
@@ -150,6 +151,7 @@ Navigator::Navigator() :
 	_gpsFailure(this, "GPSF"),
 	_abs_follow(this, "FOL"),
 	_path_follow(this, "PAT"),
+	_offset_follow(this, "OFS"),
     _cable_path(this, "CBL"),
     _land(this, "LND"),
 	_can_loiter_at_sp(false),
@@ -172,6 +174,7 @@ Navigator::Navigator() :
 	_navigation_mode_array[8] = &_path_follow;
 	_navigation_mode_array[9] = &_land;
     _navigation_mode_array[10] = &_cable_path;
+    _navigation_mode_array[11] = &_offset_follow;
 
 	updateParams();
 
@@ -626,7 +629,10 @@ Navigator::task_main()
 				_navigation_mode = &_engineFailure;
 				break;
 			case NAVIGATION_STATE_ABS_FOLLOW:
-				_navigation_mode = &_abs_follow;
+            case NAVIGATION_STATE_KITE_LITE:
+            case NAVIGATION_STATE_FRONT_FOLLOW:
+			case NAVIGATION_STATE_CIRCLE_AROUND:
+				_navigation_mode = &_offset_follow;
 				break;
             case NAVIGATION_STATE_CABLE_PARK:
                 // Switch to cable park mode only if there is enough points
@@ -734,6 +740,17 @@ Navigator::publish_position_setpoint_triplet()
 
 	} else {
 		_pos_sp_triplet_pub = orb_advertise(ORB_ID(position_setpoint_triplet), &_pos_sp_triplet);
+	}
+}
+
+void
+Navigator::publish_follow_offset()
+{
+	if (_follow_offset_pub > 0) {
+		orb_publish(ORB_ID(follow_offset), _follow_offset_pub, &_follow_offset);
+
+	} else {
+		_follow_offset_pub = orb_advertise(ORB_ID(follow_offset), &_follow_offset);
 	}
 }
 

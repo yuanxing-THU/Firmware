@@ -980,6 +980,10 @@ int commander_thread_main(int argc, char *argv[])
 	nav_states_str[NAVIGATION_STATE_OFFBOARD]		= "OFFBOARD";
 	nav_states_str[NAVIGATION_STATE_FOLLOW]			= "FOLLOW";
 	nav_states_str[NAVIGATION_STATE_AUTO_STANDBY] = "STANDBY";
+	nav_states_str[NAVIGATION_STATE_CIRCLE_AROUND]    = "CIRCLE_AROUND";
+	nav_states_str[NAVIGATION_STATE_KITE_LITE]    = "AUTO_KITE_LITE";
+	nav_states_str[NAVIGATION_STATE_FRONT_FOLLOW]    = "AUTO_FRONT_FOLLOW";
+
 
 	/* pthread for slow low prio thread */
 	pthread_t commander_low_prio_thread;
@@ -2776,7 +2780,6 @@ set_control_mode()
 	if (!_custom_flag_control_point_to_target) {
 		control_mode.flag_control_point_to_target = false;
 	}
-	control_mode.flag_control_leash_control_offset = false;
 	
 	if ( status.airdog_state == AIRD_STATE_PREFLIGHT_MOTOR_CHECK ) {
 		control_mode.flag_control_manual_enabled = false;
@@ -2908,7 +2911,6 @@ set_control_mode()
 		control_mode.flag_control_termination_enabled = false;
 		control_mode.flag_control_point_to_target = false;
 		control_mode.flag_control_follow_target = false;
-		control_mode.flag_control_leash_control_offset = false;
 		break;
 
 	case NAVIGATION_STATE_FOLLOW:
@@ -2999,7 +3001,6 @@ set_control_mode()
 		if (!_custom_flag_control_point_to_target) {
 			control_mode.flag_control_point_to_target = true;
 		}
-        control_mode.flag_control_leash_control_offset = true;
         control_mode.flag_control_follow_restricted = true;
 		break;
 
@@ -3017,7 +3018,26 @@ set_control_mode()
 		if (!_custom_flag_control_point_to_target) {
 			control_mode.flag_control_point_to_target = true;
 		}
-        control_mode.flag_control_leash_control_offset = true;
+        control_mode.flag_control_offset_follow = true;
+		break;
+
+	case NAVIGATION_STATE_FRONT_FOLLOW:
+	case NAVIGATION_STATE_CIRCLE_AROUND:
+    case NAVIGATION_STATE_KITE_LITE:
+		control_mode.flag_control_manual_enabled = false;
+		control_mode.flag_control_auto_enabled = true;
+		control_mode.flag_control_rates_enabled = true;
+		control_mode.flag_control_attitude_enabled = true;
+		control_mode.flag_control_altitude_enabled = true;
+		control_mode.flag_control_climb_rate_enabled = true;
+		control_mode.flag_control_position_enabled = true;
+		control_mode.flag_control_velocity_enabled = true;
+		control_mode.flag_control_termination_enabled = false;
+		control_mode.flag_control_follow_target = true;
+		if (!_custom_flag_control_point_to_target) {
+			control_mode.flag_control_point_to_target = true;
+		}
+        control_mode.flag_control_offset_follow = true;
 		break;
 
 	case NAVIGATION_STATE_LAND:

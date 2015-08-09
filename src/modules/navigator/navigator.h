@@ -48,6 +48,7 @@
 
 #include <uORB/uORB.h>
 #include <uORB/topics/mission.h>
+#include <uORB/topics/follow_offset.h>
 #include <uORB/topics/vehicle_control_mode.h>
 #include <uORB/topics/position_setpoint_triplet.h>
 #include <uORB/topics/vehicle_global_position.h>
@@ -77,12 +78,13 @@
 #include "path_follow.hpp"
 #include "leashed_follow.hpp"
 #include "land.h"
+#include "offset_follow.h"
 
 /**
  * Number of navigation modes that need on_active/on_inactive calls
  * Currently: mission, loiter, rtl, offboard, abs_follow, path_follow, land
  */
-#define NAVIGATOR_MODE_ARRAY_SIZE 11
+#define NAVIGATOR_MODE_ARRAY_SIZE 12
 
 class Navigator : public control::SuperBlock
 {
@@ -135,6 +137,11 @@ public:
 	 */
 	void		publish_position_restriction();
 
+    /*
+     * Publish follow offset for offset follow modes
+     */
+    void        publish_follow_offset();
+
 	/**
 	 * Reset all validity flags of the triplet to "invalid"
 	 * to prevent old values from taking effect
@@ -167,6 +174,7 @@ public:
 	struct sensor_combined_s*	    get_sensor_combined() { return &_sensor_combined; }
 	struct home_position_s*		    get_home_position() { return &_home_pos; }
 	struct position_setpoint_triplet_s* get_position_setpoint_triplet() { return &_pos_sp_triplet; }
+	struct follow_offset_s*             get_follow_offset() { return &_follow_offset; }
 	struct mission_result_s*	    get_mission_result() { return &_mission_result; }
 	struct vehicle_attitude_setpoint_s* get_att_sp() { return &_att_sp; }
     bool get_flag_reset_pfol_offs(); // get value of _reset_path_follow_offset flag
@@ -219,6 +227,7 @@ private:
 							  used only in very special failsafe modes
 							  when pos control is deactivated */
 	orb_advert_t 	_commander_request_pub; 		/**< publish commander requests */
+    orb_advert_t    _follow_offset_pub;             /**< publish follow offset of offset follow modes */
 
 	vehicle_status_s				_vstatus;		/**< vehicle status */
 	vehicle_control_mode_s				_control_mode;		/**< vehicle control mode */
@@ -229,6 +238,7 @@ private:
 	mission_item_s 					_mission_item;		/**< current mission item */
 	navigation_capabilities_s			_nav_caps;		/**< navigation capabilities */
 	position_setpoint_triplet_s			_pos_sp_triplet;	/**< triplet of position setpoints */
+	follow_offset_s                     _follow_offset;
 	position_restriction_s		_pos_restrict;	/**< position restriction*/
 
 	mission_result_s				_mission_result;
@@ -259,6 +269,7 @@ private:
 	GpsFailure	_gpsFailure;			/**< class that handles the OBC gpsfailure loss mode */
 	AbsFollow 	_abs_follow;			/**< class that handles AFollow */
 	PathFollow	_path_follow;		/**< class that handles Follow Path*/
+	OffsetFollow    _offset_follow;		/**< class that handles Follow Path*/
     Leashed     _cable_path;            /**< class that handles Cable Park */
 
     Land        _land;                  /**/
