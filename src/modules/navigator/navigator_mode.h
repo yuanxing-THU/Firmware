@@ -166,6 +166,15 @@ public:
 
         float airdog_traj_radius;
 
+        float offset_min_distance;
+        float offset_max_distance;
+
+        float max_offset_rot_speed;
+        float offset_angle_error_treshold;
+
+        float offset_rot_speed_ch_cmd_step;
+        float offset_rot_speed_ratio;
+
 	} _parameters;
 
 
@@ -226,6 +235,16 @@ public:
         param_t start_follow_immediately;
 
         param_t airdog_traj_radius;
+
+
+        param_t offset_min_distance;
+        param_t offset_max_distance;
+
+        param_t max_offset_rot_speed;
+        param_t offset_angle_error_treshold;
+
+        param_t offset_rot_speed_ch_cmd_step;
+        param_t offset_rot_speed_ratio;
 
 	} _parameter_handles;
 

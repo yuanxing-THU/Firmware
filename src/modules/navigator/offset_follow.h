@@ -67,7 +67,7 @@ private:
     void execute_vehicle_command_abs_follow();
     void execute_vehicle_command_front_follow();
 
-    void init_base_offset();
+    void init_follow_offset_vector();
     void calculate_base_offset();
 
     void update_rotation_angle();

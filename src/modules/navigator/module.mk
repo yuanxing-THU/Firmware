@@ -65,8 +65,9 @@ SRCS		= navigator_main.cpp \
 		  leashed_follow_params.c \
 		  land.cpp \
 		  preflight_motor_check.cpp \
-		  preflight_motor_check_params.c
-		  offset_follow.cpp
+		  preflight_motor_check_params.c \
+		  offset_follow.cpp \
+		  offset_follow_params.c
 
 MODULE_STACKSIZE = 1200
 

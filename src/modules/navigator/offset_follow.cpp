@@ -45,13 +45,12 @@ OffsetFollow::on_activation()
 
     _rotation_speed_ms = 0.0f;
 
-
     printf("Offset follow mode start ! \n");
 
-    init_base_offset(); 
+    init_follow_offset_vector(); 
 
     if (_vstatus->nav_state = NAVIGATION_STATE_CIRCLE_AROUND) {
-        _rotation_speed_ms = 3.0f;
+        _rotation_speed_ms = _parameters.offset_rot_speed_ch_cmd_step;;
     } 
 }
 
@@ -137,13 +136,12 @@ OffsetFollow::on_active_front_follow() {
         }
     }
 
-    if (min_angle_err > 0.2f) {
-        _rotation_speed_ms = rotation_dir * math::min(target_speed, 8.0f);
+    if (min_angle_err > _parameters.offset_angle_error_treshold) {
+        _rotation_speed_ms = rotation_dir * target_speed * _parameters.offset_rot_speed_ratio;
     } else {
         _rotation_speed_ms = 0.0f;
     }
 
-    printf("mae: %.3f ra: %.3f rsp: %.3f\n", (double)min_angle_err, (double) _rotation_angle, (double)_rotation_speed);
 }
 
 void
@@ -153,14 +151,7 @@ OffsetFollow::on_active_circle_around() {
 void
 OffsetFollow::execute_vehicle_command() {
 
-    printf("1");
-    fflush(stdout);
-    printf("2");
-    fflush(stdout);
-
 	vehicle_command_s cmd = _vcommand;
-    printf("3");
-    fflush(stdout);
 
 	if (cmd.command == VEHICLE_CMD_DO_SET_MODE){
 
@@ -197,8 +188,6 @@ OffsetFollow::execute_vehicle_command() {
 		}
 	}
 
-    printf("4");
-
     switch(_vstatus->nav_state){
 
         case NAVIGATION_STATE_ABS_FOLLOW: 
@@ -219,9 +208,6 @@ OffsetFollow::execute_vehicle_command() {
 
 void
 OffsetFollow::execute_vehicle_command_abs_follow() {
-
-    printf("10");
-    fflush(stdout);
 
     vehicle_command_s cmd = _vcommand;
     if (cmd.command == VEHICLE_CMD_NAV_REMOTE_CMD) {
@@ -267,10 +253,11 @@ OffsetFollow::execute_vehicle_command_circle_around() {
                 offset_height_step(1);
                 break;
             case REMOTE_CMD_LEFT: 
-                _rotation_speed_ms += 1.0f;
+
+                _rotation_speed_ms += _parameters.offset_rot_speed_ch_cmd_step;
                 break;
             case REMOTE_CMD_RIGHT: 
-                _rotation_speed_ms -= 1.0f;
+                _rotation_speed_ms -= _parameters.offset_rot_speed_ch_cmd_step;
                 break;
             case REMOTE_CMD_CLOSER: 
                 offset_distance_step(-1);
@@ -312,16 +299,28 @@ OffsetFollow::execute_vehicle_command_front_follow() {
 void
 OffsetFollow::offset_distance_step(int direction) {
 
-    printf("Direction step\n");
+    printf("Distance step\n");
+
+    float step_len = _parameters.horizon_button_step;
+    float cur_dst = sqrt(_follow_offset_vect(0) * _follow_offset_vect(0) + _follow_offset_vect(1) * _follow_offset_vect(1));
+    float dst_left = 0.0f;
+
+    if (direction == 1) {
+        dst_left = _parameters.offset_max_distance - cur_dst;
+    } else if (direction == -1) {
+        dst_left = cur_dst - _parameters.offset_min_distance;
+    }
+
+    if (step_len > dst_left) step_len = dst_left;
+    if (step_len < 0.0f) step_len = 0.0f;
 
     float alpha = atan2(_follow_offset_vect(1), _follow_offset_vect(0));
     math::Vector<3> offset_delta(
-        cosf(alpha) * _parameters.horizon_button_step, 
-        sinf(alpha) * _parameters.horizon_button_step,
+        cosf(alpha) * step_len, 
+        sinf(alpha) * step_len,
     0);
 
-    if (direction == -1)
-        offset_delta = -offset_delta;
+    if (direction == -1) offset_delta = -offset_delta;
 
     math::Vector<3> offset_new = _follow_offset_vect + offset_delta;
     _follow_offset_vect = offset_new;
@@ -337,6 +336,7 @@ OffsetFollow::offset_rotation_step(int direction) {
     math::Matrix<3, 3> R_phi;
     float alpha = _parameters.horizon_button_step / _radius;
     _rotation_angle += (float)direction * alpha;
+
 }
 
 void
@@ -351,13 +351,12 @@ OffsetFollow::offset_height_step(int direction) {
         _follow_offset_vect(2) += direction * _parameters.down_button_step;
 
     calculate_base_offset();
-
 }
 
 void
-OffsetFollow::init_base_offset() {
+OffsetFollow::init_follow_offset_vector() {
 
-    printf("Initing base offset !\n");
+    printf("Initing follow offset !\n");
     
     _t_prev = 0;
     _t_cur = 0;
@@ -376,7 +375,6 @@ OffsetFollow::init_base_offset() {
 	);
 
 	_follow_offset_vect(2) = target_pos->alt - global_pos->alt;
-
     calculate_base_offset();
 }
 
@@ -389,18 +387,18 @@ OffsetFollow::calculate_base_offset() {
     R_phi.from_euler(0.0f, 0.0f, -_rotation_angle);
     _base_offset = R_phi * _follow_offset_vect;
 
-    _radius = sqrt(_follow_offset_vect(0) * _follow_offset_vect(0) + _follow_offset_vect(1) * _follow_offset_vect(1));
+    _radius = sqrt(_base_offset(0) * _base_offset(0) + _base_offset(1) * _base_offset(1));
 
 }
 
 void
 OffsetFollow::update_rotation_angle() {
 
-    if (_rotation_speed_ms >= 8.0f)
-        _rotation_speed_ms = 8.0f;
+    if (_rotation_speed_ms >= _parameters.max_offset_rot_speed)
+        _rotation_speed_ms = _parameters.max_offset_rot_speed;
 
-    if (_rotation_speed_ms <= -8.0f)
-        _rotation_speed_ms = -8.0f;
+    if (_rotation_speed_ms <= -_parameters.max_offset_rot_speed)
+        _rotation_speed_ms = -_parameters.max_offset_rot_speed;
 
     _rotation_speed = _rotation_speed_ms / _radius;
 

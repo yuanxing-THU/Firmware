@@ -151,6 +151,16 @@ NavigatorMode::updateParamHandles() {
 	_parameter_handles.start_follow_immediately = param_find("A_FOL_IMDTLY");
 
     _parameter_handles.airdog_traj_radius = param_find("AIRD_TRAJ_RAD");
+
+
+    _parameter_handles.offset_min_distance = param_find("OFF_DST_MIN");
+    _parameter_handles.offset_max_distance = param_find("OFF_DST_MAX");
+
+    _parameter_handles.max_offset_rot_speed = param_find("OFF_MAX_ROT_SPD");
+    _parameter_handles.offset_angle_error_treshold = param_find("OFF_ANGL_ERR_T");
+
+    _parameter_handles.offset_rot_speed_ch_cmd_step = param_find("OFF_ROT_SPD_STP");
+    _parameter_handles.offset_rot_speed_ratio = param_find("OFF_ROT_SPD_R");
 }
 
 void
@@ -207,6 +217,16 @@ NavigatorMode::updateParamValues() {
     param_get(_parameter_handles.start_follow_immediately, &(_parameters.start_follow_immediately));
 
     param_get(_parameter_handles.airdog_traj_radius, &(_parameters.airdog_traj_radius));
+
+
+    param_get(_parameter_handles.offset_min_distance,&(_parameters.offset_min_distance));
+    param_get(_parameter_handles.offset_max_distance,&(_parameters.offset_max_distance));
+
+    param_get(_parameter_handles.max_offset_rot_speed,&(_parameters.max_offset_rot_speed));
+    param_get(_parameter_handles.offset_angle_error_treshold,&(_parameters.offset_angle_error_treshold));
+
+    param_get(_parameter_handles.offset_rot_speed_ch_cmd_step,&(_parameters.offset_rot_speed_ch_cmd_step));
+    param_get(_parameter_handles.offset_rot_speed_ratio,&(_parameters.offset_rot_speed_ratio));
 
 }
 
