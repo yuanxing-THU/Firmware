@@ -163,6 +163,10 @@ process_one_command(Device & f, FileWriteState & receive_file)
 		handle< CMD_REBOOT >(f);
 		break;
 
+	case CMD_LOG_SET:
+		handle< CMD_LOG_SET >(f);
+		break;
+
 	default:
 		reply_command_result(f, ERRCODE_REQUEST_INVALID, cmd);
 		dump_unknown_command(cmd);

@@ -1,4 +1,5 @@
 #include <dirent.h>
+#include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +29,27 @@ sdlog2_filename(char filepath[/*PATH_MAX*/], const char dir[], sdlog2_file_kind_
     if (ok) { os_path_join2(filepath, dir, name[kind]); }
     else { *filepath = '\0'; }
     return ok;
+}
+
+int
+sdlog2_file_find_closest_number_lt(char filepath[/*PATH_MAX*/], const char dir[], sdlog2_file_kind_t limit)
+{
+	while (limit > 0)
+	{
+		--limit;
+		if (sdlog2_filename(filepath, dir, limit))
+		{
+			int f = open(filepath, O_RDONLY);
+			if (f != -1)
+			{
+				close(f);
+				return limit;
+			}
+		}
+	}
+
+	*filepath = '\0';
+	return SDLOG2_FILE_KIND_MAX;
 }
 
 uint64_t
@@ -159,7 +181,7 @@ sdlog2_dir_remove_oldest(const char root[])
     if (dir == NULL)
     {
         warnx("opendir failed");
-        return;
+        return 0;
     }
 
     for (entry = readdir(dir); entry != NULL; entry = readdir(dir))

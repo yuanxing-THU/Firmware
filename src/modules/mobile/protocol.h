@@ -45,7 +45,7 @@ enum {                                              // Little-endian debug
 	 */
 
 	CMD_REBOOT = CMD_AB('r', 't'),              // 0x7472
-	CMD_LOG_INDEX = CMD_AB('l', 'i'),           // 0x696c
+	CMD_LOG_SET = CMD_AB('l', 's'),             // 0x736c
 };
 
 #undef CMD_AB

@@ -20,6 +20,9 @@ typedef enum {
 __EXPORT int /* boolean result -- name defined or not */
 sdlog2_filename(char filepath[/*PATH_MAX*/], const char dir[], sdlog2_file_kind_t kind);
 
+__EXPORT int /* ok if result < SDLOG2_FILE_KIND_MAX else error */
+sdlog2_file_find_closest_number_lt(char filepath[/*PATH_MAX*/], const char dir[], sdlog2_file_kind_t limit);
+
 __EXPORT uint32_t /* result == limit is found nothing, result < limit is an existing number */
 sdlog2_dir_find_closest_number_lt(char full_path[/*PATH_MAX*/], uint32_t limit, const char root[]);
 

@@ -6,5 +6,6 @@
 #include "request_cert.hpp"
 #include "request_files.hpp"
 #include "request_fixed.hpp"
+#include "request_logs.hpp"
 #include "request_reboot.hpp"
 #include "request_status.hpp"
