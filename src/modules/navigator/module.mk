@@ -63,8 +63,12 @@ SRCS		= navigator_main.cpp \
 		  path_follow_params.c \
 		  leashed_follow.cpp \
 		  leashed_follow_params.c \
-		  land.cpp
+		  land.cpp \
+		  preflight_motor_check.cpp \
+		  preflight_motor_check_params.c
 
 MODULE_STACKSIZE = 1200
 
 MAXOPTIMIZATION = -Os
+
+DEFAULT_VISIBILITY = protected

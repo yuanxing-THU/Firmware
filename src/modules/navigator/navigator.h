@@ -58,6 +58,7 @@
 #include <uORB/topics/target_global_position.h>
 #include <uORB/topics/commander_request.h>
 #include <uORB/topics/external_trajectory.h>
+#include <uORB/topics/vehicle_attitude.h>
 #include <uORB/topics/position_restriction.h>
 
 
@@ -173,6 +174,7 @@ public:
 	struct commander_request_s*	get_commander_request() { return &_commander_request;};
 	struct target_global_position_s*    get_target_position() {return &_target_pos; }
 	struct external_trajectory_s*		get_target_trajectory() {return &_target_trajectory;}
+	struct vehicle_attitude_s*			get_vehicle_attitude() {return &_vehicle_attitude;}
 	int		get_onboard_mission_sub() { return _onboard_mission_sub; }
 	int		get_offboard_mission_sub() { return _offboard_mission_sub; }
 	int		get_vehicle_command_sub() { return _vcommand_sub; }
@@ -181,6 +183,9 @@ public:
 	float		get_loiter_radius() { return _param_loiter_radius.get(); }
 	float		get_acceptance_radius() { return _param_acceptance_radius.get(); }
 	int		get_mavlink_fd() { return _mavlink_fd; }
+	
+	void public_vehicle_attitude_update();
+	int  public_poll_update_sensor_combined_and_vehicle_attitude(const unsigned timeout_ms);
 
 private:
 
@@ -202,6 +207,7 @@ private:
 	int 	_vcommand_sub;			/**< vehicle control subscription */
 	int 	_target_pos_sub; 		/**< target position subscription */
 	int		_target_trajectory_sub;	/**< target trajectory subscription */
+	int		_vehicle_attitude_sub;	/**< vehicle attitude subscription - not polled as part of the main loop*/
     double   _first_leash_point[3];  /**< first point to draw path in cable park */
     double   _last_leash_point[3];   /**< last point to draw path in cable park */
     bool _flag_reset_pfol_offs;
@@ -229,6 +235,7 @@ private:
 	vehicle_attitude_setpoint_s					_att_sp;
 	target_global_position_s 			_target_pos;		/**< global target position */
 	external_trajectory_s				_target_trajectory; /**< target trajectory */
+	vehicle_attitude_s					_vehicle_attitude;	/**< vehicle attitude - not updated as part of the main loop*/
 	commander_request_s					_commander_request;
 
 	bool 		_mission_item_valid;		/**< flags if the current mission item is valid */
@@ -315,6 +322,11 @@ private:
 	 * Retrieve target trajectory
 	 */
 	void 		target_trajectory_update();
+	
+	/**
+	 * Retrieve vehicle attitude
+	 */
+	void 		vehicle_attitude_update();
 
 	/**
 	 * Shim for calling task_main from task_create.

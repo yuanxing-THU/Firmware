@@ -113,6 +113,7 @@ Navigator::Navigator() :
 	_vcommand_sub(-1),
 	_target_pos_sub(-1),
 	_target_trajectory_sub(-1),
+	_vehicle_attitude_sub(-1),
     _first_leash_point(),
     _last_leash_point(),
 	_pos_sp_triplet_pub(-1),
@@ -133,6 +134,7 @@ Navigator::Navigator() :
 	_mission_result{},
 	_att_sp{},
 	_target_trajectory{},
+	_vehicle_attitude{},
 	_mission_item_valid(false),
 	_loop_perf(perf_alloc(PC_ELAPSED, "navigator")),
 	_geofence{},
@@ -270,6 +272,12 @@ Navigator::target_trajectory_update()
 }
 
 void
+Navigator::vehicle_attitude_update()
+{
+	orb_copy(ORB_ID(vehicle_attitude), _vehicle_attitude_sub, &_vehicle_attitude);
+}
+
+void
 Navigator::task_main_trampoline(int argc, char *argv[])
 {
 	navigator::g_navigator->task_main();
@@ -400,6 +408,7 @@ Navigator::task_main()
 	_vcommand_sub = orb_subscribe(ORB_ID(vehicle_command));
 	_target_pos_sub = orb_subscribe(ORB_ID(target_global_position));
 	_target_trajectory_sub = orb_subscribe(ORB_ID(external_trajectory));
+	_vehicle_attitude_sub = orb_subscribe(ORB_ID(vehicle_attitude));
 
 	/* copy all topics first time */
 	vehicle_status_update();
@@ -412,6 +421,7 @@ Navigator::task_main()
 	params_update();
 	target_position_update();
 	target_trajectory_update();
+	vehicle_attitude_update();
 
 	/* Init the path_follow mode to allocate trajectory buffer */
 	if (_path_follow.init()) {
@@ -909,4 +919,22 @@ void Navigator::invalidate_single_setpoint(position_setpoint_s &setpoint) {
 	setpoint.velocity_valid = false;
 	setpoint.yaw_valid = false;
 	setpoint.yawspeed_valid = false;
+}
+
+void
+Navigator::public_vehicle_attitude_update() {
+    vehicle_attitude_update();
+}
+
+int
+Navigator::public_poll_update_sensor_combined_and_vehicle_attitude(const unsigned timeout_ms) {
+    struct pollfd pfds[2];
+    pfds[0].fd = _sensor_combined_sub;  pfds[0].events = POLLIN;
+    pfds[1].fd = _vehicle_attitude_sub; pfds[1].events = POLLIN;
+    const int poll_ret = poll(pfds, 2, timeout_ms);
+    if ( poll_ret > 0 ) {
+        if ( pfds[0].revents & POLLIN ) sensor_combined_update();
+        if ( pfds[1].revents & POLLIN ) vehicle_attitude_update();
+    }
+    return poll_ret;
 }

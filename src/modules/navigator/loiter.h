@@ -92,6 +92,8 @@ private:
 	void set_sub_mode(LOITER_SUB_MODE new_sub_mode, uint8_t reset_setpoint = 1, int8_t force_camera_reset = 0);
 
 	void start_follow();
+	
+	bool preflight_motor_check();
 
 	bool flag_sub_mode_goal_reached;
 	bool previous_target_valid_flag;
