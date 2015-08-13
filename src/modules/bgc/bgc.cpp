@@ -2,7 +2,6 @@
 
 #include "bgc.hpp"
 
-#include <uORB/topics/frame_button.h>
 #include <systemlib/systemlib.h>
 #include <poll.h>
 #include "bgc_uart.hpp"
@@ -75,23 +74,22 @@ BGC::BGC()
     , vehicle_status_subscriber()
     , bgc_uart()
     , prev_arming_state(arming_state_t(ARMING_STATE_MAX))
-    , param_arm_bgc_motors(param_find("A_ARM_BGC_MOTORS"))
+    , arm_bgc_motors_param("A_ARM_BGC_MOTORS")
 { }
 
 BGC::~BGC() { }
 
 bool BGC::Initial_setup() {
-    frame_button_subscriber.Open(ORB_ID(frame_button_state));
-    if ( !frame_button_subscriber.Is_open() ) return false;
+    if ( !arm_bgc_motors_param.Is_open() ) return false;
+    
+    if ( !frame_button_subscriber.Open() ) return false;
     printf("[BGC::BGC] Initial_setup - subscribed to frame button\n");
     
-    vehicle_status_subscriber.Open(ORB_ID(vehicle_status));
-    if ( !vehicle_status_subscriber.Is_open() ) return false;
+    if ( !vehicle_status_subscriber.Open() ) return false;
     if ( !vehicle_status_subscriber.Set_interval(1000) ) return false;
     printf("[BGC::BGC] Initial_setup - subscribed to vehicle status\n");
     
-    bgc_uart.Open();
-    if ( !bgc_uart.Is_open() ) return false;
+    if ( !bgc_uart.Open() ) return false;
     printf("[BGC::BGC] Initial_setup - opened BGC_uart\n");
     
     return true;
@@ -183,11 +181,7 @@ bool BGC::Discover_attributes() {
 }
 
 bool BGC::Process_frame_button_event() {
-    BGC_uart_msg out_msg;
-    struct frame_button_s raw_frame_button_state;
-    if ( !frame_button_subscriber.Read(ORB_ID(frame_button_state), &raw_frame_button_state) ) {
-        return false;
-    }
+    if ( !frame_button_subscriber.Read() ) return false;
     
 /** TODO! Implement detection of the DIP-switch that enables button pass-trough. Refer to
  *  https://docs.google.com/document/d/1m2cnf1UrndAgbCF8fEZWD3Evr-s2qAcHdLWIV6tyzqg/edit?usp=sharing
@@ -201,7 +195,8 @@ bool BGC::Process_frame_button_event() {
     return true;
 #endif
     
-    switch ( raw_frame_button_state.state ) {
+    BGC_uart_msg out_msg;
+    switch ( frame_button_subscriber.Data().state ) {
         case SINGLE_CLICK: {
             DOG_PRINT("[BGC::BGC] Process_frame_button_event - SINGLE_CLICK -> SBGC_MENU_CMD_MOTOR_TOGGLE\n");
             out_msg.Build_OUT_CMD_EXECUTE_MENU(SBGC_MENU_CMD_MOTOR_TOGGLE);
@@ -234,29 +229,23 @@ bool BGC::Process_frame_button_event() {
 }
 
 bool BGC::Update_bgc_motor_status() {
-    BGC_uart_msg out_msg;
-    struct vehicle_status_s raw_vehicle_status;
-    if ( !vehicle_status_subscriber.Read(ORB_ID(vehicle_status), &raw_vehicle_status) ) {
-        return false;
-    }
+    if ( !vehicle_status_subscriber.Read() ) return false;
+    
     // DOG_PRINT("[BGC::BGC] Update_bgc_motor_status - change: %d -> %d\n", prev_arming_state, raw_vehicle_status.arming_state);
-    if ( prev_arming_state != ARMING_STATE_ARMED && raw_vehicle_status.arming_state == ARMING_STATE_ARMED ) {
-        int arm_bgc_motors = 1;
-        param_get(param_arm_bgc_motors, &arm_bgc_motors);
-        if ( arm_bgc_motors != 0 ) {
+    BGC_uart_msg out_msg;
+    if ( prev_arming_state != ARMING_STATE_ARMED && vehicle_status_subscriber.Data().arming_state == ARMING_STATE_ARMED ) {
+        if ( arm_bgc_motors_param.Get() != 0 ) {
             DOG_PRINT("[BGC::BGC] Update_bgc_motor_status - sending CMD_MOTORS_ON\n");
             out_msg.Build_OUT_CMD_MOTORS_ON();
         }
     } else if ( (prev_arming_state == ARMING_STATE_ARMED || prev_arming_state == ARMING_STATE_MAX)
-            && raw_vehicle_status.arming_state != ARMING_STATE_ARMED ) {
-        int arm_bgc_motors = 1;
-        param_get(param_arm_bgc_motors, &arm_bgc_motors);
-        if ( arm_bgc_motors != 0 ) {
+            && vehicle_status_subscriber.Data().arming_state != ARMING_STATE_ARMED ) {
+        if ( arm_bgc_motors_param.Get() != 0 ) {
             DOG_PRINT("[BGC::BGC] Update_bgc_motor_status - sending CMD_MOTORS_OFF\n");
             out_msg.Build_OUT_CMD_MOTORS_OFF();
         }
     }
-    prev_arming_state = raw_vehicle_status.arming_state;
+    prev_arming_state = vehicle_status_subscriber.Data().arming_state;
     if ( out_msg.Is_first_byte_present() && !bgc_uart.Send(out_msg) ) {
         printf("[BGC::BGC] Run - failed to send CMD_MOTORS_*\n");
         return false;
