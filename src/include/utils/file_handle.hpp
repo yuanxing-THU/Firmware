@@ -16,7 +16,7 @@ namespace Utils {
         }
         
         bool Open(const char * const path, const int oflags = 0, const bool verbose_failure = true) {
-            if ( Is_open() ) Close();
+            Close();
             fd = open(path, oflags);
             if ( !Is_open() ) {
                 if ( verbose_failure ) printf("[Utils::File_handle] failed to open %s: %d\n", path, errno);
@@ -30,8 +30,10 @@ namespace Utils {
         }
         
         void Close() {
-            close(fd);
-            fd = -1;
+            if ( Is_open() ) {
+                close(fd);
+                fd = -1;
+            }
         }
         
         int Fd() {
@@ -47,7 +49,7 @@ namespace Utils {
         }
         
         ~File_handle() {
-            if ( Is_open() ) Close();
+            Close();
         }
         
     private:

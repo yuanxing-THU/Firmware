@@ -19,7 +19,7 @@ namespace Utils {
         }
         
         bool Open(const bool verbose_failure = true) {
-            if ( Is_open() ) Close();
+            Close();
             fd = orb_subscribe(s_uorb_meta);
             if ( !Is_open() ) {
                 if ( verbose_failure ) {
@@ -35,8 +35,10 @@ namespace Utils {
         }
         
         void Close() {
-            orb_unsubscribe(fd);
-            fd = -1;
+            if ( Is_open() ) {
+                orb_unsubscribe(fd);
+                fd = -1;
+            }
         }
         
         int Fd() const {
@@ -74,7 +76,7 @@ namespace Utils {
         }
         
         ~ORB_subscriber_wo_data() {
-            if ( Is_open() ) Close();
+            Close();
         }
         
     private:

@@ -15,7 +15,7 @@ namespace Utils {
         }
         
         bool Open(const char * const name, const bool verbose_failure = true) {
-            if ( Is_open() ) Close();
+            Close();
             pt = param_find(name);
             if ( !Is_open() ) {
                 if ( verbose_failure ) {
@@ -49,7 +49,7 @@ namespace Utils {
         }
         
         ~Param_reader() {
-            if ( Is_open() ) Close();
+            Close();
         }
         
     private:
