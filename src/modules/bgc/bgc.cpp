@@ -156,6 +156,17 @@ bool BGC::Run_setup() {
         }
     }
     
+#if BOARD_REVISION >= 006
+    /** On newer revisions that don't have BGC Video Tx Power enabled by default through a hardware jumper,
+     *  we need to send a message to the BGC chip to enable Video Tx Power by setting a pin to 1.
+     */
+    int32_t do_pin = 0;
+    if ( !Utils::Get_param<int32_t>(do_pin, "A_BGC_EN_VTX_POW", 0, 1) ) return false;
+    if ( do_pin != 0 ) {
+        if ( !Enable_video_tx_power_pin() ) return false;
+    }
+#endif
+    
     return true;
 }
 
@@ -250,6 +261,17 @@ bool BGC::Update_bgc_motor_status() {
         printf("[BGC::BGC] Run - failed to send CMD_MOTORS_*\n");
         return false;
     }
+    return true;
+}
+
+bool BGC::Enable_video_tx_power_pin() {
+    BGC_uart_msg out_msg;
+    out_msg.Build_OUT_CMD_TRIGGER_PIN(BGC_VIDEO_TX_POWER_PIN, 1);
+    if ( !bgc_uart.Send(out_msg) ) {
+        printf("[BGC::BGC] Enable_video_tx_power_pin - failed to send CMD_TRIGGER_PIN\n");
+        return false;
+    }
+    printf("[BGC::BGC] Enable_video_tx_power_pin - sent CMD_TRIGGER_PIN %d/%d\n", BGC_VIDEO_TX_POWER_PIN, 1);
     return true;
 }
 

@@ -7,6 +7,8 @@
 #include <utils/param_reader.hpp>
 #include "bgc_uart.hpp"
 
+#define BGC_VIDEO_TX_POWER_PIN 18
+
 namespace BGC {
 
 class BGC {
@@ -51,6 +53,8 @@ private:
     // Reads current vehicle status, if it has changed to/from ARMED since last time, turns BGC motors on/off accordingly.
     // Returns true on success, false if something goes wrong.
     bool Update_bgc_motor_status();
+    
+    bool Enable_video_tx_power_pin();
     
     // Polls for any incoming data on frame_button uORB subscription or BGC uart connection.
     Poll_result Poll();

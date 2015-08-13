@@ -8,6 +8,7 @@
 #define SBGC_CMD_CONFIRM            67
 #define SBGC_CMD_EXECUTE_MENU       69
 #define SBGC_CMD_MOTORS_ON          77
+#define SBGC_CMD_TRIGGER_PIN        84
 #define SBGC_CMD_BOARD_INFO         86
 #define SBGC_CMD_MOTORS_OFF         109
 #define SBGC_CMD_RESET              114
@@ -111,6 +112,17 @@ namespace BGC {
             body[0]         = cmd_id;
             body[data_size] = Calc_body_checksum();
             bytes_present   = 6;
+        }
+        
+        void Build_OUT_CMD_TRIGGER_PIN(const uint8_t pin_id, const uint8_t state) {
+            angle_bracket   = uint8_t('>');
+            command_id      = uint8_t(SBGC_CMD_TRIGGER_PIN);
+            data_size       = uint8_t(2);
+            header_checksum = Calc_header_checksum();
+            body[0]         = pin_id;
+            body[1]         = state;
+            body[data_size] = Calc_body_checksum();
+            bytes_present   = 7;
         }
         
         uint8_t  Get_IN_CMD_BOARD_INFO_Board_ver()        const { return body[0];                                      }
