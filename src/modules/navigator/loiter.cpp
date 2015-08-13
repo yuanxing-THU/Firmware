@@ -56,6 +56,8 @@
 #include "loiter.h"
 #include "navigator.h"
 
+#include "preflight_motor_check.hpp"
+
 // Keep aligned with sub_mode enum!
 const char* Loiter::mode_names[] = { "Landed",
 		"Aim-and-shoot",
@@ -151,16 +153,25 @@ Loiter::on_activation()
     _navigator->invalidate_setpoint_triplet();
 
     if (vstatus->auto_takeoff_cmd) {
-		set_sub_mode(LOITER_SUB_MODE_TAKING_OFF, 1, camera_reset_mode);
-		takeoff();
-		if (vstatus->airdog_state == AIRD_STATE_IN_AIR || vstatus->airdog_state == AIRD_STATE_LANDING) {
-			in_air_takeoff = true;
-		}
-		else {
-			in_air_takeoff = false;
-		}
-		//resetModeArguments(MAIN_STATE_LOITER); //now done in commander itself
-
+        bool preflight_motor_check_not_needed_or_success = true;
+        if (vstatus->airdog_state != AIRD_STATE_IN_AIR && vstatus->airdog_state != AIRD_STATE_LANDING) {
+            preflight_motor_check_not_needed_or_success = preflight_motor_check();
+        }
+        if (preflight_motor_check_not_needed_or_success) {
+            set_sub_mode(LOITER_SUB_MODE_TAKING_OFF, 1, camera_reset_mode);
+            takeoff();
+            if (vstatus->airdog_state == AIRD_STATE_IN_AIR || vstatus->airdog_state == AIRD_STATE_LANDING) {
+                in_air_takeoff = true;
+            }
+            else {
+                in_air_takeoff = false;
+            }
+            //resetModeArguments(MAIN_STATE_LOITER); //now done in commander itself
+        } else {
+            commander_request_s *commander_request = _navigator->get_commander_request();
+            commander_request->request_type = V_DISARM;
+            _navigator->set_commander_request_updated();
+        }
 	} else if (vstatus->airdog_state == AIRD_STATE_LANDED || vstatus->airdog_state == AIRD_STATE_STANDBY) {
 		set_sub_mode(LOITER_SUB_MODE_LANDED, 1, camera_reset_mode);
 	} else {
@@ -698,4 +709,21 @@ Loiter::start_follow() {
         commander_request->main_state = MAIN_STATE_CABLE_PARK;
         _navigator->set_commander_request_updated();
     }
+}
+
+bool
+Loiter::preflight_motor_check() {
+    Preflight_motor_check pmc(_navigator);
+    commander_error_code error = COMMANDER_ERROR_OK;
+    
+    if ( error == COMMANDER_ERROR_OK ) error = pmc.Boot_init();
+    if ( error == COMMANDER_ERROR_OK ) error = pmc.Pre_check_init();
+    if ( error == COMMANDER_ERROR_OK ) error = pmc.Check();
+    
+    if ( error != COMMANDER_ERROR_OK ) {
+        commander_set_error(error);
+        return false;
+    }
+    
+    return true;
 }

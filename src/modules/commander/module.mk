@@ -46,8 +46,13 @@ SRCS		 	= commander.cpp \
 			mag_calibration.cpp \
 			baro_calibration.cpp \
 			rc_calibration.cpp \
-			airspeed_calibration.cpp
+			airspeed_calibration.cpp \
+			flight_time_check.cpp \
+			flight_time_check_params.c
 
 MODULE_STACKSIZE = 3000
 
 MAXOPTIMIZATION	 = -Os
+
+DEFAULT_VISIBILITY = protected
+

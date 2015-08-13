@@ -421,7 +421,7 @@ void
 airdog_state_transition(struct vehicle_status_s *status, airdog_state_t new_airdog_state, const int mavlink_fd) {
     status->airdog_state = new_airdog_state;
 
-    char * str;
+    const char * str = "unknown";
 
     switch (new_airdog_state){
     	case AIRD_STATE_STANDBY:
@@ -429,6 +429,9 @@ airdog_state_transition(struct vehicle_status_s *status, airdog_state_t new_aird
             break;
         case AIRD_STATE_LANDED:
             str = "landed";
+            break;
+        case AIRD_STATE_PREFLIGHT_MOTOR_CHECK:
+            str = "preflight motor check";
             break;
         case AIRD_STATE_TAKING_OFF:
             str = "taking_off";

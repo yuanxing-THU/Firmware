@@ -115,6 +115,9 @@
 #include "rc_calibration.h"
 #include "airspeed_calibration.h"
 #include "commander_error.h"
+#include "flight_time_check.hpp"
+
+static Flight_time_check g_flight_time_check;
 
 /* oddly, ERROR is not defined for c++ */
 #ifdef ERROR
@@ -542,6 +545,7 @@ bool handle_command(struct vehicle_status_s *status_local
 							if (main_ret != TRANSITION_DENIED && custom_sub_mode == 1) {
 								//Pass takeoff command to the loiter state
 								status_local->auto_takeoff_cmd = true;
+								airdog_state_transition(status_local, AIRD_STATE_PREFLIGHT_MOTOR_CHECK, mavlink_fd);
 							}
 						}
 
@@ -1246,6 +1250,8 @@ int commander_thread_main(int argc, char *argv[])
 
 	control_status_leds(&status, &armed, true);
 
+	g_flight_time_check.Boot_init();
+	
 	/* now initialized */
 	commander_initialized = true;
 	thread_running = true;
@@ -2111,6 +2117,10 @@ int commander_thread_main(int argc, char *argv[])
 			}
 			case AIRD_STATE_CHANGE:
             {
+                if ( status.airdog_state != AIRD_STATE_TAKING_OFF && commander_request.airdog_state == AIRD_STATE_TAKING_OFF ) {
+                    g_flight_time_check.Takeoff_init();
+                }
+                
                 airdog_state_transition(&status, commander_request.airdog_state, mavlink_fd);
                 //TODO: [INE]
                 //if airdog_state_transition != DENIED
@@ -2203,6 +2213,29 @@ int commander_thread_main(int argc, char *argv[])
 			}
 		}
 
+		if ( armed.armed && (control_mode.flag_control_auto_enabled || control_mode.flag_control_follow_target) ) {
+			commander_error_code check_error_code = COMMANDER_ERROR_OK;
+			
+			if ( status.airdog_state == AIRD_STATE_TAKING_OFF ) {
+				check_error_code = g_flight_time_check.Takeoff_check();
+			} else if ( status.airdog_state == AIRD_STATE_IN_AIR ) {
+				check_error_code = g_flight_time_check.Flight_check();
+			} else if ( status.airdog_state == AIRD_STATE_LANDING ) {
+				check_error_code = g_flight_time_check.Landing_check();
+			}
+			
+			if ( check_error_code != COMMANDER_ERROR_OK ) {
+				// if something went wrong ...
+				if ( check_error_code != PMC_ERROR ) {
+					// and it was not a "general error", but a specific check failed, then disarm ...
+					arm_disarm(false, mavlink_fd, "flight time check");
+					commander_set_error(check_error_code);
+				} else {
+					// if it was a general error, e.g. the checks failed to read uORBs or something like that
+					// probably we need to do something, but for now, let's just let things slide and not crash
+				}
+			}
+		}
 
 		/* handle commands last, as the system needs to be updated to handle them */
 		orb_check(cmd_sub, &updated);
@@ -2434,6 +2467,7 @@ int commander_thread_main(int argc, char *argv[])
 	close(param_changed_sub);
 	close(battery_sub);
 	close(mission_pub);
+	g_flight_time_check.Shutdown();
 
 	thread_running = false;
 
@@ -2875,18 +2909,32 @@ set_control_mode()
 
 	case NAVIGATION_STATE_AUTO_MISSION:
 	case NAVIGATION_STATE_LOITER:
-		control_mode.flag_control_manual_enabled = false;
-		control_mode.flag_control_auto_enabled = true;
-		control_mode.flag_control_rates_enabled = true;
-		control_mode.flag_control_attitude_enabled = true;
-		control_mode.flag_control_altitude_enabled = true;
-		control_mode.flag_control_climb_rate_enabled = true;
-		control_mode.flag_control_position_enabled = true;
-		control_mode.flag_control_velocity_enabled = true;
-		control_mode.flag_control_termination_enabled = false;
-		if (!_custom_flag_control_point_to_target) {
+		if (status.airdog_state == AIRD_STATE_PREFLIGHT_MOTOR_CHECK) {
+			control_mode.flag_control_manual_enabled = false;
+			control_mode.flag_control_auto_enabled = false;
+			control_mode.flag_control_rates_enabled = false;
+			control_mode.flag_control_attitude_enabled = false;
+			control_mode.flag_control_altitude_enabled = false;
+			control_mode.flag_control_climb_rate_enabled = false;
+			control_mode.flag_control_position_enabled = false;
+			control_mode.flag_control_velocity_enabled = false;
+			control_mode.flag_control_termination_enabled = false;
 			control_mode.flag_control_point_to_target = false;
+		} else {
+			control_mode.flag_control_manual_enabled = false;
+			control_mode.flag_control_auto_enabled = true;
+			control_mode.flag_control_rates_enabled = true;
+			control_mode.flag_control_attitude_enabled = true;
+			control_mode.flag_control_altitude_enabled = true;
+			control_mode.flag_control_climb_rate_enabled = true;
+			control_mode.flag_control_position_enabled = true;
+			control_mode.flag_control_velocity_enabled = true;
+			control_mode.flag_control_termination_enabled = false;
+			if (!_custom_flag_control_point_to_target) {
+				control_mode.flag_control_point_to_target = false;
+			}
 		}
+		break;
 	case NAVIGATION_STATE_RTL:
 	case NAVIGATION_STATE_AUTO_RTGS:
 	case NAVIGATION_STATE_AUTO_LANDENGFAIL:
