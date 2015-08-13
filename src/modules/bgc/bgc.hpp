@@ -2,9 +2,10 @@
 #define __BGCTST_BGC_HPP_INCLUDED__
 
 #include <uORB/topics/vehicle_status.h>
-#include <systemlib/param/param.h>
+#include <uORB/topics/frame_button.h>
+#include <utils/orb_subscriber_w_data.hpp>
+#include <utils/param_reader.hpp>
 #include "bgc_uart.hpp"
-#include "orb_subscriber.hpp"
 
 namespace BGC {
 
@@ -55,14 +56,14 @@ private:
     Poll_result Poll();
     
 private:
-    ORB_subscriber frame_button_subscriber;
-    ORB_subscriber vehicle_status_subscriber;
+    Utils::ORB_subscriber_w_data<ORB_ID(frame_button_state), frame_button_s>   frame_button_subscriber;
+    Utils::ORB_subscriber_w_data<ORB_ID(vehicle_status),     vehicle_status_s> vehicle_status_subscriber;
     BGC_uart bgc_uart;
     
     // The arming state we read on the previous vehicle status update event.
     arming_state_t prev_arming_state;
     
-    param_t param_arm_bgc_motors;
+    Utils::Param_reader<int32_t> arm_bgc_motors_param;
     
 private:
     static volatile bool s_thread_running;
