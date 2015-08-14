@@ -57,8 +57,8 @@ if mount -t vfat /dev/mmcsd0 /fs/microsd
 then
 	if [ $ENABLE_LOG_FILE = yes ]
 	then
-		set LOG_FILE /fs/microsd/bootlog.txt		
-		echo "-----------------------------------" >> $LOG_FILE		
+		set LOG_FILE /fs/microsd/bootlog.txt
+		echo "-----------------------------------" >> $LOG_FILE
 	fi
 	echo "[init] microSD mounted: /fs/microsd"
 	# Start playing the startup tune
