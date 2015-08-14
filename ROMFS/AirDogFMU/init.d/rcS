@@ -369,6 +369,20 @@ then
 	echo "Mavlink start OK" >> $LOG_FILE
 
 	#
+	# mobile
+	#
+
+	if [ $TELEM_TTY != /dev/ttyS2 ]
+	then
+		if mobile start /dev/ttyS2
+		then
+			echo "mobile OK" >> $LOG_FILE
+		else
+			echo "mobile failed" >> $LOG_FILE
+		fi
+	fi
+
+	#
 	# Sensors, Logging, GPS
 	#
 	sh /etc/init.d/rc.sensors
