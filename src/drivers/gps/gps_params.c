@@ -21,3 +21,57 @@ PARAM_DEFINE_INT32(GPS_UBX_INTERVAL, 0);
  * @group GPS
  */
 PARAM_DEFINE_INT32(GPS_UBX_DYNAMICS, -1);
+
+
+/**
+ * GPS min tracking channels
+ * -1 - use defaul
+ *
+ * @min 0
+ * @max 32
+ * @group GPS
+ */
+PARAM_DEFINE_INT32(UBX_GPS_MIN_CHN, -1);
+
+/**
+ * GPS max tracking channels
+ * -1 - use defaul
+ *
+ * @min 0
+ * @max 32
+ * @group GPS
+ */
+PARAM_DEFINE_INT32(UBX_GPS_MAX_CHN, -1);
+
+/**
+ * GPS enable GPS and QZSS
+ * 0 - disable GPS and QZSS
+ * 1 - enable GPS and
+ *
+ * @min 0
+ * @max 1
+ * @group GPS
+ */
+PARAM_DEFINE_INT32(UBX_ENABLE_GPS, 1);
+
+/**
+ * GPS enable SBAS
+ * 0 - disable SBAS
+ * 1 - enable SBAS
+ *
+ * @min 0
+ * @max 1
+ * @group GPS
+ */
+PARAM_DEFINE_INT32(UBX_ENABLE_SBAS, 1);
+
+/**
+ * GPS enable GLONASS
+ * 0 - disable GLONASS
+ * 1 - enable GLONASS
+ *
+ * @min 0
+ * @max 1
+ * @group GPS
+ */
+PARAM_DEFINE_INT32(UBX_ENABLE_GLONASS, 1);
