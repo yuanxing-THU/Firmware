@@ -39,4 +39,4 @@ PARAM_DEFINE_INT32(A_PMC_THRUST_PCT, 40);
 /**
  * Configure, in m/s^2, the maximum acceleration allowed on top of 1G, during a check. Limited to [PMC_VIBR_THRSH_MIN;PMC_VIBR_THRSH_MAX].
  */
-PARAM_DEFINE_FLOAT(A_PMC_VIBR_THRSH, 5.0f);
+PARAM_DEFINE_FLOAT(A_PMC_VIBR_THRSH, 1.0f);
