@@ -358,6 +358,9 @@ adc_init()
 #ifdef GPIO_VDD_ESC_EN
 	stm32_configgpio(GPIO_VDD_ESC_EN);
 #endif
+#ifdef GPIO_VDD_FORCE_POWER
+	stm32_configgpio(GPIO_VDD_FORCE_POWER);
+#endif
 #undef ADC1_N_X
 #undef ADC1_N
 }
