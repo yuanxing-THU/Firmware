@@ -47,6 +47,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <math.h>
+#include <board_config.h>
 
 
 #include <uORB/uORB.h>
@@ -261,6 +262,11 @@ arming_state_transition(struct vehicle_status_s *status,		///< current vehicle s
 		if (!feedback_provided) {
 			mavlink_log_critical(mavlink_fd, str, state_names[status->arming_state], state_names[new_arming_state]);
 		}
+	}
+	else if (ret == TRANSITION_CHANGED) {
+#ifdef GPIO_VDD_FORCE_POWER
+		stm32_gpiowrite(GPIO_VDD_FORCE_POWER, new_arming_state == ARMING_STATE_ARMED);
+#endif
 	}
 
 	return ret;
