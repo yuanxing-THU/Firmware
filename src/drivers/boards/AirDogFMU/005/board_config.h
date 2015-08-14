@@ -87,6 +87,8 @@ __BEGIN_DECLS
 #define GPIO_DEBUG_BTN		(GPIO_INPUT|GPIO_PULLUP|GPIO_PORTB|GPIO_PIN15)
 #define DEBUG_BTN_ACTIVE_LOW	1
 
+#define FC_BUTT_BGC (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTE|GPIO_PIN9)
+
 /* External interrupts */
 #define GPIO_EXTI_GYRO_DRDY	(GPIO_INPUT|GPIO_FLOAT|GPIO_EXTI|GPIO_PORTB|GPIO_PIN0)
 #define GPIO_EXTI_MAG_DRDY	(GPIO_INPUT|GPIO_FLOAT|GPIO_EXTI|GPIO_PORTB|GPIO_PIN1)
@@ -190,9 +192,6 @@ __BEGIN_DECLS
 #define PWMIN_TIMER		4
 #define PWMIN_TIMER_CHANNEL	2
 #define GPIO_PWM_IN		GPIO_TIM4_CH2IN_2
-
-/* Frame button state pin config */
-#define FC_BUTT_BGC (GPIO_INPUT|GPIO_PULLUP|GPIO_PORTE|GPIO_PIN9)
 
 /****************************************************************************************************
  * Public Types
