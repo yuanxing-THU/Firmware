@@ -2225,9 +2225,7 @@ int commander_thread_main(int argc, char *argv[])
 			}
 			
 			if ( check_error_code != COMMANDER_ERROR_OK ) {
-				// if something went wrong ...
 				if ( check_error_code != FTC_ERROR ) {
-					// and it was not a "general error", but a specific check failed, then disarm ...
 					commander_set_error(check_error_code);
 					arm_disarm(false, mavlink_fd, "flight time check");
 					if ( main_state_transition(&status, MAIN_STATE_AUTO_STANDBY, mavlink_fd) == TRANSITION_CHANGED ) {
