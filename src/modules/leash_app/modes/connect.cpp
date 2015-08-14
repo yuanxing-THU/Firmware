@@ -23,7 +23,8 @@ namespace modes
 
 ModeConnect::ModeConnect(State Current) : 
     forcing_pairing(false),
-    currentState(Current)
+    currentState(Current),
+    startTime(0)
 {
     if (Current == State::PAIRING)
     {
@@ -76,29 +77,29 @@ Base* ModeConnect::doEvent(int orbId)
     else
         getConState();
 
-    if (currentState == State::CONNECTING)
+    switch (currentState)
     {
-        DisplayHelper::showInfo(INFO_CONNECTING_TO_AIRDOG);
-    }
-    else if (currentState == State::CONNECTED)
-    {
-        currentState = State::CHECK_MAVLINK;
-        time(&startTime);
-    }
-    else if (currentState == State::DISCONNECTED)
-    {
-        DisplayHelper::showInfo(INFO_CONNECTION_LOST);
-    }
-    else if (currentState == State::NOT_PAIRED)
-    {
-        DisplayHelper::showInfo(INFO_NOT_PAIRED);
-    }
-    else if (currentState == State::PAIRING)
-    {
-        DisplayHelper::showInfo(INFO_PAIRING);
-    }
-    else {
-        DisplayHelper::showInfo(INFO_FAILED);
+        case State::CONNECTING:
+        case State::CHECK_MAVLINK:
+            if (startTime == 0)
+                time(&startTime);
+            DisplayHelper::showInfo(INFO_CONNECTING_TO_AIRDOG);
+            break;
+        case State::CONNECTED:
+            nextMode = new Acquiring_gps();
+            break;
+        case State::DISCONNECTED: 
+            DisplayHelper::showInfo(INFO_CONNECTION_LOST);
+            break;
+        case State::NOT_PAIRED:
+            DisplayHelper::showInfo(INFO_NOT_PAIRED);
+            break;
+        case State::PAIRING:
+            DisplayHelper::showInfo(INFO_PAIRING);
+            break;
+        default:
+            DisplayHelper::showInfo(INFO_FAILED);
+            break;
     }
 
     if (orbId == FD_KbdHandler)
@@ -118,12 +119,17 @@ Base* ModeConnect::doEvent(int orbId)
             {
                 case State::NOT_PAIRED:
                 case State::CONNECTING:
+                case State::CHECK_MAVLINK:
                 case State::UNKNOWN:
                     nextMode = new Menu();
                     break;
                 case State::PAIRING:
                     DOG_PRINT("[modes]{connection} stop pairing!\n");
                     BTPairing(false);
+                    break;
+                default:
+                    DOG_PRINT("[modes]{connection} menu button not handled for this state:%d\n"
+                            ,currentState);
                     break;
 
             }
@@ -151,10 +157,12 @@ Base* ModeConnect::doEvent(int orbId)
         }
         else
         {
-            // invalid mavlink version
+            // valid mavlink version
+            currentState = State::CONNECTED;
             nextMode = new Acquiring_gps();
         }
     }
+    DOG_PRINT("[modes]{connect} Current state %d\n", currentState);
 
     // Check if we are in service screen
     Base* service = checkServiceScreen(orbId);
@@ -186,10 +194,7 @@ void ModeConnect::getConState()
             currentState = State::PAIRING;
             break;
         case CONNECTED:
-            if (currentState != State::CHECK_MAVLINK)
-            {
-                currentState = State::CONNECTED;
-            }
+            currentState = State::CHECK_MAVLINK;
             break;
         default:
             currentState = State::UNKNOWN;
