@@ -3,8 +3,10 @@
 #ifdef ENABLE_DOG_DEBUG
 
 #ifdef __cplusplus
+# include <cerrno>
 # include <cstdio>
 #else
+# include <errno.h>
 # include <stdio.h>
 #endif
 
