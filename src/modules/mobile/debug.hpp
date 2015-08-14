@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cerrno>
+#include <cstring>
+
 #include <dog_debug.hpp>
 
 #define dbg(...) DOG_PRINT(__VA_ARGS__)
