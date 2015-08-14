@@ -196,6 +196,7 @@ class NSH:
 			else:
 				from glob import glob
 				port_list = glob("/dev/serial/by-id/usb-3D_Robotics*") #linux
+				port_list += glob("/dev/serial/by-id/usb-AirDog*") #linux
 				port_list += glob("/dev/tty.usbmodem*") #mac
 
 			for port in port_list:
