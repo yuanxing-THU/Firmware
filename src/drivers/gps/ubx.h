@@ -72,8 +72,10 @@
 #define UBX_ID_CFG_PRT		0x00
 #define UBX_ID_CFG_MSG		0x01
 #define UBX_ID_CFG_RATE		0x08
+#define UBX_ID_CFG_CFG		0x09
 #define UBX_ID_CFG_NAV5		0x24
 #define UBX_ID_CFG_SBAS		0x16
+#define UBX_ID_CFG_GNSS		0x3E
 #define UBX_ID_MON_VER		0x04
 #define UBX_ID_MON_HW		0x09
 
@@ -87,10 +89,12 @@
 #define UBX_MSG_ACK_NAK		((UBX_CLASS_ACK) | UBX_ID_ACK_NAK << 8)
 #define UBX_MSG_ACK_ACK		((UBX_CLASS_ACK) | UBX_ID_ACK_ACK << 8)
 #define UBX_MSG_CFG_PRT		((UBX_CLASS_CFG) | UBX_ID_CFG_PRT << 8)
+#define UBX_MSG_CFG_CFG		((UBX_CLASS_CFG) | UBX_ID_CFG_CFG << 8)
 #define UBX_MSG_CFG_MSG		((UBX_CLASS_CFG) | UBX_ID_CFG_MSG << 8)
 #define UBX_MSG_CFG_RATE	((UBX_CLASS_CFG) | UBX_ID_CFG_RATE << 8)
 #define UBX_MSG_CFG_NAV5	((UBX_CLASS_CFG) | UBX_ID_CFG_NAV5 << 8)
 #define UBX_MSG_CFG_SBAS	((UBX_CLASS_CFG) | UBX_ID_CFG_SBAS << 8)
+#define UBX_MSG_CFG_GNSS	((UBX_CLASS_CFG) | UBX_ID_CFG_GNSS << 8)
 #define UBX_MSG_MON_HW		((UBX_CLASS_MON) | UBX_ID_MON_HW << 8)
 #define UBX_MSG_MON_VER		((UBX_CLASS_MON) | UBX_ID_MON_VER << 8)
 
@@ -140,6 +144,16 @@
 #define UBX_TX_CFG_MSG_RATE1_1HZ	0x05		/**< {0x00, 0x05, 0x00, 0x00, 0x00, 0x00} the second entry is for UART1 */
 #define UBX_TX_CFG_MSG_RATE1_05HZ	10
 
+/* TX CFG-GNSS message contents */
+#define UBX_TX_CFG_GNSS_ID_GPS		0 		/**< GPS ID */
+#define UBX_TX_CFG_GNSS_ID_SBAS		1 		/**< SBAS ID */
+#define UBX_TX_CFG_GNSS_ID_BDS		3 		/**< BSD ID */
+#define UBX_TX_CFG_GNSS_ID_QZSS		5 		/**< QZSS ID */
+#define UBX_TX_CFG_GNSS_ID_GLONASS	6 		/**< GLONASS ID */
+
+#define UBX_TX_CFG_GNSS_SIG_CFG_MASK_GLONASS	(0x1 << 16) /**< Glonas mask for sigCfgMask*/
+#define UBX_TX_CFG_GNSS_SIG_CFG_MASK_ENABLE		0x1 /**< Enable bit for for sigCfgMask*/
+#define UBX_TX_CFG_CFG_MASK_NAV_CONF			0x8 /**< CFG-CFG mask bit for navConf*/
 
 /*** u-blox protocol binary message and payload definitions ***/
 #pragma pack(push, 1)
@@ -411,6 +425,30 @@ typedef struct {
 	uint8_t rate;
 } ubx_payload_tx_cfg_msg_t;
 
+
+/* Tx CFG-GNSS */
+typedef struct {
+	uint8_t gnssId;
+	uint8_t resTrkCh;
+	uint8_t maxTrkCh;
+	uint8_t reserved1;
+	uint32_t flags;
+} ubx_payload_tx_cfg_gnss_config_block_t;
+
+typedef struct {
+	uint8_t msgVer;
+	uint8_t numTrkChHw;
+	uint8_t numTrkChUse;
+	uint8_t numConfigBlocks;
+	ubx_payload_tx_cfg_gnss_config_block_t configBlocks[0];
+} ubx_payload_tx_cfg_gnss_t;
+
+typedef struct {
+	uint32_t clearMask;
+	uint32_t saveMask;
+	uint32_t loadMask;
+} ubx_payload_tx_cfg_cfg_t;
+
 /* General message and payload buffer union */
 typedef union {
 	ubx_payload_rx_nav_pvt_t		payload_rx_nav_pvt;
@@ -474,7 +512,7 @@ public:
 	~UBX();
 	int			receive(const unsigned timeout);
 	int			configure(unsigned &baudrate);
-
+	int			configureGps();
 private:
 
 	/**
@@ -552,6 +590,8 @@ private:
 	hrt_abstime		_disable_cmd_last;
 	uint16_t		_ack_waiting_msg;
 	ubx_buf_t		_buf;
+	uint8_t			_cfgGnss[44]; // size for gnss with 5 configuration blocks
+	uint16_t		_cfgGnssLength;
 	uint32_t		_ubx_version;
 	bool			_use_nav_pvt;
 };

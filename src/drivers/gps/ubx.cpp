@@ -263,11 +263,171 @@ UBX::configure(unsigned &baudrate)
 		return 1;
 	}
 
+	configureGps();
+
 	/* request module version information by sending an empty MON-VER message */
 	send_message(UBX_MSG_MON_VER, nullptr, 0);
+	// receive version
+	if (receive(UBX_CONFIG_TIMEOUT) <= 0)
+	{
+		UBX_WARN("Failed to receive MON_VER\n");
+		return 1;
+	}
 
 	_configured = true;
 	return 0;
+}
+
+int	UBX::configureGps()
+{
+	bool ok = true;
+	int ret = 0;
+
+	uint32_t enable_gps_qzss = 0;
+	uint32_t enable_sbas = 0;
+	uint32_t enable_glonass = 0;
+	uint32_t gps_min_channels = -1;
+	uint32_t gps_max_channels = -1;
+	ubx_payload_tx_cfg_gnss_t *cfgGnss = nullptr;
+
+	param_get(param_find("GPS_UBX_ENABLE_GPS_QZSS"), &enable_gps_qzss);
+	param_get(param_find("GPS_UBX_ENABLE_SBAS"), &enable_sbas);
+	param_get(param_find("GPS_UBX_ENABLE_GLONASS"), &enable_glonass);
+	param_get(param_find("GPS_UBX_GPS_MIN_CHANNELS"), &gps_min_channels);
+	param_get(param_find("GPS_UBX_GPS_MAX_CHANNELS"), &gps_max_channels);
+
+	// get current GNSS configuration
+	if (ok)
+	{
+		_cfgGnssLength = 0;
+		send_message(UBX_MSG_CFG_GNSS, nullptr, 0);
+
+		int ret = receive(UBX_CONFIG_TIMEOUT);
+		if (ret <= 0)
+		{
+			UBX_WARN("Failed to receive CFG-GNSS. Error %d\n", ret);
+			ok = false;
+		}
+
+		if (_cfgGnssLength == 0)
+		{
+			UBX_WARN("Reply received, but not CFG-GNSS");
+			ok = false;
+		}
+	}
+
+	if (ok)
+	{
+		cfgGnss = (ubx_payload_tx_cfg_gnss_t*)_cfgGnss;
+		// set enable/disable flag
+		for (int i = 0; i < cfgGnss->numConfigBlocks; i++)
+		{
+			switch (cfgGnss->configBlocks[i].gnssId)
+			{
+				case UBX_TX_CFG_GNSS_ID_GPS:
+					cfgGnss->configBlocks[i].flags = enable_gps_qzss;
+
+					if (gps_min_channels != -1)
+					{
+						cfgGnss->configBlocks[i].resTrkCh = gps_min_channels;
+					}
+
+					if (gps_max_channels != -1)
+					{
+						cfgGnss->configBlocks[i].maxTrkCh = gps_max_channels;
+					}
+					break;
+
+				case UBX_TX_CFG_GNSS_ID_SBAS:
+					cfgGnss->configBlocks[i].flags = enable_sbas;
+					break;
+
+				case UBX_TX_CFG_GNSS_ID_BDS:
+					break;
+
+				case UBX_TX_CFG_GNSS_ID_QZSS:
+					cfgGnss->configBlocks[i].flags = enable_gps_qzss;
+					break;
+
+				case UBX_TX_CFG_GNSS_ID_GLONASS:
+					cfgGnss->configBlocks[i].flags = enable_glonass;
+					break;
+
+				default:
+					UBX_WARN("Unknown gnssId in CFG-GNSS");
+			}
+		}
+
+		// set new configuration
+		cfgGnss->numTrkChUse = 32;
+
+		const uint16_t length = sizeof(ubx_payload_tx_cfg_gnss_t) +
+			cfgGnss->numConfigBlocks * sizeof(ubx_payload_tx_cfg_gnss_config_block_t);
+
+		uint8_t payload[length];
+
+		memcpy(payload, _cfgGnss, length);
+
+		send_message(UBX_MSG_CFG_GNSS, (uint8_t*)payload, length);
+
+		if (wait_for_ack(UBX_MSG_CFG_GNSS, UBX_CONFIG_TIMEOUT, true) < 0) {
+			UBX_WARN("CFG-GNSS failed");
+			ok = false;
+		}
+
+	}
+
+	// get current GNSS configuration
+	send_message(UBX_MSG_CFG_GNSS, nullptr, 0);
+
+	ret = receive(UBX_CONFIG_TIMEOUT);
+	if (ret <= 0)
+	{
+		UBX_WARN("Failed to receive CFG-GNSS. Error %d\n", ret);
+		return 1;
+	}
+
+	cfgGnss = (ubx_payload_tx_cfg_gnss_t*)_cfgGnss;
+
+	for (int i = 0; i < cfgGnss->numConfigBlocks; i++)
+	{
+		char enableBit = cfgGnss->configBlocks[i].flags & UBX_TX_CFG_GNSS_SIG_CFG_MASK_ENABLE;
+
+		switch (cfgGnss->configBlocks[i].gnssId)
+		{
+			case UBX_TX_CFG_GNSS_ID_GPS:
+				UBX_WARN("GPS enabled %d %d %d", enableBit,
+						 cfgGnss->configBlocks[i].resTrkCh,
+						 cfgGnss->configBlocks[i].maxTrkCh);
+				break;
+
+			case UBX_TX_CFG_GNSS_ID_SBAS:
+				UBX_WARN("SBAS enabled %d", enableBit);
+				break;
+
+			case UBX_TX_CFG_GNSS_ID_BDS:
+				UBX_WARN("BDS enabled %d", enableBit);
+				break;
+
+			case UBX_TX_CFG_GNSS_ID_QZSS:
+				UBX_WARN("QZSS enabled %d", enableBit);
+				break;
+
+			case UBX_TX_CFG_GNSS_ID_GLONASS:
+				UBX_WARN("GLONASS enabled %d", enableBit);
+				break;
+		}
+	}
+
+	if (ok)
+	{
+		UBX_WARN("Gps configuration ok");
+	}
+	else
+	{
+		UBX_WARN("Gps configuration failed");
+	}
+
 }
 
 int	// -1 = NAK, error or timeout, 0 = ACK
@@ -437,6 +597,16 @@ UBX::parse_char(const uint8_t b)
 		case UBX_MSG_MON_VER:
 			ret = payload_rx_add_mon_ver(b);	// add a MON-VER payload byte
 			break;
+
+		case UBX_MSG_CFG_GNSS:
+			ret = payload_rx_add(b);
+			if (ret == 1) {
+				// payload received. Save gnss configuration
+				_cfgGnssLength = _rx_payload_length;
+				memcpy(_cfgGnss, _buf.raw, _rx_payload_length);
+			}
+			break;
+
 		default:
 			ret = payload_rx_add(b);		// add a payload byte
 			break;
@@ -569,6 +739,13 @@ UBX::payload_rx_init()
 			_rx_state = UBX_RXMSG_ERROR_LENGTH;
 		else if (_configured)
 			_rx_state = UBX_RXMSG_IGNORE;	// ignore if _configured
+		break;
+
+	case UBX_MSG_CFG_GNSS:
+		if ((_rx_payload_length - sizeof(ubx_payload_tx_cfg_gnss_t)) % sizeof(ubx_payload_tx_cfg_gnss_config_block_t) != 0)
+		{
+			_rx_state = UBX_RXMSG_ERROR_LENGTH;
+		}
 		break;
 
 	default:
@@ -992,6 +1169,7 @@ UBX::send_message(const uint16_t msg, const uint8_t *payload, const uint16_t len
 		calc_checksum(payload, length, &checksum);
 
 	// Send message
+
 	write(_fd, (const void *)&header, sizeof(header));
 	if (payload != nullptr)
 		write(_fd, (const void *)payload, length);
