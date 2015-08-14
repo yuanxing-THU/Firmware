@@ -443,6 +443,9 @@ void Main::decide_command(MainStates mainState)
     else if (key_ShortPressed(BTN_TO_ME))
         sendAirDogCommnad(VEHICLE_CMD_NAV_REMOTE_CMD
                 , REMOTE_CMD_COME_TO_ME
+                ,0
+                ,0
+                ,0
                 , dm->leashGlobalPos.lat
                 , dm->leashGlobalPos.lon);
 
