@@ -225,7 +225,8 @@ static struct spi_dev_s *spi1;
 static struct spi_dev_s *spi4;
 static struct sdio_dev_s *sdio;
 
-static void adc_init();
+static inline void adc_init();
+static inline void bl600_init();
 
 __EXPORT int nsh_archinitialize(void)
 {
@@ -233,6 +234,7 @@ __EXPORT int nsh_archinitialize(void)
 	stm32_configgpio(GPIO_DEBUG_BTN);
 
 	adc_init();
+	bl600_init();
 
 	/* configure the high-resolution time/callout interface */
 	hrt_init();
@@ -336,7 +338,7 @@ __EXPORT int nsh_archinitialize(void)
 	return OK;
 }
 
-static void
+void
 adc_init()
 {
 #define ADC1_N_X(channel) (GPIO_ADC1_IN ## channel)
@@ -363,4 +365,18 @@ adc_init()
 #endif
 #undef ADC1_N_X
 #undef ADC1_N
+}
+
+void
+bl600_init()
+{
+	stm32_configgpio(GPIO_BL600_RESET);
+	stm32_configgpio(GPIO_BL600_SWDCLK);
+	stm32_configgpio(GPIO_BL600_SIO_06);
+	stm32_configgpio(GPIO_BL600_SIO_07);
+#ifdef GPIO_BL600_SIO_25
+	stm32_configgpio(GPIO_BL600_SIO_25);
+#endif
+	stm32_configgpio(GPIO_BL600_SIO_28);
+	stm32_configgpio(GPIO_BL600_SIO_29);
 }
