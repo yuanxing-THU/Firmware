@@ -114,7 +114,6 @@ static void event_printer( press_type press) {
             DOG_PRINT("[frame button] event TRIPLE_CLICK\n");
             break;
     }
-    fflush(stderr);
 }
 
 
