@@ -2,18 +2,11 @@
 
 #ifdef ENABLE_DOG_DEBUG
 
-#ifdef __cplusplus
-# include <cerrno>
-# include <cstdio>
-#else
-# include <errno.h>
-# include <stdio.h>
-#endif
+#include <syslog.h>
 
 #define DOG_PRINT(...) do {                              \
 		const int save_errno = errno;            \
-		fprintf(stderr, __VA_ARGS__);            \
-		fflush(stderr);                          \
+		syslog(__VA_ARGS__);            \
 		errno = save_errno;			 \
 	} while (0)
 
