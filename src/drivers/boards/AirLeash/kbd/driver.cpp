@@ -11,6 +11,8 @@
 #include <drivers/drv_airleash_kbd.h>
 #include <drivers/drv_hrt.h>
 
+#include <syslog.h>
+
 #include "bounce_filter.hpp"
 #include "buffer.hpp"
 #include "config_helper.hpp"
@@ -18,7 +20,7 @@
 #include "state.hpp"
 #include "stm32_helper.hpp"
 
-#define message(...)	printf(__VA_ARGS__)
+#define message(...)	syslog(__VA_ARGS__)
 
 namespace airleash_kbd {
 

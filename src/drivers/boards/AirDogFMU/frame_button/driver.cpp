@@ -24,8 +24,6 @@ extern "C" __EXPORT int main(int argc, const char *argv[]);
 #include "stm32_helper.hpp"
 #include "button_state.hpp"
 
-#define message(...)	printf(__VA_ARGS__)
-
 namespace frame_kbd {
 
 
@@ -114,7 +112,6 @@ static void event_printer( press_type press) {
             DOG_PRINT("[frame button] event TRIPLE_CLICK\n");
             break;
     }
-    fflush(stderr);
 }
 
 
