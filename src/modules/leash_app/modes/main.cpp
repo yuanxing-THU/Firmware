@@ -95,7 +95,7 @@ Base* Main::processTakeoff(int orbId)
     {
         if (local_timer + command_responce_time < hrt_absolute_time() )
         {
-            if(dm->airdog_status.state_aird < AIRD_STATE_TAKING_OFF)
+            if(dm->airdog_status.state_aird < AIRD_STATE_PREFLIGHT_MOTOR_CHECK)
             {
                 baseCondition.main = GROUNDED;
                 baseCondition.sub = TAKEOFF_FAILED;
@@ -119,7 +119,7 @@ Base* Main::processTakeoff(int orbId)
         {
             if (baseCondition.sub == CONFIRM_TAKEOFF)
             {
-                if (dm->airdog_status.state_aird < AIRD_STATE_TAKING_OFF)
+                if (dm->airdog_status.state_aird < AIRD_STATE_PREFLIGHT_MOTOR_CHECK)
                 {
                     baseCondition.sub = TAKEOFF_CONFIRMED;
                 }
@@ -403,7 +403,7 @@ Base* Main::processLandRTL(int orbId)
             displayInfo.airdog_mode = AIRDOGMODE_PAUSE;
             baseCondition.sub = LANDING;
         }
-        else if (dm->airdog_status.state_aird < AIRD_STATE_TAKING_OFF)
+        else if (dm->airdog_status.state_aird < AIRD_STATE_PREFLIGHT_MOTOR_CHECK)
         {
             baseCondition.main = GROUNDED;
             baseCondition.sub = NONE;
@@ -431,10 +431,12 @@ void Main::decide_command(MainStates mainState)
 {
     DataManager *dm = DataManager::instance();
 
-    if (key_ShortPressed(BTN_LEFT))
+    if (key_ShortPressed(BTN_LEFT)
+        || key_RepeatedPressed(BTN_LEFT))
         sendAirDogCommnad(VEHICLE_CMD_NAV_REMOTE_CMD, REMOTE_CMD_LEFT);
 
-    else if (key_ShortPressed(BTN_RIGHT))
+    else if (key_ShortPressed(BTN_RIGHT)
+            || key_RepeatedPressed(BTN_RIGHT))
         sendAirDogCommnad(VEHICLE_CMD_NAV_REMOTE_CMD, REMOTE_CMD_RIGHT);
 
     else if (key_ShortPressed(BTN_PLAY))
@@ -455,7 +457,8 @@ void Main::decide_command(MainStates mainState)
     else if (key_LongPressed(BTN_TO_H))
         send_rtl_command(dm->airdog_status);
 
-    else if (key_ShortPressed(BTN_UP))
+    else if (key_ShortPressed(BTN_UP)
+            || key_RepeatedPressed(BTN_UP))
     {
         switch(mainState)
         {
@@ -470,7 +473,8 @@ void Main::decide_command(MainStates mainState)
                 break;
         }
     }
-    else if (key_ShortPressed(BTN_DOWN))
+    else if (key_ShortPressed(BTN_DOWN)
+            || key_RepeatedPressed(BTN_DOWN))
     {
         switch(mainState)
         {
