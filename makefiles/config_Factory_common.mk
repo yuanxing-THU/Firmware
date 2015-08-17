@@ -3,6 +3,7 @@ ROMFS_ROOT ?= $(PX4_BASE)/ROMFS/factory/0/
 #
 # Factory modules
 #
+MODULES += modules/i2c_exchange
 
 #
 # Minimal required module set
