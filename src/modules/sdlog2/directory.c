@@ -189,7 +189,7 @@ sdlog2_dir_remove_oldest(const char root[])
 uint32_t
 sdlog2_dir_find_closest_number_lt(char full_path[/*PATH_MAX*/], uint32_t limit, const char root[])
 {
-    uint32_t r = limit;
+    uint32_t r = 0;
     DIR *dir;
     struct dirent *entry;
 
