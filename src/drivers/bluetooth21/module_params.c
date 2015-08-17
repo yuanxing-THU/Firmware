@@ -42,4 +42,4 @@ PARAM_DEFINE_INT32(A_BT_CONNECT_TO, -1 );
  * 1 -- User mode. (Real user expierence. Pairing is required.)
  *
  */
-PARAM_DEFINE_INT32(A_BT_SVC_MODE, 0 );
+PARAM_DEFINE_INT32(A_BT_SVC_MODE, 1 );

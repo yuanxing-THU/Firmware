@@ -266,7 +266,7 @@ PARAM_DEFINE_FLOAT(INAV_LAND_THR, 0.2f);
  * @unit s
  * @group Position Estimator INAV
  */
-PARAM_DEFINE_FLOAT(INAV_DELAY_GPS, 0.2f);
+PARAM_DEFINE_FLOAT(INAV_DELAY_GPS, 0.056f);
 
 /**
  * Disable vision input
