@@ -290,11 +290,11 @@ int	UBX::configureGps()
 	uint32_t gps_max_channels = -1;
 	ubx_payload_tx_cfg_gnss_t *cfgGnss = nullptr;
 
-	param_get(param_find("GPS_UBX_ENABLE_GPS_QZSS"), &enable_gps_qzss);
-	param_get(param_find("GPS_UBX_ENABLE_SBAS"), &enable_sbas);
-	param_get(param_find("GPS_UBX_ENABLE_GLONASS"), &enable_glonass);
-	param_get(param_find("GPS_UBX_GPS_MIN_CHANNELS"), &gps_min_channels);
-	param_get(param_find("GPS_UBX_GPS_MAX_CHANNELS"), &gps_max_channels);
+	param_get(param_find("UBX_ENABLE_GPS"), &enable_gps_qzss);
+	param_get(param_find("UBX_ENABLE_SBAS"), &enable_sbas);
+	param_get(param_find("UBX_ENABLE_GLONASS"), &enable_glonass);
+	param_get(param_find("UBX_GPS_MIN_CHN"), &gps_min_channels);
+	param_get(param_find("UBX_GPS_MAX_CHN"), &gps_max_channels);
 
 	// get current GNSS configuration
 	if (ok)
