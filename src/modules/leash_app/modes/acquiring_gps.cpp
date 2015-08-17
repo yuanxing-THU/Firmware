@@ -77,7 +77,7 @@ Base* Acquiring_gps::doEvent(int orbId)
             leash_has_home = true;
         }
     }
-    else if (orbId == FD_DroneRowGPS)
+    else if (orbId == FD_DroneLocalPos)
     {
         drone_has_gps = drone_status(dm);
         // Since we are subscribing to TargetGlobalPos topic - it is not 0 only if we have home already
