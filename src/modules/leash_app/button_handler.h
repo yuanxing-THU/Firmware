@@ -18,3 +18,4 @@
 bool key_pressed(int key_mask);
 bool key_ShortPressed(int key_mask);
 bool key_LongPressed(int key_mask);
+bool key_RepeatedPressed(int key_mask);

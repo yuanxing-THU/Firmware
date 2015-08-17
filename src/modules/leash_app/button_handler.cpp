@@ -31,3 +31,14 @@ key_LongPressed(int key_mask) {
     }
     return false;
 };
+
+bool
+key_RepeatedPressed(int key_mask) {
+    DataManager *dm = DataManager::instance();
+    if (dm->kbd_handler.buttons == key_mask) {
+        DOG_PRINT("[button_handler] Key %d event %d\n", dm->kbd_handler.buttons, dm->kbd_handler.event);
+        if (dm->kbd_handler.event == 2)
+            return true;
+    }
+    return false;
+};
