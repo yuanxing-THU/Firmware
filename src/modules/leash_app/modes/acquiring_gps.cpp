@@ -18,11 +18,10 @@ namespace modes
 bool drone_status(DataManager *dm);
 
 Acquiring_gps::Acquiring_gps()
-    //:drone_has_gps(false)
-    :drone_has_gps(true)
-    ,drone_has_home(true)
-    ,leash_has_gps(false)
-    ,leash_has_home(false)
+    :drone_has_gps(false),
+    drone_has_home(false),
+    leash_has_gps(false),
+    leash_has_home(false)
 {
     DisplayHelper::showInfo(INFO_ACQUIRING_GPS_LEASH, 0);
 }
@@ -37,7 +36,7 @@ void Acquiring_gps::listenForEvents(bool awaitMask[])
     awaitMask[FD_KbdHandler] = 1;
     awaitMask[FD_LocalPos] = 1;
     awaitMask[FD_VehicleStatus] = 1;
-    awaitMask[FD_DroneRowGPS] = 1;
+    awaitMask[FD_DroneLocalPos] = 1;
 }
 
 Base* Acquiring_gps::doEvent(int orbId)
@@ -46,9 +45,9 @@ Base* Acquiring_gps::doEvent(int orbId)
     Base *nextMode = nullptr;
 
     if (drone_has_gps 
-            && drone_has_home
-            && leash_has_home 
-            && leash_has_gps)
+        && drone_has_home
+        && leash_has_home 
+        && leash_has_gps)
     {
         nextMode = new Main();
     }
@@ -78,9 +77,11 @@ Base* Acquiring_gps::doEvent(int orbId)
             leash_has_home = true;
         }
     }
-    else if (orbId == FD_DroneRowGPS)
+    else if (orbId == FD_DroneLocalPos)
     {
         drone_has_gps = drone_status(dm);
+        // Since we are subscribing to TargetGlobalPos topic - it is not 0 only if we have home already
+        drone_has_home = drone_has_gps;
     }
 
     // Check if we are in service screen
@@ -94,11 +95,11 @@ Base* Acquiring_gps::doEvent(int orbId)
 bool drone_status(DataManager *dm)
 {
     bool result = false;
-    float eph = dm->droneRawGPS.eph;
-    float epv = dm->droneRawGPS.epv;
-    int sats  = dm->droneRawGPS.satellites_visible;
+    float eph = dm->droneLocalPos.eph;
+    float epv = dm->droneLocalPos.epv;
 
-    if (eph < max_eph_epv * 0.7f && epv < max_eph_epv * 0.7f && sats >= 3) {
+    // Since we are subscribing to TargetGlobalPos topic - it is not 0 only if we have home already
+    if (eph != 0.0f && epv != 0.0f){
         result = true;
     }
     return result;
