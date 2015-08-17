@@ -3,6 +3,7 @@
 #ifdef ENABLE_DOG_DEBUG
 
 #include <syslog.h>
+#include <cerrno>
 
 #define DOG_PRINT(...) do {                              \
 		const int save_errno = errno;            \
