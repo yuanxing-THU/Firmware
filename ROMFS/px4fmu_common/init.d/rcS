@@ -669,6 +669,14 @@ then
 		echo "[init] No addons script: $EXTRAS_FILE"
 	fi
 
+	if param compare SYS_ACT 1
+	then
+		echo "Dron is activated"
+	else
+		echo "Dron is not activated"
+		commander error 1
+	fi
+
 	if [ $EXIT_ON_END == yes ]
 	then
 		echo "[init] Exit from nsh"
