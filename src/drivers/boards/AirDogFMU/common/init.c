@@ -188,6 +188,9 @@ static void driverless_pins_initialize()
 #ifdef GPIO_VDD_PERIPHERY_EN
 	stm32_configgpio(GPIO_VDD_PERIPHERY_EN);
 #endif
+#ifdef GPIO_SENS_HEAT_EN
+	stm32_configgpio(GPIO_SENS_HEAT_EN);
+#endif
 }
 
 /************************************************************************************
