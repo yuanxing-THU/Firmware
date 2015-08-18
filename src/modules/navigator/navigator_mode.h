@@ -100,7 +100,7 @@ public:
 
 	void set_camera_mode(camera_mode_t camera_mode, bool force_change = false);
 
-	inline void updateParameters();
+	void updateParameters();
 	void updateParamValues();
 	void updateParamHandles();
 
