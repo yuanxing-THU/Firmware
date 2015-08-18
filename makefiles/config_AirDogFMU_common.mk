@@ -1,5 +1,5 @@
 #
-# Makefile for the px4fmu_default configuration
+# Common configuration for all AirDog FMU revisions.
 #
 
 #
