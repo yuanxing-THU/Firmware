@@ -27,6 +27,16 @@ PARAM_DEFINE_INT32(A_FTC_TALT_MS, 5000);
 PARAM_DEFINE_INT32(A_FTC_FTILT_DEG, 110);
 
 /**
+ * Configure, in degrees, the "low" tilt threshold during flight. Limited to [FTC_FLTILT_DEG_MIN;FTC_FLTILT_DEG_MAX].
+ */
+PARAM_DEFINE_INT32(A_FTC_FLTILT_DEG, 50);
+
+/**
+ * Configure, in milliseconds, the "low" tilt timeout during flight. Limited to [FTC_FLTILT_MS_MIN;FTC_FLTILT_MS_MAX].
+ */
+PARAM_DEFINE_INT32(A_FTC_FLTILT_MS, 3000);
+
+/**
  * Configure, in degrees, the maximum tilt allowed during landing. Limited to [FTC_LTILT_DEG_MIN;FTC_LTILT_DEG_MAX].
  */
 PARAM_DEFINE_INT32(A_FTC_LTILT_DEG, 55);
