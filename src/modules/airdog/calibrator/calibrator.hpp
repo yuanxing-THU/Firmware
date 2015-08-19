@@ -58,4 +58,6 @@ __EXPORT bool calibrate_accelerometer(int mavlink_fd=0);
  * @return true if the copter is still, false - if copter is moving or accel fails self-test
  */
 __EXPORT bool check_resting_state(unsigned int timeout, unsigned int minimal_time = 0, int mavlink_fd = 0, float threshold = 0.1f);
+
+__EXPORT bool calibrate_level();
 } // End calibration namespace

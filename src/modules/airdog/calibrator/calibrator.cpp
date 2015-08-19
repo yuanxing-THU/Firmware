@@ -24,6 +24,7 @@
 #include "calibration_commons.hpp"
 #include "accel_calibration.hpp"
 #include "gyro_calibration.hpp"
+#include "level_calibration.hpp"
 #include "mag_calibration.hpp"
 
 #include <uORB/uORB.h>
@@ -358,6 +359,18 @@ __EXPORT bool calibrate_accelerometer(int mavlink_fd) {
 	}
 }
 
+__EXPORT bool calibrate_level() {
+	if (!check_resting_state(3000, 800, 0, 0.2f)) {
+		warnx("Vehicle is not standing still! Check accelerometer calibration!");
+		return false;
+	}
+	warnx("Starting level calibration!");
+	CALIBRATION_RESULT res;
+	res = do_calibrate_level();
+	print_results(res, "level", 0, 0);
+	return (res == CALIBRATION_RESULT::SUCCESS);
+}
+
 // TODO! Get rid of copy-paste with optional mavlink reporting
 __EXPORT bool check_resting_state(unsigned int timeout, unsigned int minimal_time, int mavlink_fd, float threshold) {
 	int fd = open(ACCEL_DEVICE_PATH, O_RDONLY);
@@ -656,6 +669,14 @@ extern "C" __EXPORT int calibrator_main(int argc, char ** argv)
 		}
 		else {
 			printf("No!\n");
+		}
+	}
+	else if (strcmp(sensname,"level") == 0) {
+		if (calibrate_level()) {
+			printf("Done!\n");
+		}
+		else {
+			printf("Fail!\n");
 		}
 	}
 	else {
