@@ -12,6 +12,8 @@ Flight_time_check::Flight_time_check()
     , takeoff_alt_m_param()
     , takeoff_alt_ms_param()
     , flight_tilt_deg_param()
+    , flight_low_tilt_deg_param()
+    , flight_low_tilt_ms_param()
     , landing_tilt_deg_param()
     , attitude_orb()
     , local_pos_orb()
@@ -24,6 +26,9 @@ Flight_time_check::Flight_time_check()
     , takeoff_start_time_ms(0)
     , takeoff_max_seen_z_diff(0.0f)
     , flight_tilt_min_cos(2.0f)
+    , flight_low_tilt_min_cos(2.0f)
+    , flight_low_tilt_timeout_ms(0)
+    , flight_low_tilt_exceeded_start_time_ms(0)
     , landing_tilt_min_cos(2.0f)
 { }
 
@@ -31,14 +36,16 @@ commander_error_code Flight_time_check::Boot_init() {
     boot_init_complete = false;
     do_checks_enabled = false;
     
-    if ( !do_param.Open("A_FTC_DO")                      ) return FTC_ERROR;
-    if ( !takeoff_tilt_deg_param.Open("A_FTC_TTILT_DEG") ) return FTC_ERROR;
-    if ( !takeoff_alt_m_param.Open("A_FTC_TALT_M")       ) return FTC_ERROR;
-    if ( !takeoff_alt_ms_param.Open("A_FTC_TALT_MS")     ) return FTC_ERROR;
-    if ( !flight_tilt_deg_param.Open("A_FTC_FTILT_DEG")  ) return FTC_ERROR;
-    if ( !landing_tilt_deg_param.Open("A_FTC_LTILT_DEG") ) return FTC_ERROR;
-    if ( !attitude_orb.Open()                            ) return FTC_ERROR;
-    if ( !local_pos_orb.Open()                           ) return FTC_ERROR;
+    if ( !do_param.Open("A_FTC_DO")                          ) return FTC_ERROR;
+    if ( !takeoff_tilt_deg_param.Open("A_FTC_TTILT_DEG")     ) return FTC_ERROR;
+    if ( !takeoff_alt_m_param.Open("A_FTC_TALT_M")           ) return FTC_ERROR;
+    if ( !takeoff_alt_ms_param.Open("A_FTC_TALT_MS")         ) return FTC_ERROR;
+    if ( !flight_tilt_deg_param.Open("A_FTC_FTILT_DEG")      ) return FTC_ERROR;
+    if ( !flight_low_tilt_deg_param.Open("A_FTC_FLTILT_DEG") ) return FTC_ERROR;
+    if ( !flight_low_tilt_ms_param.Open("A_FTC_FLTILT_MS")   ) return FTC_ERROR;
+    if ( !landing_tilt_deg_param.Open("A_FTC_LTILT_DEG")     ) return FTC_ERROR;
+    if ( !attitude_orb.Open()                                ) return FTC_ERROR;
+    if ( !local_pos_orb.Open()                               ) return FTC_ERROR;
     
     boot_init_complete = true;
     
@@ -87,6 +94,16 @@ commander_error_code Flight_time_check::Takeoff_init() {
     }
     
     {
+        int32_t flight_low_tilt_deg = 0;
+        if ( !Utils::Get_param(flight_low_tilt_deg, flight_low_tilt_deg_param, FTC_FLTILT_DEG_MIN, FTC_FLTILT_DEG_MAX) ) return FTC_ERROR;
+        const float flight_low_tilt_max_rad = math::radians(float(flight_low_tilt_deg));
+        flight_low_tilt_min_cos             = cos(flight_low_tilt_max_rad);
+    }
+    
+    if ( !Utils::Get_param(flight_low_tilt_timeout_ms, flight_low_tilt_ms_param, FTC_FLTILT_MS_MIN, FTC_FLTILT_MS_MAX) ) return FTC_ERROR;
+    flight_low_tilt_exceeded_start_time_ms = 0;
+    
+    {
         int32_t landing_tilt_deg = 0;
         if ( !Utils::Get_param(landing_tilt_deg, landing_tilt_deg_param, FTC_LTILT_DEG_MIN, FTC_LTILT_DEG_MAX) ) return FTC_ERROR;
         const float landing_tilt_max_rad = math::radians(float(landing_tilt_deg));
@@ -127,6 +144,23 @@ commander_error_code Flight_time_check::Takeoff_check() const {
 
 commander_error_code Flight_time_check::Flight_check() const {
     if ( !do_checks_enabled ) return COMMANDER_ERROR_OK;
+    
+    const commander_error_code low_tilt_error_code = Verify_tilt_not_exceeded(flight_low_tilt_min_cos, FTC_ERROR_FLIGHT_TOO_MUCH_TILT);
+    if ( low_tilt_error_code == FTC_ERROR_FLIGHT_TOO_MUCH_TILT ) {
+        const uint64_t now_time_ms = hrt_absolute_time() / 1000;
+        if ( flight_low_tilt_exceeded_start_time_ms == 0 ) {
+            flight_low_tilt_exceeded_start_time_ms = now_time_ms;
+        } else {
+            if ( now_time_ms - flight_low_tilt_exceeded_start_time_ms > flight_low_tilt_timeout_ms ) {
+                return FTC_ERROR_FLIGHT_TOO_MUCH_TILT;
+            }
+        }
+    } else if ( low_tilt_error_code == COMMANDER_ERROR_OK ) {
+        flight_low_tilt_exceeded_start_time_ms = 0;
+    } else {
+        return low_tilt_error_code;
+    }
+    
     return Verify_tilt_not_exceeded(flight_tilt_min_cos, FTC_ERROR_FLIGHT_TOO_MUCH_TILT);
 }
 
@@ -136,19 +170,20 @@ commander_error_code Flight_time_check::Landing_check() const {
 }
 
 commander_error_code Flight_time_check::Verify_tilt_not_exceeded(const float tilt_min_cos, commander_error_code error_code) const {
-    bool  attitude_updated = false;
-    if ( !attitude_orb.Check(&attitude_updated, false) ) return FTC_ERROR;
+    bool attitude_updated = false;
     
+    if ( !attitude_orb.Check(&attitude_updated, false) ) return FTC_ERROR;
     if ( attitude_updated ) {
-        if ( !attitude_orb.Read()         ) return FTC_ERROR;
-        if ( !attitude_orb.Data().R_valid ) return FTC_ERROR;
-        
-        const math::Vector<3> up_vector(0.0f, 0.0f, 1.0f);
-        const math::Matrix<3,3> drone_to_world_matrix(attitude_orb.Data().R);
-        const math::Vector<3> current_up_vector = drone_to_world_matrix * up_vector;
-        const float current_tilt_cos = current_up_vector * up_vector;
-        if ( current_tilt_cos < tilt_min_cos ) return error_code;
+        if ( !attitude_orb.Read() ) return FTC_ERROR;
     }
+    
+    if ( !attitude_orb.Data().R_valid ) return FTC_ERROR;
+    
+    const math::Vector<3> up_vector(0.0f, 0.0f, 1.0f);
+    const math::Matrix<3,3> drone_to_world_matrix(attitude_orb.Data().R);
+    const math::Vector<3> current_up_vector = drone_to_world_matrix * up_vector;
+    const float current_tilt_cos = current_up_vector * up_vector;
+    if ( current_tilt_cos < tilt_min_cos ) return error_code;
     
     return COMMANDER_ERROR_OK;
 }

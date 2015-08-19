@@ -21,6 +21,12 @@
 #define FTC_FTILT_DEG_MIN      1
 #define FTC_FTILT_DEG_MAX      180
 
+#define FTC_FLTILT_DEG_MIN     1
+#define FTC_FLTILT_DEG_MAX     180
+
+#define FTC_FLTILT_MS_MIN      1000
+#define FTC_FLTILT_MS_MAX      20000
+
 #define FTC_LTILT_DEG_MIN      1
 #define FTC_LTILT_DEG_MAX      90
 
@@ -57,6 +63,8 @@ private:
     Utils::Param_reader<float  > takeoff_alt_m_param;
     Utils::Param_reader<int32_t> takeoff_alt_ms_param;
     Utils::Param_reader<int32_t> flight_tilt_deg_param;
+    Utils::Param_reader<int32_t> flight_low_tilt_deg_param;
+    Utils::Param_reader<int32_t> flight_low_tilt_ms_param;
     Utils::Param_reader<int32_t> landing_tilt_deg_param;
     
 private:
@@ -78,6 +86,11 @@ private:
     mutable float takeoff_max_seen_z_diff;
     
     float flight_tilt_min_cos;
+    float flight_low_tilt_min_cos;
+    float flight_low_tilt_timeout_ms;
+    
+    // 0 if low tilt limit was not exceeded on last tick, otherwise the time when the limit was first noticed over the limit
+    mutable uint64_t flight_low_tilt_exceeded_start_time_ms;
     
     float landing_tilt_min_cos;
     
