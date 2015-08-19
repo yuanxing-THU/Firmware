@@ -16,10 +16,14 @@ fi
 
 if [ $MAG_started = yes ]
 then
-	ms5611 start
-	echo "Baro OK" >> $LOG_FILE
-	adc start
-	echo "ADC OK" >> $LOG_FILE
+	if ms5611 start
+	then
+		echo "Baro OK" >> $LOG_FILE
+	fi
+	if adc start
+	then
+		echo "ADC OK" >> $LOG_FILE
+	fi
 
 	if param compare SENS_DISABLE_MPU 1
 	then
