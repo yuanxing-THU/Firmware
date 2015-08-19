@@ -32,7 +32,7 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     nullptr, // use previous preset name
     Menu::MENUENTRY_SETTINGS,
     Menu::MENUENTRY_ACTIVITIES,
-    Menu::MENUENTRY_ALTITUDE,
+    Menu::MENUENTRY_ACTION,
     Menu::MENUENTRY_EXIT,
 },
 {
@@ -416,6 +416,18 @@ Base* Menu::makeAction()
         case MENUENTRY_PAIRING:
             nextMode = new ModeConnect(ModeConnect::State::PAIRING);
             break;
+
+        case MENUENTRY_CUSTOMIZE:
+            int modes[] = {
+                MENUENTRY_ALTITUDE,
+//                MENUENTRY_FOLLOW,
+//                MENUENTRY_LAND,
+                MENUENTRY_SAVE,
+                MENUENTRY_CANCEL
+            };
+            makeMenu(modes, sizeof(modes)/sizeof(int));
+            switchEntry(modes[0]);
+            break;
     }
 
     return nextMode;
@@ -464,6 +476,41 @@ Base* Menu::switchEntry(int newEntry)
     }
 
     return nextMode;
+}
+
+void Menu::makeMenu(int menuEntry[], int size)
+{
+    int first = MENUENTRY_IGNORE;
+    int last = MENUENTRY_IGNORE;
+    int i = 0;
+
+    // find first menu
+    for (i = 0; i < size; i++)
+    {
+        if (menuEntry[i] != MENUENTRY_IGNORE)
+        {
+            first = menuEntry[i];
+
+            entries[first].next = first;
+            entries[first].prev = first;
+            break;
+        }
+    }
+
+    // make a loop with entries
+    last = first;
+    i++;
+    for (; i < size; i++)
+    {
+        int e = menuEntry[i];
+        if (e != MENUENTRY_IGNORE)
+        {
+            entries[last].next = e;
+            entries[e].prev = last;
+            entries[e].next = first;
+            last = e;
+        }
+    }
 }
 
 }
