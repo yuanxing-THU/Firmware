@@ -55,7 +55,7 @@ fi
 echo "[init] Looking for microSD..."
 if mount -t vfat /dev/mmcsd0 /fs/microsd
 then
-	if [ $ENABLE_LOG_FILE = yes ]
+	if [ notset$ENABLE_LOG_FILE = notsetyes ]
 	then
 		set LOG_FILE /fs/microsd/bootlog.txt
 		echo "-----------------------------------" >> $LOG_FILE
