@@ -2213,7 +2213,10 @@ int commander_thread_main(int argc, char *argv[])
 			}
 		}
 
-		if ( armed.armed && (control_mode.flag_control_auto_enabled || control_mode.flag_control_follow_target) ) {
+		if ( armed.armed &&
+				(  control_mode.flag_control_auto_enabled
+				|| control_mode.flag_control_follow_target
+				|| control_mode.flag_control_manual_enabled ) ) {
 			commander_error_code check_error_code = COMMANDER_ERROR_OK;
 			
 			if ( status.airdog_state == AIRD_STATE_TAKING_OFF ) {
