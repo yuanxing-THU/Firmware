@@ -7,6 +7,7 @@ extern "C" __EXPORT int main(int argc, const char * const * const argv);
 #include <string.h>
 #include <stdio.h>
 #include <time.h>
+#include <nuttx/mmcsd.h>
 
 int
 main(int argc, const char * const * const argv)
@@ -23,6 +24,11 @@ main(int argc, const char * const * const argv)
 
     for (int i = 0; i < argc; i++)
     {
+        if (strcmp("-testbus", argv[i]) == 0)
+        {
+            printf("%d\n", mmcsd_busTestResult);
+            doWrite = doRead = false;
+        }
         if (strcmp("-ro", argv[i]) == 0)
         {
             doWrite = false;
