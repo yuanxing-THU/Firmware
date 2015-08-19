@@ -86,6 +86,8 @@ protected:
     Base* makeAction();
     void showEntry();
     Base* switchEntry(int newEntry);
+
+    void makeMenu(int menuEntry[], int size);
 };
 
 }
