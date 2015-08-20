@@ -30,6 +30,7 @@ then
 else
         set LOG_FILE /dev/null
         echo "[init] No microSD card found"
+        tone_alarm "MBT200 O2f#8d8g#8<b8p"
 fi
 
 #
