@@ -12,7 +12,7 @@ template <typename Device>
 void
 reply(Request< CMD_HANDSHAKE >, Device & dev)
 {
-	HandshakeReply buf { 0, 0 };
+	HandshakeReply buf { 1, 0 };
 	write(dev, &buf, sizeof buf);
 }
 
