@@ -36,7 +36,7 @@ struct AllowedParam {
 // Order here is important, never add parameters in the middle of this list.
 // If this list is updated make sure there are enough space for all values in *** mavlink message
 // If this list is updated add default setup for this param in activity DEFAULT_ACTIVITY(0)
-extern bool allowed_params_inited;
+extern volatile bool allowed_params_inited;
 extern AllowedParam ALLOWED_PARAMS[ALLOWED_PARAM_COUNT];
 bool init_allowed_params();
 

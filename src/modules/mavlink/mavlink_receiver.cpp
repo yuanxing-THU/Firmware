@@ -76,7 +76,10 @@
 #include <commander/px4_custom_mode.h>
 #include <geo/geo.h>
 
+#include <activity/activity_lib_constants.h>
+
 #include <uORB/topics/mavlink_stats.h>
+#include <uORB/topics/activity_params.h>
 #include <uORB/uORB.h>
 
 __BEGIN_DECLS
@@ -150,6 +153,10 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
 	case MAVLINK_MSG_ID_COMMAND_LONG:
 		handle_message_command_long(msg);
 		break;
+
+    case MAVLINK_MSG_ID_ACTIVITY_PARAMS:
+        handle_message_activity_params(msg);
+        break;
 
 	case MAVLINK_MSG_ID_COMMAND_INT:
 		handle_message_command_int(msg);
@@ -268,6 +275,7 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
 	_mavlink->set_has_received_messages(true);
 }
 
+
 void
 MavlinkReceiver::handle_message_command_long(mavlink_message_t *msg)
 {
@@ -385,6 +393,28 @@ MavlinkReceiver::handle_message_command_int(mavlink_message_t *msg)
 			}
 		}
 	}
+}
+
+
+
+void
+MavlinkReceiver::handle_message_activity_params(mavlink_message_t *msg)
+{
+
+    mavlink_activity_params_t mav_activity_params;
+    mavlink_msg_activity_params_decode(msg, &mav_activity_params);
+
+    activity_params_s activity_params;
+
+    activity_params.type = ACTIVITY_PARAMS_RECEIVED; 
+    activity_params.ts = hrt_absolute_time();
+
+    for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++){
+        activity_params.values[i] = mav_activity_params.values[i];
+    } 
+
+    orb_advertise(ORB_ID(activity_params), &activity_params);
+
 }
 
 void
@@ -1141,8 +1171,10 @@ MavlinkReceiver::handle_combo_message(mavlink_message_t *msg)
         // save additional airdog status field
         // publishing will happen in internal_heartbeat_handle
         _airdog_status.battery_remaining = msg_combo.STS_battery_remaining;
+        _airdog_status.activity = msg_combo.STS_activity;
         _airdog_status.error_code = msg_combo.HRT_error_code;
         _airdog_status.error_stamp = msg_combo.HRT_error_stamp;
+
 		internal_heartbeat_handle(msg_hrt, msg);
 	}
 	if (msg_combo.fresh_messages & MAVLINK_COMBO_MESSAGE_GPOS) {

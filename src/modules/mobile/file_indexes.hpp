@@ -2,7 +2,7 @@
 
 #include <limits.h>
 
-#include "activity/activity_file_manager.hpp"
+#include "activity/activity_files.hpp"
 
 #include "protocol.h"
 

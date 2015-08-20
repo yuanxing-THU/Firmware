@@ -18,8 +18,11 @@ typedef enum {
 } activity_params_type;
 
 struct activity_params_s {
-    activity_params_type type;
+
+    uint8_t type;
     float values[32];
+    uint64_t ts;
+
 };
 
 ORB_DECLARE(activity_params);

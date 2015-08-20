@@ -75,7 +75,6 @@
 #include <uORB/topics/get_drone_parameter.h>
 #include <uORB/topics/set_drone_parameter.h>
 #include <uORB/topics/bt21_laird.h>
-#include <uORB/topics/activity_params.h>
 
 #include "mavlink_bridge_header.h"
 #include "mavlink_main.h"
@@ -1470,10 +1469,6 @@ Mavlink::task_main(int argc, char *argv[])
 		pthread_mutex_init(&_message_buffer_mutex, NULL);
 	}
 
-    activity_params_sub = orb_subscribe(ORB_ID(activity_params));
-    activity_request_sndr_sub = orb_subscribe(ORB_ID(activity_request_sndr));
-    activity_params_sndr_sub = orb_subscribe(ORB_ID(activity_params_sndr));
-
     get_drone_parameter_sub = orb_subscribe(ORB_ID(get_drone_parameter));
     set_drone_parameter_sub = orb_subscribe(ORB_ID(set_drone_parameter));
 
@@ -1505,6 +1500,8 @@ Mavlink::task_main(int argc, char *argv[])
 
 	struct vehicle_status_s status;
 	status_sub->update(&status_time, &status);
+
+    configure_stream("ACTIVITY_PARAMS", 1.0f);
 
 	/* add default streams depending on mode */
 

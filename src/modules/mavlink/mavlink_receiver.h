@@ -143,7 +143,7 @@ private:
 	void internal_trajectory_handle(const mavlink_trajectory_t &msg_traj, mavlink_message_t *msg);
 	void handle_combo_message(mavlink_message_t *msg);
 	void handle_message_gps_raw_int(mavlink_message_t *msg);
-
+    void handle_message_activity_params(mavlink_message_t *msg);
 
 
 	void *receive_thread(void *arg);

@@ -1,5 +1,4 @@
 /**
- * @file activity_file_manager.cpp
  * Function set to help manage activity files.
  * @author Martins Frolovs <martins.f@airdog.vom>
  */
@@ -8,17 +7,22 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <dirent.h>
+#include <unistd.h>
 
 #include <systemlib/systemlib.h>
 #include <systemlib/param/param.h>
 #include <systemlib/err.h>
 #include <sys/stat.h>
 
+#include <drivers/drv_hrt.h>
+#include <errno.h>
+
 #include <uORB/uORB.h>
 #include <uORB/topics/activity_params.h>
 
 #include "activity_lib_constants.h"
-#include "activity_file_manager.hpp"
+#include "activity_files.hpp"
+
 
 namespace Activity
 {
@@ -28,36 +32,33 @@ namespace Files
 bool
 create_directory_structure() {
 
-    // TODO: Add error handling
-    
-    DIR * pDir = opendir(ACTIVITY_FILE_DIR);
-
-    if (pDir == NULL) {
+    if (chdir(ACTIVITY_FILE_DIR) != 0) {
 
         printf("Directory \"%s\" does not exist.\n", ACTIVITY_FILE_DIR);
 
         int mkdir_ret = mkdir(ACTIVITY_FILE_DIR, 0770);
 
+        printf("Activity dir %s\n", ACTIVITY_FILE_DIR);
+
         if (mkdir_ret == -1) { 
             printf("Failed to create directory: %s\n", ACTIVITY_FILE_DIR);
+            printf ("mkdir error : %s\n",strerror(errno));
             return false;
         } else {
             printf("Successfuly created directory: %s\n", ACTIVITY_FILE_DIR);
         }
 
     } else {
-        closedir(pDir);
+        printf("Directory %s exists.\n", ACTIVITY_FILE_DIR);
     }
+
 
     for (int i=0;i<ACTIVITIES_COUNT;i++){
 
         char dir_path[PATH_MAX];
         sprintf(dir_path, "%s/%i", ACTIVITY_FILE_DIR, i);
 
-        printf("Activity folder %s\n", dir_path);
-
-        DIR * pDir = opendir(dir_path);
-        if (pDir == NULL) {
+        if (chdir(dir_path) != 0) {
      
             printf("Directory \"%s\" does not exist.\n", dir_path);
 
@@ -69,44 +70,30 @@ create_directory_structure() {
             } else {
                 printf("Successfuly created directory: %s\n", dir_path);
             }
-
         } else {
-            closedir(pDir);
+            printf("Directory %s exists.\n", dir_path);
         }
-
-        char file_path[PATH_MAX];
-        int attribute = 0;
-        sprintf(file_path,"%s/%d",dir_path,attribute);
-
-        FILE * pFile = fopen(file_path, "r");
-
-       if (pFile == NULL) {
-           printf("File %s does not exist let's create it.\n", file_path);
-           pFile = fopen(file_path, "w");
-           fclose(pFile);
-       } else {
-            printf("File %s exists.\n", file_path);
-            fclose(pFile);
-       }
     }
 }
 
 __EXPORT bool
 get_path(uint8_t activity, uint8_t attribute, char (&pathname)[PATH_MAX]) {
     
+    char dir[PATH_MAX];
     switch(attribute) {
         case PARAMS:
+            sprintf(dir,"%s/%d", ACTIVITY_FILE_DIR, activity);
             sprintf(pathname,"%s/%d/%d", ACTIVITY_FILE_DIR, activity, attribute);
             break;
         default:
             return false;
     }
 
-   FILE * pFile = fopen(pathname, "r");
-   if (pFile == NULL) {
-       printf("Cannot open file %s. \nLet's check and create directory structure if needed.\n", pathname);
+   if (chdir(dir) != 0) {
+       printf("Directory %s doesn't exist. \nLet's check and create directory structure if needed.\n", dir);
        create_directory_structure();
    }
+
 
     return true;
 }
@@ -142,13 +129,16 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
 
     FILE * activity_params_file = fopen(pathname, "r");
 
+    bool file_ok = true;
+
     if (activity_params_file == NULL) {
 
         printf("Failed to open file %s !\n", pathname);
         return false;
+
     }
 
-    while (fgets(line, MAX_STR_LEN, activity_params_file) != NULL) {
+    while (file_ok && fgets(line, MAX_STR_LEN, activity_params_file) != NULL) {
 
         printf("line: %s\n", line);
 
@@ -163,7 +153,7 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
         
         int part = 0;
 
-        for (int i=0;line[i]!='\n';i++) {
+        for (int i=0;line[i]!='\n' && file_ok;i++) {
 
             switch (part) {
                 case 0:
@@ -172,7 +162,7 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
                     else 
                     {
                         printf("%s Error on line %i: Line must start with digit\n", pathname, line_no);
-                        return false;
+                        file_ok = false;
                     }
                 break;
                 case 1:
@@ -181,7 +171,7 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
                     else if (!isdigit(line[i]))
                     {
                         printf("%s Error on line %i: Activity number must be followed by colon\n", pathname, line_no);
-                        return false;
+                        file_ok = false;
                     }
                 break;
                 case 2:
@@ -190,7 +180,7 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
                     else
                     {
                         printf("%s Error on line %i: Colon must be followed by [floating point] number\n", pathname, line_no);
-                        return false;
+                        file_ok = false;
                     }
                 break;
                 case 3:
@@ -199,7 +189,7 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
                     else if (!isdigit(line[i]))
                     {
                         printf("%s Error on line %i: Colon must be followed by [floating point] number\n", pathname, line_no);
-                        return false;
+                        file_ok = false;
                     }
                 break;
                 case 4:
@@ -209,20 +199,25 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
                     else
                     {
                         printf("%s Error on line %i: Colon must be followed by [floating point] number\n", pathname, line_no);
-                        return false;
+                        file_ok = false;
                     }
                 case 5:
                     if (!isdigit(line[i])){
                         printf("%s Error on line %i: Colon must be followed by [floating point] number\n", pathname, line_no);
-                        return false;
+                        file_ok = false;
                     }
             }
         }
 
+        if (!file_ok)
+            break;
+
         if (!(part == 3 || part == 5 )){
             printf("%s Error on line %i: Line must end with a number\n", pathname, line_no);
-            return false;
+            file_ok = false;
+            break;
         }
+
 
         // 2. Check: every required param is showing up
 
@@ -235,23 +230,27 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
 
         if (param_id >= ALLOWED_PARAM_COUNT) {
             printf("%s Error: Param number %f not allowed. \n", pathname, (double)param_id);
-            return false;
+            file_ok = false;
+            break;
         }
     
         if (param_appeared[(int)param_id]){
             printf("%s Error: Param number %f defined multiple times. \n", pathname, (double)param_id);
-            return false;
+            file_ok = false;
+            break;
         }
 
         if (line_no == 1) {
             if (param_id != 0) {
                 printf("%s Error: First line of param file must define param 0 (activity_id) \n", pathname );
-                return false;
+                file_ok = false;
+                break;
             }
 
             if (param_val != activity) {
                 printf("%s Error: File not valid for activity %f : parameter activity_id value in file is %f \n", pathname, (double)activity , (double)param_val);
-                return false;
+                file_ok = false;
+                break;
             }
         }
 
@@ -259,6 +258,10 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
 
         // TODO: 3. Check: values are in proper range 
     }
+
+    fclose(activity_params_file);
+
+    if (!file_ok) return false;
 
     for (int i=0;i<ALLOWED_PARAM_COUNT;i++) {
         if (param_appeared[i] && !param_required[i]){
@@ -283,38 +286,48 @@ bool isdigit(char c){
 __EXPORT bool
 update_activity(uint8_t activity, uint8_t attribute) {
 
-    set_file_state();
+    clear_file_state();
 
 }
 
 __EXPORT bool
 get_file_state() {
 
-    char pathname[PATH_MAX];
-    sprintf(pathname,"%s/ok", ACTIVITY_FILE_DIR);
-    FILE * f = fopen(pathname, "r"); 
-
-    bool file_state_ok = (f != NULL);
-
-    fclose(f);
-
+    char ok_pathname[PATH_MAX];
+    sprintf(ok_pathname,"%s/ok", ACTIVITY_FILE_DIR);
+    bool file_state_ok = (chdir(ok_pathname) == 0);
     return file_state_ok;
+
 }
 
 
 __EXPORT bool
-set_file_state() {
+clear_file_state() {
 
     char ok_pathname[PATH_MAX];
+    sprintf(ok_pathname,"%s/ok", ACTIVITY_FILE_DIR);
+    if (chdir(ok_pathname) == 0){
+        chdir(ACTIVITY_FILE_DIR);
+        rmdir(ok_pathname);
+    }
 
-    sprintf(ok_pathname, "%s/ok", ACTIVITY_FILE_DIR);
 
-    unlink(ok_pathname);
+    return true;
+}
+
+
+__EXPORT bool
+check_file_state() {
+
+    char ok_pathname[PATH_MAX];
+    sprintf(ok_pathname,"%s/ok", ACTIVITY_FILE_DIR);
+
+    clear_file_state();
 
     bool ok = true;
 
     for (int i=0;i<ACTIVITIES_COUNT && ok;i++) {
-    
+
         char pathname[PATH_MAX];
         get_path(i,0,pathname);
 
@@ -322,59 +335,63 @@ set_file_state() {
             ok = false;
         else 
             printf("File %s ok!\n", pathname);
-       
-        break; //TODO: remove this break
         
     }
 
     if (ok) {
-        FILE * f = fopen(ok_pathname, "w");
-        fclose(f);
+
+        int mkdir_ret = mkdir(ok_pathname, 0770);
+
+        if (mkdir_ret == -1) { 
+            printf("Failed to create directory: %s\n", ok_pathname);
+            return false;
+        } else {
+            printf("Successfuly created directory: %s\n", ok_pathname);
+        }
+
     }
      
     return ok;
 }
 
 __EXPORT bool
-activity_orb_to_file(uint8_t activity){
-
-    char tmp_file_path[PATH_MAX];
-    get_path(activity, 0, tmp_file_path);
-
-    printf("Returned path %s \n", tmp_file_path);
-
-    FILE * tmp_file = fopen(tmp_file_path, "w");
+activity_orb_to_file(){
 
 	int activity_params_sub = orb_subscribe(ORB_ID(activity_params));
-
     activity_params_s activity_params;
 	orb_copy(ORB_ID(activity_params), activity_params_sub, &activity_params);
 
-    int value_activity = activity_params.values[0];
+	orb_unsubscribe(activity_params_sub);
 
-    if (value_activity != activity) {
-        printf("Trying to store parameters of activity %d to activity file %d\n", value_activity, activity);
-        return false; 
-    }
+    char tmp_file_path[PATH_MAX];
+    sprintf(tmp_file_path,"%s/tmp", ACTIVITY_FILE_DIR);
+    FILE * tmp_file = fopen(tmp_file_path, "w");
+
+    int activity = activity_params.values[0];
 
     for (int i=0;i<ALLOWED_PARAM_COUNT;i++) {
         fprintf(tmp_file, "%i:%.6f\n", i, (double)activity_params.values[i]); 
     }
 
-    char new_file_path[PATH_MAX];
-    get_path(activity,0, new_file_path);
+    fclose(tmp_file);
 
-    if (rename(tmp_file_path, new_file_path)) {
+    char new_file_path[PATH_MAX];
+    get_path(activity, 0, new_file_path);
+
+    unlink(new_file_path);
+
+    if (rename(tmp_file_path, new_file_path) == 0) {
         printf("Successfully written %d params file.\n", activity);
     } else {
         printf("Failed to write file: %s\n", new_file_path);
     }
 
-	orb_unsubscribe(activity_params_sub);
 } 
 
 __EXPORT bool
 activity_file_to_orb(uint8_t activity) {
+
+    printf("activity_file_to_orb\n");
 
     if (activity>ACTIVITIES_COUNT){
         printf("ERROR: Activity file manager: activity number %d does not exist\n", activity);
@@ -414,11 +431,20 @@ activity_file_to_orb(uint8_t activity) {
         activity_params.values[(int)param_id] = param_val;
     }
 
+    activity_params.ts = hrt_absolute_time();
+
+    fclose(activity_file);
+
     int activity_params_pub = orb_advertise(ORB_ID(activity_params), &activity_params);
+
+    printf("activity_params_pub: %i\n", activity_params_pub);
 
     if (activity_params_pub < 0) {
         printf("Failed to publish activity params\n");
+    } else {
+        printf("Pub successful\n");
     }
+
 
     return true;
 }

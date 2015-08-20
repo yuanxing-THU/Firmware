@@ -6,7 +6,6 @@ namespace Activity {
 class __EXPORT ParamChangeManager {
 
     public:
-
         bool get_param_name(char* buffer, int buffer_len);
         bool get_display_name(char* buffer, int buffer_len);
         bool get_display_value(char* buffer, int buffer_len);
@@ -46,38 +45,32 @@ class __EXPORT ActivityChangeManager {
         bool save_params();
         int cancel_params();
 
-        bool init_params(activity_params_s);
-        bool params_updated();
+        bool process_received_params(activity_params_s);
+        bool params_received();
 
-        bool send_params_to_dog();
+        bool request_dog_params();
 
-        ActivityChangeManager(int _a_id, bool _test_mode);
+        ActivityChangeManager();
+        ActivityChangeManager(int _activity);
         ~ActivityChangeManager();
        
     private:
-        int a_id;
-        int param_count;
+
+        bool init_activity_limits(); 
+        bool send_params_to_dog();
 
         ParamChangeManager params[ALLOWED_PARAM_COUNT];
-        
+
+        int activity;
+        int param_count;
         int cur_param_id;
 
-        bool params_inited;
         bool params_up_to_date; 
-
         int activity_params_sub;
-
-        bool test_mode;
 };
 
-__EXPORT ActivityChangeManager 
-getActivityChangeManager(int activity_id, bool test_mode = false);
-
-__EXPORT bool
+bool
 float_eq(float a, float b);
 
-bool
-publish_fake_activity_params();
-
-}
 // End of namespace Activity
+}

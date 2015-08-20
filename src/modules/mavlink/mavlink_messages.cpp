@@ -71,15 +71,19 @@
 #include <uORB/topics/airspeed.h>
 #include <uORB/topics/battery_status.h>
 #include <uORB/topics/navigation_capabilities.h>
+#include <uORB/topics/activity_params.h>
 #include <drivers/drv_rc_input.h>
 #include <drivers/drv_pwm_output.h>
 #include <drivers/drv_range_finder.h>
 #include <systemlib/err.h>
 #include <mavlink/mavlink_log.h>
 #include <version/version.h>
+#include <activity/activity_lib_constants.h>
 
 #include "mavlink_messages.h"
 #include "mavlink_main.h"
+
+
 
 static uint16_t cm_uint16_from_m_float(float m);
 static void get_mavlink_mode_state(struct vehicle_status_s *status, struct position_setpoint_triplet_s *pos_sp_triplet,
@@ -254,6 +258,7 @@ void get_mavlink_mode_state(struct vehicle_status_s *status, struct position_set
 
 	}
 }
+
 
 
 class MavlinkStreamHeartbeat : public MavlinkStream
@@ -2293,6 +2298,7 @@ protected:
 		updated |= _gps_sub->update(&_gps_time, &gps);
 
 		msg.STS_battery_remaining = (uint8_t)(100.0f * status.battery_remaining);
+        msg.STS_activity = status.activity;
 
 		if (_pos_time != 0 && updated) {
 			msg.fresh_messages |= MAVLINK_COMBO_MESSAGE_GPOS;
@@ -2361,6 +2367,75 @@ protected:
 };
 
 
+class MavlinkStreamActivityParams : public MavlinkStream
+{
+public:
+	const char *get_name() const
+	{
+		return MavlinkStreamActivityParams::get_name_static();
+	}
+
+	static const char *get_name_static()
+	{
+		return "ACTIVITY_PARAMS";
+	}
+
+	uint8_t get_id()
+	{
+		return MAVLINK_MSG_ID_ACTIVITY_PARAMS;
+	}
+
+	static MavlinkStream *new_instance(Mavlink *mavlink)
+	{
+		return new MavlinkStreamActivityParams(mavlink);
+	}
+
+	unsigned get_size()
+	{
+		return MAVLINK_MSG_ID_ACTIVITY_PARAMS_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES;
+	}
+
+private:
+
+	MavlinkOrbSubscription *_activity_params_sndr_sub;
+	MavlinkOrbSubscription *_activity_params_sub;
+
+	uint64_t _activity_time;
+
+	/* do not allow top copying this class */
+	MavlinkStreamActivityParams(const MavlinkStreamActivityParams &);
+	MavlinkStreamActivityParams& operator = (const MavlinkStreamActivityParams &);
+
+protected:
+	explicit MavlinkStreamActivityParams(Mavlink *mavlink) : MavlinkStream(mavlink),
+		_activity_params_sndr_sub(_mavlink->add_orb_subscription(ORB_ID(activity_params_sndr))),
+		_activity_params_sub(_mavlink->add_orb_subscription(ORB_ID(activity_params))),
+        _activity_time(0)
+	{}
+
+	void send(const hrt_abstime t)
+	{
+
+
+		struct activity_params_s activity_params;
+		struct activity_params_sndr_s activity_params_sndr;
+
+		if (_activity_params_sndr_sub->update(&_activity_time, &activity_params_sndr)) {
+
+            _activity_params_sub->update(&activity_params);
+
+            mavlink_activity_params_t msg;
+
+            for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++) {
+                msg.values[i] = activity_params.values[i];
+            }
+
+            _mavlink->send_message(MAVLINK_MSG_ID_ACTIVITY_PARAMS, &msg);
+
+		}
+	}
+};
+
 StreamListItem * const streams_list[] = {
 	new StreamListItem(&MavlinkStreamHeartbeat::new_instance, &MavlinkStreamHeartbeat::get_name_static),
 	new StreamListItem(&MavlinkStreamStatustext::new_instance, &MavlinkStreamStatustext::get_name_static),
@@ -2391,6 +2466,7 @@ StreamListItem * const streams_list[] = {
 //	new StreamListItem(&MavlinkStreamCameraCapture::new_instance, &MavlinkStreamCameraCapture::get_name_static),
 	new StreamListItem(&MavlinkStreamDistanceSensor::new_instance, &MavlinkStreamDistanceSensor::get_name_static),
 	new StreamListItem(&MavlinkStreamTrajectory::new_instance, &MavlinkStreamTrajectory::get_name_static),
+    new StreamListItem(&MavlinkStreamActivityParams::new_instance, &MavlinkStreamActivityParams::get_name_static),
 	new StreamListItem(&MavlinkStreamHRT_GPOS_TRAJ_COMMAND::new_instance, &MavlinkStreamHRT_GPOS_TRAJ_COMMAND::get_name_static),
 };
 

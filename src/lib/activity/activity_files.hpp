@@ -31,14 +31,16 @@ namespace Files
     activity_file_to_orb(uint8_t activity);
 
     __EXPORT bool
-    activity_orb_to_file(uint8_t activity);
+    activity_orb_to_file();
 
     __EXPORT bool
     get_file_state();
 
     __EXPORT bool
-    set_file_state();
+    check_file_state();
 
+    __EXPORT bool
+    clear_file_state();
 
 
     // Private functions

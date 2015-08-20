@@ -7,7 +7,6 @@
 
 namespace Activity {
 
-
 class __EXPORT ParamLimits {
     public:
 

@@ -1,3 +1,5 @@
+#include <errno.h>
+#include <string.h>
 #include <stdio.h>
 
 #include <uORB/uORB.h>
@@ -6,28 +8,37 @@
 #include "allowed_params.hpp"
 
 #include "activity_lib_constants.h"
-#include "activity_file_manager.hpp"
+#include "activity_files.hpp"
 
 #include <drivers/drv_hrt.h>
 
 #include "dog_activity_manager.hpp"
 
+
 namespace Activity {
 
 DogActivityManager::DogActivityManager(){
 
-    init_allowed_params();
+    _received_activity_params_sub = orb_subscribe(ORB_ID(activity_params));
 
     _file_state_ok = false;
     _inited = false;
     _current_activity = 0;
+    _activity_params_sndr_pub = 0;
+
+    _last_params_received_process = 0;
+
+    init_allowed_params();
+
+    Activity::Files::clear_file_state();
 
     param_get(param_find("A_ACTIVITY"), &(_current_activity));
-    init();
 
 }
 
 DogActivityManager::~DogActivityManager() {
+
+    orb_unsubscribe(_received_activity_params_sub);
 }
 
 bool
@@ -36,12 +47,7 @@ DogActivityManager::init() {
     if (_inited)
         return true;
 
-    if (!_file_state_ok && hrt_absolute_time() - last_file_state_check_time > 1000000) {
-
-        printf("Checking files..");
-        _file_state_ok = Activity::Files::get_file_state();
-        last_file_state_check_time = hrt_absolute_time();
-    }
+    check_file_state();
 
     if (_file_state_ok) {
         if (set_activity(_current_activity))
@@ -52,58 +58,116 @@ DogActivityManager::init() {
 
 }
 
+bool
+DogActivityManager::check_file_state(){
+
+    if (hrt_absolute_time() - last_file_state_check_time > 1000000) {
+
+        last_file_state_check_time = hrt_absolute_time();
+
+        printf("Checking files.. \n");
+
+        if (Activity::Files::get_file_state()) {
+
+            printf("Ok file present.\n");
+            _file_state_ok = true;
+
+        } else {
+
+            printf("No ok file. Rechecking status.\n");
+
+            _file_state_ok = Activity::Files::check_file_state();
+
+            if (_file_state_ok) {
+                printf("file state ok!\n");
+            } else {
+                printf("file state bad!\n");
+            }
+        } 
+    }
+
+    if (!_file_state_ok) {
+        _inited = false;
+    }
+
+    return _file_state_ok;
+
+}
 
 bool 
-DogActivityManager::set_activity(uint8_t activity){
+DogActivityManager::set_activity(int32_t activity){
+
+    printf("Setting activity %d\n", activity);
 
     _current_activity = activity;
 
     param_set(param_find("A_ACTIVITY"), &activity);
-    Files::activity_file_to_orb(activity);
 
-    process_virtual_params();
-    send_params_to_leash();
-    apply_params();
+    if (!Files::activity_file_to_orb(activity))
+        return false;
+
+    if (!process_virtual_params())
+        return false;
+
+    if (!send_params_to_leash())
+         return false;
+
+    if (!apply_params())
+        return false;
+
+    return true;
 
 }
 
 bool 
-DogActivityManager::check_incoming_params() {
+DogActivityManager::check_received_params() {
 
-    bool params_updated;
+    activity_params_s activity_params;
 
-    orb_check(_incoming_activity_params_orb, &params_updated);
+    bool updated;
+    orb_check(_received_activity_params_sub, &updated);
 
-    if (params_updated) {
+    if (updated) {
 
-        activity_params_s activity_params;
-        orb_copy(ORB_ID(activity_params), _incoming_activity_params_orb, &activity_params);
+        orb_copy(ORB_ID(activity_params), _received_activity_params_sub, &activity_params);
 
-        if (activity_params.type == ACTIVITY_PARAMS_RECEIVED )
-            process_incoming_params();
+        if (activity_params.type == ACTIVITY_PARAMS_RECEIVED ) {
+            process_received_params();
+        }
     }
 }
 
 bool 
-DogActivityManager::process_incoming_params(){
+DogActivityManager::process_received_params(){
 
-    process_virtual_params();
-    send_params_to_leash();
-    apply_params();
+    printf("Processing received params\n");
+
+    if (!process_virtual_params())
+        return false;
+
+    if (!Files::activity_orb_to_file())
+        return false;
+
+    if (!apply_params())
+        return false;
+
+    if (!send_params_to_leash())
+        return false;
+
+    return true;
 
 }
 
 bool
 DogActivityManager::send_params_to_leash(){
 
-    activity_params_sndr_s activity_params_sndr;
-    activity_params_sndr.type = ACTIVITY_PARAMS_MSG_VALUES;
+    _activity_params_sndr.type = ACTIVITY_PARAMS_MSG_VALUES;
 
-    int activity_params_sndr_pub = orb_advertise(ORB_ID(activity_params_sndr), &activity_params_sndr);
-
-    if (activity_params_sndr_pub <= 0) {
-        printf("Failed to publish activity sender.");
-        return false;
+    if (_activity_params_sndr_pub >  0) {
+        orb_publish(ORB_ID(activity_params_sndr), _activity_params_sndr_pub, &_activity_params_sndr);
+    } else {
+    
+        _activity_params_sndr_pub = orb_advertise(ORB_ID(activity_params_sndr), &_activity_params_sndr);
     }
 
     return true;
@@ -144,10 +208,12 @@ DogActivityManager::apply_params() {
     activity_params_s activity_params;
 	orb_copy(ORB_ID(activity_params), activity_params_sub, &activity_params);
 
+    orb_unsubscribe(activity_params_sub);
+
     for (int p=0;p<ALLOWED_PARAM_COUNT;p++) {
         if (ALLOWED_PARAMS[p].target_device == DOG || ALLOWED_PARAMS[p].target_device == ALL) {
           
-            printf("%s\n", ALLOWED_PARAMS[p].name);
+            printf("Applying param on dog - %s: %.2f\n", ALLOWED_PARAMS[p].name, (double)activity_params.values[p]);
             if (param_set(param_find(ALLOWED_PARAMS[p].name), &activity_params.values[p]) != 0) {
                 printf("Param %s connot be found.\n", ALLOWED_PARAMS[p].name);
                 return false;
@@ -160,7 +226,12 @@ DogActivityManager::apply_params() {
 
 bool
 DogActivityManager::is_inited() {
+
+    send_params_to_leash();
+
+    check_file_state();
     return _inited;
+
 }
 
 }

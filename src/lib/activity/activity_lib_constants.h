@@ -1,8 +1,7 @@
 #pragma once
 
 namespace Activity {
-
-const char ACTIVITY_FILE_DIR[] = "/fs/microsd/activity";
+const char ACTIVITY_FILE_DIR[PATH_MAX] = "/fs/microsd/activity";
 const int MAX_STR_LEN = 64;
 const int MAX_PATH_LEN = 256;
 

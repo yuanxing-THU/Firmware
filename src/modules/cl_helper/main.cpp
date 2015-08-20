@@ -1,5 +1,6 @@
 #include <nuttx/config.h>
 
+#include <drivers/drv_hrt.h>
 
 #include <sys/ioctl.h>
 
@@ -8,13 +9,14 @@
 
 #include <uORB/uORB.h>
 #include <uORB/topics/bt_state.h>
+#include <uORB/topics/vehicle_command.h>
 
 #include <cstdio>
 #include <cstring>
 #include <ctime>
 
 #include <activity/activity_change_manager.hpp>
-#include <activity/activity_file_manager.hpp>
+#include <activity/activity_files.hpp>
 #include <activity/activity_lib_constants.h>
 
 extern "C" __EXPORT int
@@ -117,6 +119,9 @@ bool init_receive_fake_activity_params();
 bool modify_receive_fake_activity_params();
 bool print_activity_params_orb_content();
 bool fill_activity_files();
+bool send_switch_activity(int activity);
+
+void sendAirDogCommnad(enum VEHICLE_CMD command, float param1, float param2, float param3, float param4, double param5, double param6, float param7);
 
 int
 main(int argc, char const * const * argv)
@@ -152,8 +157,8 @@ main(int argc, char const * const * argv)
         if (streq(argv[2], "test")) {
             if (argc == 4)
             {
-                const int activ_number = atoi(argv[3]);
-                test_activity_manager(activ_number);
+                const int activity = atoi(argv[3]);
+                test_activity_manager(activity);
             }
             test_activity_manager();
         } else if (streq(argv[2], "receive_init")) {
@@ -165,17 +170,32 @@ main(int argc, char const * const * argv)
         } else if (streq(argv[2], "file_to_orb")) {
             Activity::Files::activity_file_to_orb(1); 
         } else if (streq(argv[2], "orb_to_file")) {
-            Activity::Files::activity_orb_to_file(1);
+            Activity::Files::activity_orb_to_file();
         } else if (streq(argv[2], "get_path")) {
             char path[PATH_MAX];
             Activity::Files::get_path(1,0,path);
             printf("%s\n", path);
-        } else if (streq(argv[2], "set_file_state")) {
-            Activity::Files::set_file_state();
+        } else if (streq(argv[2], "check_file_state")) {
+            Activity::Files::check_file_state();
         } else if (streq(argv[2], "fill_files")){
             fill_activity_files(); 
+        } else if (streq(argv[2], "files_updated")) {
+            Activity::Files::update_activity(1,0);
+        } else if (streq(argv[2], "clear_file_state")) {
+            Activity::Files::clear_file_state();
+        } else if (streq(argv[2], "open_file")) {
+        
         }
-        else {
+        else if (streq(argv[2], "switch_cmd")){
+            if (argc == 4)
+            {
+                const int activity = atoi(argv[3]);
+                send_switch_activity(activity);
+            } else {
+                send_switch_activity(2);
+            }
+
+        } else {
             usage();
         }
     
@@ -189,17 +209,20 @@ main(int argc, char const * const * argv)
 bool
 test_activity_manager(const int activity_number){
 
+    Activity::ActivityChangeManager A(3);
 
-    auto A = Activity::getActivityChangeManager(activity_number, true);
     init_receive_fake_activity_params();
-    if (A.params_updated()) { 
+
+    while (!A.params_received()) {}
+
+    if (A.params_received()) { 
 
         printf("So far so good .\n");
 
+        auto *param = A.get_current_param();
+
         char val[32];
         char display_name[32];
-
-        auto *param = A.get_current_param();
 
         for (int i=0;i<20;i++) {
 
@@ -207,7 +230,7 @@ test_activity_manager(const int activity_number){
             param->get_display_value(val, 32);
             printf("%s : %s\n", display_name, val);
 
-            for (int j=0;j<2;j++) {
+            for (int j=0;j<10;j++) {
                 param->get_next_value(val, 32);
                 printf("%s : %s\n", display_name, val);
             }
@@ -219,23 +242,22 @@ test_activity_manager(const int activity_number){
 
             if (last > param->get_id())
                 break;
+
         }
 
         A.save_params();
 
         modify_receive_fake_activity_params();
 
-        while (!A.params_updated()) {}
+        while (!A.params_received()) {}
 
-        if (A.params_updated()){
+        if (A.params_received()){
             printf("Params received ! \n ");
         }
 
         printf("Prev PART.\n"); 
 
         param = A.get_current_param();
-
-        memset(val, 0, sizeof(val));
 
         for (int i=0;i<9;i++) {
 
@@ -257,16 +279,15 @@ test_activity_manager(const int activity_number){
 
         modify_receive_fake_activity_params();
 
-        while (!A.params_updated()) {}
+        while (!A.params_received()) {}
 
-        if (A.params_updated()){
+        if (A.params_received()){
             printf("Params received ! \n ");
         }
 
         printf("Cancel param PART.\n"); 
 
         param = A.get_current_param();
-        memset(val, 0, sizeof(val));
 
         for (int i=0;i<9;i++) {
 
@@ -288,12 +309,11 @@ test_activity_manager(const int activity_number){
 
         modify_receive_fake_activity_params();
 
-        while (!A.params_updated()) {}
+        while (!A.params_received()) {}
 
-        if (A.params_updated()){
+        if (A.params_received()){
             printf("Params received ! \n ");
         }
-
     } 
 }
 
@@ -306,26 +326,29 @@ modify_receive_fake_activity_params() {
 	orb_copy(ORB_ID(activity_params), activity_params_sub, &activity_params);
 
     activity_params.type = ACTIVITY_PARAMS_RECEIVED; 
+    activity_params.ts = hrt_absolute_time();
 
-    for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++)
+    for (int i=1;i<Activity::ALLOWED_PARAM_COUNT;i++)
         activity_params.values[i]+=1.0f;
 
-    int pub = orb_advertise(ORB_ID(activity_params), &activity_params);
+    orb_advertise(ORB_ID(activity_params), &activity_params);
 
-    printf("Moddified %d\n", pub);
+    orb_unsubscribe(activity_params_sub);
 }
 
 bool
 init_receive_fake_activity_params() {
 
     activity_params_s activity_params;
+
     activity_params.type = ACTIVITY_PARAMS_RECEIVED; 
+    activity_params.ts = hrt_absolute_time();
 
     for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++)
         activity_params.values[i]=1.0f;
 
-    int pub = orb_advertise(ORB_ID(activity_params), &activity_params);
-    printf("Published %d\n", pub);
+    orb_advertise(ORB_ID(activity_params), &activity_params);
+    printf("Published !\n");
 
 }
 
@@ -340,6 +363,8 @@ print_activity_params_orb_content() {
     for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++){
         printf("%f: %.5f\n", (double)i, (double)activity_params.values[i]);
     }
+
+    orb_unsubscribe(activity_params_sub);
 
     return true;
 }
@@ -359,6 +384,54 @@ fill_activity_files(){
             fprintf(f, "%i:%f\n", (int)j, (double)i);
             printf("%i:%f\n", (int)j, (double)i);
         }
+
+
         fclose(f);
+
+    }
+}
+
+bool
+send_switch_activity(int activity){
+    sendAirDogCommnad(VEHICLE_CMD_NAV_REMOTE_CMD, REMOTE_CMD_SWITCH_ACTIVITY, activity, 0, 0, 0, 0, 0);
+}
+
+void sendAirDogCommnad(enum VEHICLE_CMD command,
+                      float param1,
+                      float param2,
+                      float param3,
+                      float param4,
+                      double param5,
+                      double param6,
+                      float param7
+)
+{
+    struct vehicle_command_s vehicle_command;
+    static orb_advert_t to_vehicle_command = 0;
+
+
+    printf("sendAirDogCommnad cmd %d: %.3f %.3f %.3f %.3f %.3f\n", (int)command,
+           (double)param1, (double)param2, (double)param3,
+           (double)param4, (double)param5);
+
+    vehicle_command.command = command;
+    vehicle_command.param1 = param1;
+    vehicle_command.param2 = param2;
+    vehicle_command.param3 = param3;
+    vehicle_command.param4 = param4;
+    vehicle_command.param5 = param5;
+    vehicle_command.param6 = param6;
+    vehicle_command.param7 = param7;
+
+    vehicle_command.target_system = 1;
+    vehicle_command.target_component = 50;
+
+    if (to_vehicle_command > 0)
+    {
+        orb_publish(ORB_ID(vehicle_command), to_vehicle_command, &vehicle_command);
+    }
+    else
+    {
+        to_vehicle_command = orb_advertise(ORB_ID(vehicle_command), &vehicle_command);
     }
 }

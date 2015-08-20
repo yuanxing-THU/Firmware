@@ -206,7 +206,7 @@ typedef enum {
 
 static low_prio_task_t low_prio_task = LOW_PRIO_TASK_NONE;
 
-Activity::DogActivityManager activity_manager;
+Activity::DogActivityManager * activity_manager = nullptr;
 
 /**
  * The daemon app only briefly exists to start
@@ -710,7 +710,8 @@ bool handle_command(struct vehicle_status_s *status_local
 
             if (cmd->param1 == REMOTE_CMD_SWITCH_ACTIVITY) {
 
-                activity_manager.set_activity(cmd->param2);
+                if (activity_manager != nullptr) 
+                    activity_manager->set_activity((int32_t)cmd->param2);
             
             }
 
@@ -883,6 +884,7 @@ int commander_thread_main(int argc, char *argv[])
 	param_t _param_ef_throttle_thres = param_find("COM_EF_THROT");
 	param_t _param_ef_current2throttle_thres = param_find("COM_EF_C2T");
 	param_t _param_ef_time_thres = param_find("COM_EF_TIME");
+	param_t _param_activity = param_find("A_ACTIVITY");
 
 
 	float battery_warning_level;
@@ -1281,15 +1283,9 @@ int commander_thread_main(int argc, char *argv[])
 	bool trg_eph_good;
 	bool trg_epv_good;
 
-    activity_manager = Activity::DogActivityManager();
 
 	while (!thread_should_exit) {
  
-        if (activity_manager.is_inited()) 
-            activity_manager.check_incoming_params();
-        else
-            activity_manager.init();
-
 
 		if (mavlink_fd < 0 && counter % (1000000 / MAVLINK_OPEN_INTERVAL) == 0) {
 			/* try to open the mavlink log device every once in a while */
@@ -1315,19 +1311,23 @@ int commander_thread_main(int argc, char *argv[])
         
 
 
+
+
 		/* update parameters */
 		orb_check(param_changed_sub, &updated);
 
 		if (updated || param_init_forced) {
+
 			param_init_forced = false;
 			/* parameters changed */
 			orb_copy(ORB_ID(parameter_update), param_changed_sub, &param_changed);
 
 			/* update parameters */
 			if (!armed.armed) {
+
 				if (param_get(_param_sys_type, &(status.system_type)) != OK) {
 					warnx("failed getting new system type");
-				}
+				} 
 
 				/* disable manual override for all systems that rely on electronic stabilization */
 				if (status.system_type == VEHICLE_TYPE_COAXIAL ||
@@ -1347,6 +1347,7 @@ int commander_thread_main(int argc, char *argv[])
                 
 				param_get(_param_component_id, &(status.component_id));
 
+
 				status.circuit_breaker_engaged_power_check =
 					circuit_breaker_enabled("CBRK_SUPPLY_CHK", CBRK_SUPPLY_CHK_KEY);
 				status.circuit_breaker_engaged_airspd_check =
@@ -1361,6 +1362,8 @@ int commander_thread_main(int argc, char *argv[])
 				/* re-check RC calibration */
 				rc_calibration_check(mavlink_fd);
 			}
+
+            param_get(_param_activity, &status.activity);
 
 			/* navigation parameters */
 			param_get(_param_takeoff_alt, &takeoff_alt);
@@ -1385,6 +1388,12 @@ int commander_thread_main(int argc, char *argv[])
 				status_changed = true;
 			}
 		}
+
+        // If is drone
+        if (status.system_type == 2 && activity_manager == nullptr) {
+            activity_manager = new Activity::DogActivityManager;
+        }
+
 
 		orb_check(sp_man_sub, &updated);
 
@@ -2456,6 +2465,16 @@ int commander_thread_main(int argc, char *argv[])
 		}
 
 		status_changed = false;
+
+        if (activity_manager != nullptr) {
+
+            if (activity_manager->is_inited()) 
+                activity_manager->check_received_params();
+            else
+                activity_manager->init();
+
+        }
+
 
 		usleep(COMMANDER_MONITORING_INTERVAL);
 	}

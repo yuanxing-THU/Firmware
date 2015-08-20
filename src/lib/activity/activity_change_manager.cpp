@@ -1,38 +1,38 @@
 #include "activity_change_manager.hpp"
 #include "activity_lib_constants.h"
 
+#include <drivers/drv_hrt.h>
+
 #include <systemlib/param/param.h>
 #include <string.h>
 
 namespace Activity {
 
-ActivityChangeManager::ActivityChangeManager(int _a_id, bool _test_mode){
+ActivityChangeManager::ActivityChangeManager() : 
+    activity(0),
+    param_count(ALLOWED_PARAM_COUNT),
+    cur_param_id(0),
+    params_up_to_date(false),
+    activity_params_sub(-1){
+}
 
-        a_id = _a_id;
-        test_mode = _test_mode;
+ActivityChangeManager::ActivityChangeManager(int _activity) :
+    activity(_activity),
+    param_count(ALLOWED_PARAM_COUNT),
+    cur_param_id(0),
+    params_up_to_date(false),
+    activity_params_sub(-1)
+{
 
-        params_inited = false;
-        params_up_to_date = false;
-        param_count = ALLOWED_PARAM_COUNT;
+        if (!allowed_params_inited) init_allowed_params();
+        if (!activity_limits_list_inited) init_activity_limits_list();
 
-
+        init_activity_limits();
+        
         activity_params_sub = orb_subscribe(ORB_ID(activity_params));
 
-        for (int i=0;i<ALLOWED_PARAM_COUNT;i++) {
+        request_dog_params();
 
-            params[i].p_id = i;
-            params[i].limits = nullptr;
-
-            for (int j=0;j<ACTIVITY_LIMITS_LIST[_a_id].param_count;j++)
-                if (ACTIVITY_LIMITS_LIST[0].params[i].p_id == ACTIVITY_LIMITS_LIST[_a_id].params[j].p_id) {
-                    params[i].limits = &ACTIVITY_LIMITS_LIST[_a_id].params[j];
-                }
-
-            if (params[i].limits == nullptr) {
-                params[i].limits = &ACTIVITY_LIMITS_LIST[0].params[i];
-            }
-
-        }
 }
 
 ActivityChangeManager::~ActivityChangeManager() {
@@ -41,13 +41,13 @@ ActivityChangeManager::~ActivityChangeManager() {
 
 bool
 ParamChangeManager::get_param_name(char * buffer, const int buffer_len){
-    strncpy ( buffer, ALLOWED_PARAMS[p_id].name, strlen(ALLOWED_PARAMS[p_id].name)+1 );
+    strncpy ( buffer, ALLOWED_PARAMS[p_id].name, buffer_len );
     return true; 
 }
 
 bool
 ParamChangeManager::get_display_name(char * buffer, const int buffer_len){
-    strncpy ( buffer, ALLOWED_PARAMS[p_id].display_name, strlen(ALLOWED_PARAMS[p_id].display_name)+1 );
+    strncpy ( buffer, ALLOWED_PARAMS[p_id].display_name, buffer_len );
     return true; 
 }
 
@@ -209,7 +209,7 @@ ParamChangeManager::get_id(){
 
 bool
 ActivityChangeManager::get_display_name(char * buffer, const int buffer_len){
-   snprintf(buffer, buffer_len, "%s", ACTIVITY_LIMITS_LIST[a_id].name); 
+   snprintf(buffer, buffer_len, "%s", ACTIVITY_LIMITS_LIST[activity].name); 
    return true; 
 }
 
@@ -270,15 +270,16 @@ ActivityChangeManager::get_prev_visible_param(){
 
         cur_param_id--;
 
-        if (cur_param_id < 0)
+        if (cur_param_id < 0) {
             cur_param_id = ALLOWED_PARAM_COUNT-1;
+        }
 
         if (it >= ALLOWED_PARAM_COUNT)
             break;
 
         if (params[cur_param_id].limits->type != PARAM_LIMIT_TYPE::INVISIBLE) {
-            break;
-        }
+           break;
+         }
 
         it++;
     }
@@ -287,9 +288,14 @@ ActivityChangeManager::get_prev_visible_param(){
 }
 
 bool
-ActivityChangeManager::init_params(activity_params_s activity_params){
+ActivityChangeManager::process_received_params(activity_params_s activity_params){
+
+    activity = activity_params.values[0];
+
+    init_activity_limits();
 
     for (int i=0;i<ALLOWED_PARAM_COUNT;i++) {
+
         params[i].saved_value = activity_params.values[i]; 
         params[i].value = activity_params.values[i]; 
 
@@ -302,9 +308,29 @@ ActivityChangeManager::init_params(activity_params_s activity_params){
         }
     }
 
-    params_inited = true;
+    params_up_to_date = true;
     cur_param_id = 0;
+
     return true;
+}
+
+bool
+ActivityChangeManager::init_activity_limits() {
+
+    for (int i=0;i<ALLOWED_PARAM_COUNT;i++) {
+
+        params[i].p_id = i;
+        params[i].limits = nullptr;
+
+        for (int j=0;j<ACTIVITY_LIMITS_LIST[activity].param_count;j++)
+            if (ACTIVITY_LIMITS_LIST[0].params[i].p_id == ACTIVITY_LIMITS_LIST[activity].params[j].p_id) {
+                params[i].limits = &ACTIVITY_LIMITS_LIST[activity].params[j];
+            }
+
+        if (params[i].limits == nullptr) {
+            params[i].limits = &ACTIVITY_LIMITS_LIST[0].params[i];
+        }
+    }
 }
 
 bool
@@ -313,6 +339,7 @@ ActivityChangeManager::save_params(){
     activity_params_s activity_params;
 
     activity_params.type = ACTIVITY_PARAMS_SAVED;
+    activity_params.ts = hrt_absolute_time();
 
     for (int i=0;i<ALLOWED_PARAM_COUNT;i++) {
         activity_params.values[i] = params[i].saved_value;
@@ -328,6 +355,21 @@ ActivityChangeManager::save_params(){
     send_params_to_dog();
 
     return true;
+
+}
+
+int
+ActivityChangeManager::cancel_params(){
+
+    activity_params_s activity_params;
+    orb_copy(ORB_ID(activity_params), activity_params_sub, &activity_params);
+
+    for (int i=0;i<ALLOWED_PARAM_COUNT;i++) {
+
+        params[i].saved_value = activity_params.values[i]; 
+        params[i].value = activity_params.values[i]; 
+
+    }
 
 }
 
@@ -347,13 +389,8 @@ ActivityChangeManager::send_params_to_dog(){
     params_up_to_date = false;
 }
 
-int
-ActivityChangeManager::cancel_params(){
-    params_inited = false;
-}
-
 bool 
-ActivityChangeManager::params_updated() {
+ActivityChangeManager::params_received() {
 
     if (params_up_to_date)
         return true;
@@ -368,20 +405,17 @@ ActivityChangeManager::params_updated() {
             orb_copy(ORB_ID(activity_params), activity_params_sub, &activity_params);
 
             if (activity_params.type == ACTIVITY_PARAMS_RECEIVED) {
-                init_params(activity_params);
+                process_received_params(activity_params);
                 params_up_to_date = true;
             }
         }
     }
 
     return params_up_to_date;
-
 }
 
-__EXPORT ActivityChangeManager 
-getActivityChangeManager(int activity_id, bool test_mode){
-
-    init_activity_limits_list();
+bool 
+ActivityChangeManager::request_dog_params() {
 
     activity_request_sndr_s activity_request_sndr;
     activity_request_sndr.type = ACTIVITY_REQUEST_PARAMS; 
@@ -389,11 +423,9 @@ getActivityChangeManager(int activity_id, bool test_mode){
     int activity_request_sndr_pub = orb_advertise(ORB_ID(activity_request_sndr), &activity_request_sndr);
 
     if (activity_request_sndr_pub <= 0) {
-        // TODO: Do something
+        printf("Error: failed to publish to activity request sender orb! ");
     }
 
-    ActivityChangeManager mgr = ActivityChangeManager(activity_id, test_mode);
-    return mgr;
 }
 
 bool
