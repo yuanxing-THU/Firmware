@@ -26,7 +26,7 @@ namespace Laird
  */
 constexpr auto MAX_COMMAND_DURATION = Time::duration_sec(6);
 
-constexpr int READ_WAIT_POLL_ms = 1000;
+constexpr int READ_WAIT_POLL_ms = 250;
 constexpr int WRITE_SINGLE_POLL_ms = 1000;
 
 using ResponceEventBuffer = RxBuffer< 256 >;
