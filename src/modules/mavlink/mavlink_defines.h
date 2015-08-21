@@ -1,3 +1,3 @@
 #pragma once
 
-#define MAVLINK_VERSION 4
+#define AIRDOG_MAVLINK_VERSION 4

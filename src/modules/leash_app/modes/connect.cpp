@@ -150,7 +150,7 @@ Base* ModeConnect::doEvent(int orbId)
                 DisplayHelper::showInfo(INFO_COMMUNICATION_FAILED);
             }
         }
-        else if (v != MAVLINK_VERSION)
+        else if (v != AIRDOG_MAVLINK_VERSION)
         {
             // invalid mavlink version
             DisplayHelper::showInfo(INFO_COMMUNICATION_FAILED);
