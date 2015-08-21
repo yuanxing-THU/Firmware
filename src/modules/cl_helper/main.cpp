@@ -209,7 +209,7 @@ main(int argc, char const * const * argv)
 bool
 test_activity_manager(const int activity_number){
 
-    Activity::ActivityChangeManager A(3);
+    Activity::ActivityChangeManager A(activity_number);
 
     init_receive_fake_activity_params();
 

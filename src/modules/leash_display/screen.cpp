@@ -95,7 +95,8 @@ void Screen::showLogo()
 }
 
 void Screen::showMain(int mode, const char *presetName, int leashBattery, int airdogBattery,
-                      int airdogMode, int followMode, int landMode)
+                      int airdogMode, int followMode, int landMode,
+                      int leashGPS, int airdogGPS)
 {
     DOG_PRINT("[display]{main} current mode %d\n", mode);
     int width = 0;
@@ -183,10 +184,50 @@ void Screen::showMain(int mode, const char *presetName, int leashBattery, int ai
         display_draw_line(64, 19, 64, 63);
         display_draw_line(64, 41, 113, 41);
 
+        display_draw_line(0, 29, 64, 29); // horizontal gps line
+        //display_draw_line(32, 19, 32, 29); // vertical gps line
+
+        DOG_PRINT("[screen] leash_gps: %d\n", leashGPS);
+        if (leashGPS > 0)
+        {
+            display_draw_rectangle(13,21,16,27);
+            display_draw_rectangle(19,21,22,27);
+            display_draw_rectangle(25,21,28,27);
+        }
+        if (leashGPS > 1)
+        {
+            display_fill_rectangle(13,21,16,27);
+        }
+        if (leashGPS > 2)
+        {
+            display_fill_rectangle(19,21,22,27);
+        }
+        if (leashGPS > 3)
+        {
+            display_fill_rectangle(25,21,28,27);
+        }
+
+        if (airdogGPS > 0)
+        {
+            display_draw_rectangle(47,21,50,27);
+            display_draw_rectangle(53,21,56,27);
+            display_draw_rectangle(59,21,62,27);
+        }
+        if (airdogGPS > 1)
+        {
+            display_fill_rectangle(47,21,50,27);
+        }
+        if (airdogGPS > 2)
+        {
+            display_fill_rectangle(53,21,56,27);
+        }
+        if (airdogGPS > 3)
+        {
+            display_fill_rectangle(59,21,62,27);
+        }
+
         if (mode == MAINSCREEN_INFO_SUB)
         {
-            //display_draw_line(31, 63, 31, 19);
-            //display_draw_line(0, 41, 64, 41);
             display_fill_rectangle(0, 19, 64, 63);
         }
 
@@ -209,7 +250,7 @@ void Screen::showMain(int mode, const char *presetName, int leashBattery, int ai
         // draw airdog battery level
         char buf[10];
         sprintf(buf, "%d", airdogBattery);
-        TextBlock blockAirdogBattery(buf, 4, 30, &Font::LucideGrandeBig);
+        TextBlock blockAirdogBattery(buf, 4, 34, &Font::LucideGrandeBig);
         blockAirdogBattery.draw();
 
         width = Font::LucideGrandeBig.getTextWidth(buf);
@@ -218,12 +259,12 @@ void Screen::showMain(int mode, const char *presetName, int leashBattery, int ai
         {
             if (airdogImageId == -1)
             {
-                TextBlock blockProcent("%", 5 + width, 35, &Font::LucideGrandeMed);
+                TextBlock blockProcent("%", 5 + width, 39, &Font::LucideGrandeMed);
                 blockProcent.draw();
             }
             else if (airdogImageId != -1)
             {
-                BitmapBlock blockAirdogMode(7 + width, 33, airdogImageId);
+                BitmapBlock blockAirdogMode(7 + width, 37, airdogImageId);
                 blockAirdogMode.draw();
             }
         }
@@ -524,6 +565,15 @@ void Screen::showInfo(int info, int error)
             text[1].font = &Font::LucideGrandeSmall;
             text[2].text = "airdog";
             text[2].font = &Font::LucideGrandeSmall;
+            break;
+
+        case INFO_GETTING_ACTIVITIES:
+            text[0].text = "SYNCING";
+            text[0].font = &Font::LucideGrandeMed;
+            text[1].text = "activities with";
+            text[1].font = &Font::LucideGrandeTiny;
+            text[2].text = "AirDog";
+            text[2].font = &Font::LucideGrandeTiny;
             break;
 
         case INFO_CONNECTION_LOST:

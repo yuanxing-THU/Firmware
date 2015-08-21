@@ -3,6 +3,7 @@
 #include "base.h"
 
 #include <uORB/topics/leash_display.h>
+#include <activity/activity_change_manager.hpp>
 
 namespace modes
 {
@@ -48,7 +49,7 @@ protected:
         MENUENTRY_GYRO,
 
         // Customize menu
-        MENUENTRY_ALTITUDE,
+        MENUENTRY_GENERATED,
         MENUENTRY_FOLLOW,
         MENUENTRY_LAND,
         MENUENTRY_SAVE,
@@ -79,8 +80,7 @@ protected:
     int calibrateMode;
     int currentEntry;
     int previousEntry;
-    //TODO: get current preset from somewhere
-    const char *currentPresetName;
+    char currentPresetName[20];
     static struct Entry entries[MENUENTRY_SIZE];
 
     Base* makeAction();
@@ -88,6 +88,9 @@ protected:
     Base* switchEntry(int newEntry);
 
     void makeMenu(int menuEntry[], int size);
+    void buildActivityMenu(bool switching_from_prev_entry = false);
+    Activity::ParamChangeManager * activity_param;
+    void backToCustomize(bool);
 };
 
 }

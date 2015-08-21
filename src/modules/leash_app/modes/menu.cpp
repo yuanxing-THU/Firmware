@@ -1,5 +1,7 @@
 #include "menu.h"
 
+#include <cstdlib>
+#include <cstring>
 #include <stdio.h>
 
 #include "main.h"
@@ -10,6 +12,7 @@
 
 namespace modes
 {
+
 struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
 {
 // -------- Top level menu
@@ -156,14 +159,14 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
 
 // -------- Customize menu
 {
-    // Menu::MENUENTRY_ALTITUDE,
-    MENUTYPE_ALTITUDE,
+    // Menu::MENUENTRY_GENERATED,
+    MENUTYPE_CUSTOM_VALUE,
     0,
     MENUBUTTON_LEFT | MENUBUTTON_RIGHT,
     nullptr, // use previous preset name
-    Menu::MENUENTRY_FOLLOW,
-    Menu::MENUENTRY_CANCEL,
     Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_ACTION,
     Menu::MENUENTRY_CUSTOMIZE,
 },
 {
@@ -173,7 +176,7 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     MENUBUTTON_LEFT | MENUBUTTON_RIGHT,
     nullptr, // use previous preset name
     Menu::MENUENTRY_LAND,
-    Menu::MENUENTRY_ALTITUDE,
+    Menu::MENUENTRY_GENERATED,
     Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_CUSTOMIZE,
 },
@@ -195,9 +198,9 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     MENUBUTTON_LEFT | MENUBUTTON_RIGHT,
     nullptr, // use previous preset name
     Menu::MENUENTRY_CANCEL,
-    Menu::MENUENTRY_LAND,
-    Menu::MENUENTRY_IGNORE,
-    Menu::MENUENTRY_CUSTOMIZE,
+    Menu::MENUENTRY_CANCEL,
+    Menu::MENUENTRY_ACTION,
+    Menu::MENUENTRY_GENERATED,
 },
 {
     // Menu::MENUENTRY_CANCEL,
@@ -205,20 +208,89 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     0,
     MENUBUTTON_LEFT | MENUBUTTON_RIGHT,
     nullptr, // use previous preset name
-    Menu::MENUENTRY_ALTITUDE,
     Menu::MENUENTRY_SAVE,
-    Menu::MENUENTRY_IGNORE,
-    Menu::MENUENTRY_CUSTOMIZE,
+    Menu::MENUENTRY_SAVE,
+    Menu::MENUENTRY_ACTION,
+    Menu::MENUENTRY_GENERATED,
 },
 };
 
 Menu::Menu()
 {
+    DataManager *dm = DataManager::instance();
+
+    int newMode = 0;
+    if (!dm->activityManager.params_received())
+    {
+        int modes[] = {
+            MENUENTRY_SETTINGS
+        };
+        makeMenu(modes, sizeof(modes)/sizeof(int));
+        newMode = modes[0];
+    }
+    else
+    {
+        int modes[] = {
+            MENUENTRY_CUSTOMIZE,
+            MENUENTRY_SETTINGS,
+            MENUENTRY_ACTIVITIES
+        };
+        makeMenu(modes, sizeof(modes)/sizeof(int));
+        newMode = modes[0];
+
+        activity_param = dm->activityManager.get_current_param();
+        dm->activityManager.get_display_name(currentPresetName, sizeof(currentPresetName)/sizeof(char));
+    }
     calibrateMode = CALIBRATE_NONE;
-    currentPresetName = nullptr;
-    currentEntry = MENUENTRY_CUSTOMIZE;
     previousEntry = -1;
-    showEntry();
+    switchEntry(newMode);
+}
+
+void Menu::buildActivityMenu(bool switching_from_prev_entry)
+{
+    DataManager *dm = DataManager::instance();
+
+    char c_name[19];
+    char c_value[10];
+    char result[LEASHDISPLAY_TEXT_SIZE];
+
+    activity_param->get_param_name(c_name, sizeof(c_name)/sizeof(char));
+    activity_param->get_display_value(c_value, sizeof(c_value)/sizeof(char));
+
+    if (key_pressed(BTN_UP))
+    {
+        memset(c_value, 0, sizeof(c_value));
+        activity_param->get_next_value(c_value, sizeof(c_value)/sizeof(char));
+        backToCustomize(false);
+    }
+    else if (key_pressed(BTN_DOWN))
+    {
+        memset(c_value, 0, sizeof(c_value));
+        activity_param->get_prev_value(c_value, sizeof(c_value)/sizeof(char));
+        backToCustomize(false);
+    }
+    else if (key_pressed(BTN_RIGHT)) //Don't switch param if comming from prev entry
+    {
+        activity_param = dm->activityManager.get_next_visible_param();
+        activity_param->get_display_value(c_value, sizeof(c_value)/sizeof(char));
+        activity_param->get_param_name(c_name, sizeof(c_name)/sizeof(char));
+    }
+    else if (key_pressed(BTN_LEFT)) //Don't switch param if comming from prev entry
+    {
+        activity_param = dm->activityManager.get_prev_visible_param();
+        activity_param->get_display_value(c_value, sizeof(c_value)/sizeof(char));
+        activity_param->get_param_name(c_name, sizeof(c_name)/sizeof(char));
+    }
+
+    if (currentEntry == MENUENTRY_GENERATED) //If not - we switched entry with Right/Left
+    {
+        const char *presetName = entries[currentEntry].text;
+
+        snprintf(result, sizeof(result), "%s\n%s", c_name, c_value);
+        DisplayHelper::showMenu(entries[currentEntry].menuButtons, entries[currentEntry].menuType,
+                                0, presetName, result);
+    }
+
 }
 
 int Menu::getTimeout()
@@ -254,11 +326,17 @@ Base* Menu::doEvent(int orbId)
     }
     else if (key_pressed(BTN_RIGHT))
     {
-        nextMode = switchEntry(entries[currentEntry].next);
+        if (currentEntry != MENUENTRY_GENERATED)
+            nextMode = switchEntry(entries[currentEntry].next);
+        else
+            nextMode = makeAction();
     }
     else if (key_pressed(BTN_LEFT))
     {
-        nextMode = switchEntry(entries[currentEntry].prev);
+        if (currentEntry != MENUENTRY_GENERATED)
+            nextMode = switchEntry(entries[currentEntry].prev);
+        else
+            nextMode = makeAction();
     }
     else if (key_pressed(BTN_UP))
     {
@@ -274,6 +352,7 @@ Base* Menu::doEvent(int orbId)
 
 Base* Menu::makeAction()
 {
+    DataManager *dm = DataManager::instance();
     Base *nextMode = nullptr;
     int value = 0;
 
@@ -283,29 +362,29 @@ Base* Menu::makeAction()
             nextMode = new Main();
             break;
 
-        case MENUENTRY_ALTITUDE:
-            value = entries[MENUENTRY_ALTITUDE].menuValue;
-            if (key_pressed(BTN_UP))
+        case MENUENTRY_SAVE:
+            if (dm->activityManager.save_params())
             {
-                if (value < 100)
-                {
-                    value += 10;
-                }
-            }
-            else if (key_pressed(BTN_DOWN))
-            {
-                if (value > 0)
-                {
-                    value -= 10;
-                }
-            }
-
-            if (value != entries[MENUENTRY_ALTITUDE].menuValue)
-            {
-                // value was changed
-                entries[MENUENTRY_ALTITUDE].menuValue = value;
+                backToCustomize(true);
+                currentEntry = MENUENTRY_CUSTOMIZE;
                 showEntry();
             }
+            else
+            {
+                //[TODO:YURA] Error handling should be there
+                DisplayHelper::showInfo(INFO_FAILED);
+            }
+            break;
+
+        case MENUENTRY_CANCEL:
+            backToCustomize(true);
+            dm->activityManager.cancel_params(); 
+            currentEntry = MENUENTRY_CUSTOMIZE;
+            showEntry();
+            break;
+
+        case MENUENTRY_GENERATED:
+            buildActivityMenu();
             break;
 
         case MENUENTRY_FOLLOW:
@@ -419,11 +498,7 @@ Base* Menu::makeAction()
 
         case MENUENTRY_CUSTOMIZE:
             int modes[] = {
-                MENUENTRY_ALTITUDE,
-//                MENUENTRY_FOLLOW,
-//                MENUENTRY_LAND,
-                MENUENTRY_SAVE,
-                MENUENTRY_CANCEL
+                MENUENTRY_GENERATED
             };
             makeMenu(modes, sizeof(modes)/sizeof(int));
             switchEntry(modes[0]);
@@ -435,16 +510,24 @@ Base* Menu::makeAction()
 
 void Menu::showEntry()
 {
-    const char *presetName = entries[currentEntry].text;
-
-    if (presetName == nullptr)
+    if (currentEntry == MENUENTRY_GENERATED)
     {
-        presetName = currentPresetName;
+        bool switching_from_prev_entry = true;
+        buildActivityMenu(switching_from_prev_entry);
     }
+    else
+    {
+        const char *presetName = entries[currentEntry].text;
 
-    printf("presetName %s\n", presetName);
-    DisplayHelper::showMenu(entries[currentEntry].menuButtons, entries[currentEntry].menuType,
-                            entries[currentEntry].menuValue, presetName);
+        if (presetName == nullptr)
+        {
+            presetName = currentPresetName;
+        }
+
+        printf("presetName %s\n", presetName);
+        DisplayHelper::showMenu(entries[currentEntry].menuButtons, entries[currentEntry].menuType,
+                                entries[currentEntry].menuValue, presetName);
+    }
 }
 
 Base* Menu::switchEntry(int newEntry)
@@ -465,17 +548,24 @@ Base* Menu::switchEntry(int newEntry)
     }
     else if (newEntry < MENUENTRY_SIZE && newEntry >= 0)
     {
+        DOG_PRINT("[menu] SWITCHING TO ENTRY %d from %d\n", newEntry, currentEntry);
         currentEntry = newEntry;
-
-        if (entries[currentEntry].text != nullptr)
-        {
-            currentPresetName = entries[currentEntry].text;
-            printf("current preset %s\n", currentPresetName);
-        }
         showEntry();
     }
 
     return nextMode;
+}
+
+void Menu::backToCustomize(bool yes)
+{
+    if (yes)
+    {
+        entries[MENUENTRY_GENERATED].back = MENUENTRY_CUSTOMIZE;
+    }
+    else
+    {
+        entries[MENUENTRY_GENERATED].back = MENUENTRY_SAVE;
+    }
 }
 
 void Menu::makeMenu(int menuEntry[], int size)
@@ -506,6 +596,7 @@ void Menu::makeMenu(int menuEntry[], int size)
         if (e != MENUENTRY_IGNORE)
         {
             entries[last].next = e;
+            entries[first].prev = e;
             entries[e].prev = last;
             entries[e].next = first;
             last = e;

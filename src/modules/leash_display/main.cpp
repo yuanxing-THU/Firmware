@@ -120,7 +120,8 @@ static int leash_display_thread_main(int argc, char *argv[])
 
                     lb = leash_convert_voltage_to_percent(dm.system_power.voltage5V_v);
                     Screen::showMain(dm.leash_display.mainMode, dm.leash_display.presetName, lb, dm.airdog_status.battery_remaining,
-                                     dm.leash_display.airdogMode, dm.leash_display.followMode, dm.leash_display.landMode);
+                                     dm.leash_display.airdogMode, dm.leash_display.followMode, dm.leash_display.landMode,
+                                     dm.leash_display.leashGPS, dm.leash_display.airdogGPS);
                     break;
 
                 case LEASHDISPLAY_MENU:
@@ -167,7 +168,8 @@ static int leash_display_thread_main(int argc, char *argv[])
                 case LEASHDISPLAY_MAIN:
                     lb = leash_convert_voltage_to_percent(dm.system_power.voltage5V_v);
                     Screen::showMain(dm.leash_display.mainMode, dm.leash_display.presetName, lb, dm.airdog_status.battery_remaining,
-                                     dm.leash_display.airdogMode, dm.leash_display.followMode, dm.leash_display.landMode);
+                                     dm.leash_display.airdogMode, dm.leash_display.followMode, dm.leash_display.landMode,
+                                     dm.leash_display.leashGPS, dm.leash_display.airdogGPS);
                     break;
 
                 case LEASHDISPLAY_MENU:

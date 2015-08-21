@@ -88,6 +88,7 @@ enum
 enum
 {
     INFO_CONNECTING_TO_AIRDOG,
+    INFO_GETTING_ACTIVITIES,
     INFO_CONNECTION_LOST,
     INFO_TAKEOFF_FAILED,
     INFO_CALIBRATING_SENSORS,
@@ -127,6 +128,8 @@ struct leash_display_s {
     int menuButtons;
     int infoId;
     int infoError;
+    int leashGPS;
+    int airdogGPS;
     char customText[LEASHDISPLAY_TEXT_SIZE];
 
     // show text for debug puprose

@@ -16,6 +16,10 @@
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_status.h>
 
+#include <activity/activity_change_manager.hpp>
+#include <activity/activity_files.hpp>
+#include <activity/activity_lib_constants.h>
+
 enum Orbs
 {
     FD_AirdogStatus = 0,
@@ -58,6 +62,8 @@ public:
     struct vehicle_gps_position_s leashRawGPS;
     struct vehicle_local_position_s localPos;
     struct vehicle_status_s vehicle_status;
+
+    Activity::ActivityChangeManager activityManager;
 
     bool wait(int timeout);
     void clearAwait();

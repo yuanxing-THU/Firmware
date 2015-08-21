@@ -54,11 +54,21 @@ private:
         int follow_mode;
         int land_mode;
     };
+    typedef enum
+    {
+        NO_GPS = 0,
+        BAD_GPS,
+        FAIR_GPS,
+        GOOD_GPS,
+        EXCELENT_GPS,
+    } gps_qality;
 
 	const hrt_abstime command_responce_time = 10000000;
 	hrt_abstime local_timer = 0;
 
     bool ignoreKeyEvent;
+    gps_qality leashGPS;
+    gps_qality airdogGPS;
 
     struct DisplayInfo displayInfo;
     struct Condition baseCondition;
@@ -70,6 +80,7 @@ private:
     Base* processFlight(int orbId);
 
     void decide_command(MainStates mainState);
+    void checkGPS();
 };
 
 }

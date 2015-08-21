@@ -1,3 +1,5 @@
+#pragma once
+
 #include "activity_limits_list.hpp"
 #include "uORB/topics/activity_params.h"
 

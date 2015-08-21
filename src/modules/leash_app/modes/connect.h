@@ -14,8 +14,9 @@ public:
         PAIRING,
         DISCONNECTED,
         CONNECTING,
-        CONNECTED,
         CHECK_MAVLINK,
+        GETTING_ACTIVITIES,
+        CONNECTED,
     };
 
     ModeConnect(State current = State::UNKNOWN);
@@ -36,6 +37,7 @@ private:
 
     // == methods ==
     void getConState();
+    bool receiveActivityParams();
     void BTPairing(bool start = 1);
 };
 

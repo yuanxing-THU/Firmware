@@ -7,7 +7,8 @@
 
 DataManager* DataManager::_instance = nullptr;
 
-DataManager::DataManager()
+DataManager::DataManager() :
+    activityManager(0)
 {
     // get orbs id
     orbId[FD_AirdogStatus] = ORB_ID(airdog_status);

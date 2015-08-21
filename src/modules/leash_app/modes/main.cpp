@@ -15,7 +15,9 @@
 namespace modes
 {
 
-Main::Main()
+Main::Main() :
+    leashGPS(NO_GPS),
+    airdogGPS(NO_GPS)
 {
 
     displayInfo.mode = MAINSCREEN_INFO;
@@ -32,7 +34,7 @@ Main::Main()
                                 ,displayInfo.airdog_mode
                                 ,displayInfo.follow_mode
                                 ,displayInfo.land_mode
-                                );
+                                ,leashGPS, airdogGPS);
 }
 
 int Main::getTimeout()
@@ -48,6 +50,8 @@ void Main::listenForEvents(bool awaitMask[])
     awaitMask[FD_KbdHandler] = 1;
     awaitMask[FD_BLRHandler] = 1;
     awaitMask[FD_LeashGlobalPos] = 1;
+    awaitMask[FD_DroneLocalPos] = 1;
+    awaitMask[FD_LeashRowGPS] = 1;
 }
 
 Base* Main::processGround(int orbId)
@@ -184,6 +188,11 @@ Base* Main::doEvent(int orbId)
         makeAction();
     }
 
+    /* -- check gps state -- */
+    if (orbId == FD_DroneLocalPos || orbId == FD_LeashRowGPS)
+    {
+        checkGPS();
+    }
     /* -- disconnected -- */
     if (dm->bt_handler.global_state == CONNECTING)
     {
@@ -245,6 +254,35 @@ Base* Main::doEvent(int orbId)
     return nextMode;
 }
 
+void Main::checkGPS()
+{
+    DataManager *dm = DataManager::instance();
+    float leash_eph = dm->leashRawGPS.eph;
+    float airdog_eph = dm->droneLocalPos.eph;
+
+    if (leash_eph == 0.0f)
+        leashGPS = NO_GPS;
+    else if (leash_eph < 1.5f)
+        leashGPS = EXCELENT_GPS;
+    else if (leash_eph < 2.5f)
+        leashGPS = GOOD_GPS;
+    else if (leash_eph < 3.2f)
+        leashGPS = FAIR_GPS;
+    else
+        leashGPS = BAD_GPS;
+
+    if (airdog_eph == 0.0f)
+        airdogGPS = NO_GPS;
+    else if (airdog_eph < 1.5f)
+        airdogGPS = EXCELENT_GPS;
+    else if (airdog_eph < 2.5f)
+        airdogGPS = GOOD_GPS;
+    else if (airdog_eph < 3.2f)
+        airdogGPS = FAIR_GPS;
+    else
+        airdogGPS = BAD_GPS;
+}
+
 bool Main::onError(int errorCode)
 {
     baseCondition.sub = NONE;
@@ -263,19 +301,23 @@ Base* Main::makeAction()
         {
             case NONE:
                 DisplayHelper::showMain(MAINSCREEN_INFO, "airdog",
-                                        AIRDOGMODE_NONE, FOLLOW_PATH, LAND_SPOT);
+                                        AIRDOGMODE_NONE, FOLLOW_PATH, LAND_SPOT,
+                                        leashGPS, airdogGPS);
                 break;
             case HELP:
                 DisplayHelper::showMain(MAINSCREEN_READY_TO_TAKEOFF, "airdog",
-                                        AIRDOGMODE_NONE, FOLLOW_PATH, LAND_SPOT);
+                                        AIRDOGMODE_NONE, FOLLOW_PATH, LAND_SPOT,
+                                        leashGPS, airdogGPS);
                 break;
             case CONFIRM_TAKEOFF:
                 DOG_PRINT("[leash_app]{main menu} confirm airdog screen\n");
-                DisplayHelper::showMain(MAINSCREEN_CONFIRM_TAKEOFF, "airdog", 0, 0, 0);
+                DisplayHelper::showMain(MAINSCREEN_CONFIRM_TAKEOFF, "airdog", 0, 0, 0,
+                                        leashGPS, airdogGPS);
                 break;
             case TAKEOFF_CONFIRMED:
                 DOG_PRINT("[leash_app]{main menu} takeoff confirm\n");
-                DisplayHelper::showMain(MAINSCREEN_TAKING_OFF, "airdog", 0, 0, 0);
+                DisplayHelper::showMain(MAINSCREEN_TAKING_OFF, "airdog", 0, 0, 0,
+                                        leashGPS, airdogGPS);
                 if (local_timer == 0)
                 {
                     send_arm_command(dm->airdog_status);
@@ -283,7 +325,8 @@ Base* Main::makeAction()
                 }
                 break;
             case TAKING_OFF:
-                DisplayHelper::showMain(MAINSCREEN_TAKING_OFF, "airdog", 0, 0, 0);
+                DisplayHelper::showMain(MAINSCREEN_TAKING_OFF, "airdog", 0, 0, 0,
+                                        leashGPS, airdogGPS);
                 break;
             case TAKEOFF_FAILED:
                 DisplayHelper::showInfo(INFO_TAKEOFF_FAILED, 0);
@@ -304,17 +347,20 @@ Base* Main::makeAction()
                 DisplayHelper::showMain(displayInfo.mode, "airdog"
                                 ,displayInfo.airdog_mode
                                 ,displayInfo.follow_mode
-                                ,displayInfo.land_mode
-                                );
+                                ,displayInfo.land_mode,
+                                leashGPS, airdogGPS);
                 break;
             case TAKING_OFF:
-                DisplayHelper::showMain(MAINSCREEN_TAKING_OFF, "airdog", 0, 0, 0);
+                DisplayHelper::showMain(MAINSCREEN_TAKING_OFF, "airdog", 0, 0, 0,
+                                        leashGPS, airdogGPS);
                 break;
             case LANDING:
-                DisplayHelper::showMain(MAINSCREEN_LANDING, "airdog", 0, 0, 0);
+                DisplayHelper::showMain(MAINSCREEN_LANDING, "airdog", 0, 0, 0,
+                                        leashGPS, airdogGPS);
                 break;
             case RTL:
-                DisplayHelper::showMain(MAINSCREEN_GOING_HOME, "airdog", 0, 0, 0);
+                DisplayHelper::showMain(MAINSCREEN_GOING_HOME, "airdog", 0, 0, 0,
+                                        leashGPS, airdogGPS);
                 break;
             default:
                 DOG_PRINT("[leash_app]{main} unexpected sub condition, got %d\n", baseCondition.sub);

@@ -50,6 +50,7 @@ void ModeConnect::listenForEvents(bool awaitMask[])
         case State::DISCONNECTED:
         case State::CONNECTING:
         case State::CONNECTED:
+        case State::GETTING_ACTIVITIES:
             awaitMask[FD_BLRHandler] = 1;
             break;
 
@@ -74,7 +75,7 @@ Base* ModeConnect::doEvent(int orbId)
         if (currentState == State::PAIRING)
             forcing_pairing = false;
     }
-    else
+    else if (currentState != State::GETTING_ACTIVITIES)
         getConState();
 
     switch (currentState)
@@ -84,6 +85,9 @@ Base* ModeConnect::doEvent(int orbId)
             if (startTime == 0)
                 time(&startTime);
             DisplayHelper::showInfo(INFO_CONNECTING_TO_AIRDOG);
+            break;
+        case State::GETTING_ACTIVITIES:
+            DisplayHelper::showInfo(INFO_GETTING_ACTIVITIES);
             break;
         case State::CONNECTED:
             nextMode = new Acquiring_gps();
@@ -121,6 +125,7 @@ Base* ModeConnect::doEvent(int orbId)
                 case State::CONNECTING:
                 case State::CHECK_MAVLINK:
                 case State::UNKNOWN:
+                case State::GETTING_ACTIVITIES:
                     nextMode = new Menu();
                     break;
                 case State::PAIRING:
@@ -158,7 +163,13 @@ Base* ModeConnect::doEvent(int orbId)
         else
         {
             // valid mavlink version
-            currentState = State::CONNECTED;
+            currentState = State::GETTING_ACTIVITIES;
+        }
+    }
+    if (currentState == State::GETTING_ACTIVITIES)
+    {
+        if (receiveActivityParams())
+        {
             nextMode = new Acquiring_gps();
         }
     }
@@ -170,6 +181,16 @@ Base* ModeConnect::doEvent(int orbId)
         nextMode = service;
 
     return nextMode;
+}
+
+bool ModeConnect::receiveActivityParams()
+{
+    bool result = false;
+
+    DataManager *dm = DataManager::instance();
+    result = dm->activityManager.params_received();
+
+    return result;
 }
 
 void ModeConnect::getConState()

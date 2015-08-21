@@ -23,7 +23,7 @@ void DisplayHelper::showLogo()
     }
 }
 
-void DisplayHelper::showMain(int mode, const char *presetName, int airdogMode, int followMode, int landMode)
+void DisplayHelper::showMain(int mode, const char *presetName, int airdogMode, int followMode, int landMode, int leashGPS, int airdogGPS)
 {
     struct leash_display_s leash_display;
 
@@ -32,6 +32,9 @@ void DisplayHelper::showMain(int mode, const char *presetName, int airdogMode, i
     leash_display.followMode = followMode;
     leash_display.landMode = landMode;
     leash_display.mainMode = mode;
+    leash_display.leashGPS = leashGPS;
+    leash_display.airdogGPS = airdogGPS;
+
 
     if (presetName != nullptr)
     {
