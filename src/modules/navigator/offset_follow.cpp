@@ -101,6 +101,9 @@ OffsetFollow::on_active_front_follow() {
 
     _rotation_angle_sp = - atan2(target_vel(0), target_vel(1));
 
+    if (isnan(_rotation_angle_sp))
+        _rotation_angle_sp = 0.0f;
+
     if (_rotation_angle_sp < 0.0f )
         _rotation_angle_sp+=_2pi;
     
@@ -315,6 +318,9 @@ OffsetFollow::offset_distance_step(int direction) {
     if (step_len < 0.0f) step_len = 0.0f;
 
     float alpha = atan2(_follow_offset_vect(1), _follow_offset_vect(0));
+
+    if (isnan(alpha)) alpha = 1.0f;
+
     math::Vector<3> offset_delta(
         cosf(alpha) * step_len, 
         sinf(alpha) * step_len,
@@ -384,6 +390,10 @@ OffsetFollow::calculate_base_offset() {
     printf("Recalculating base offset !\n");
 
     _rotation_angle = -atan2(_follow_offset_vect(0), _follow_offset_vect(1));
+
+    if (isnan(_rotation_angle))
+        _rotation_angle = 0.0f;
+
     R_phi.from_euler(0.0f, 0.0f, -_rotation_angle);
     _base_offset = R_phi * _follow_offset_vect;
 
