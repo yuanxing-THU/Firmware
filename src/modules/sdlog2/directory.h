@@ -33,10 +33,10 @@ sdlog2_dir_find_by_number(char full_path[/*PATH_MAX*/], uint32_t number, const c
 uint64_t __attribute__ (( visibility ("protected") ))
 sdlog2_dir_size_recursive(const char path[]);
 
-void __attribute__ (( visibility ("protected") ))
+uint64_t __attribute__ (( visibility ("protected") ))
 sdlog2_dir_remove_recursive(const char path[]);
 
-void __attribute__ (( visibility ("protected") ))
+uint64_t __attribute__ (( visibility ("protected") ))
 sdlog2_dir_remove_oldest(const char root[]);
 
 __END_DECLS

@@ -87,18 +87,19 @@ sdlog2_dir_size_recursive(const char path[])
     return totalSize;
 }
 
-void
+uint64_t
 sdlog2_dir_remove_recursive(const char path[])
 {
     DIR *dir;
     struct dirent *entry;
     int path_len = strlen(path);
+    uint64_t removeSize = 0;
 
     dir = opendir(path);
     if (dir == NULL)
     {
         warnx("opendir failed");
-        return;
+        return removeSize;
     }
 
     for (entry = readdir(dir); entry != NULL; entry = readdir(dir))
@@ -129,10 +130,11 @@ sdlog2_dir_remove_recursive(const char path[])
         // if directory then we should check sub directories
         if (S_ISDIR(st.st_mode))
         {
-            sdlog2_dir_remove_recursive(buf);
+            removeSize += sdlog2_dir_remove_recursive(buf);
         }
         else
         {
+            removeSize += st.st_size;
             unlink(buf);
         }
     }
@@ -140,15 +142,18 @@ sdlog2_dir_remove_recursive(const char path[])
     closedir(dir);
 
     rmdir(path);
+
+    return removeSize;
 }
 
-void
+uint64_t
 sdlog2_dir_remove_oldest(const char root[])
 {
     DIR *dir;
     struct dirent *entry;
-    int oldest_number = 0;
+    int oldest_number = -1;
     char oldest_dir[PATH_MAX];
+    uint64_t removeSize = 0;
 
     dir = opendir(root);
     if (dir == NULL)
@@ -170,7 +175,7 @@ sdlog2_dir_remove_oldest(const char root[])
             continue;
         }
 
-        if (oldest_number == 0 || n < oldest_number)
+        if (oldest_number == -1 || n < oldest_number)
         {
             oldest_number = n;
             os_path_join2(oldest_dir, root, entry->d_name);
@@ -179,11 +184,13 @@ sdlog2_dir_remove_oldest(const char root[])
 
     closedir(dir);
 
-    if (oldest_number > 0)
+    if (oldest_number >= 0)
     {
-        warnx("remove %s\n", oldest_dir);
-        sdlog2_dir_remove_recursive(oldest_dir);
+        removeSize = sdlog2_dir_remove_recursive(oldest_dir);
+        warnx("removed %lld bytes %s\n", removeSize, oldest_dir);
     }
+
+    return removeSize;
 }
 
 uint32_t

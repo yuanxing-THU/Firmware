@@ -376,17 +376,26 @@ int sdlog2_main(int argc, char *argv[])
                 {
                         int32_t max_size_MB = 0;
 
+                        warnx("Calculating total log size...\n");
                         param_get(log_max_size, &max_size_MB);
+
+                        uint64_t size_b = sdlog2_dir_size_recursive(sdlog2_root);
 
                         while (1)
                         {
-                            uint64_t size_b = sdlog2_dir_size_recursive(sdlog2_root);
                             int32_t size_MB = (int32_t)(size_b >> 20);
+
+                            warnx("Log size %d MB\n", size_MB);
 
                             if (size_MB >= max_size_MB)
                             {
+                                uint64_t removedSize = 0;
                                 warnx("Log size is too big. %d MB max allowed %d MB\n", size_MB, max_size_MB);
-                                sdlog2_dir_remove_oldest(sdlog2_root);
+                                warnx("Removing oldest log...");
+                                removedSize = sdlog2_dir_remove_oldest(sdlog2_root);
+
+                                size_b -= removedSize;
+
                                 continue;
                             }
                             break;
