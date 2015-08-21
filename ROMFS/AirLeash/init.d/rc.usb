@@ -10,11 +10,15 @@ if mavlink stream -d /dev/ttyACM0 -s PARAM_VALUE -r 200
 then
 fi
 usleep 100000
-if mavlink stream -d /dev/ttyACM0 -s VFR_HUD -r 20
+if mavlink stream -d /dev/ttyACM0 -s HIGHRES_IMU -r 10
 then
 fi
 usleep 100000
-if mavlink stream -d /dev/ttyACM0 -s ATTITUDE -r 20
+if mavlink stream -d /dev/ttyACM0 -s VFR_HUD -r 5
+then
+fi
+usleep 100000
+if mavlink stream -d /dev/ttyACM0 -s ATTITUDE -r 10
 then
 fi
 
