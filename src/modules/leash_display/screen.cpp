@@ -303,14 +303,17 @@ void Screen::showMain(int mode, const char *presetName, int leashBattery, int ai
     */
 }
 
-void Screen::showMenu(int buttons, int type, int value, const char *presetName)
+void Screen::showMenu(int buttons, int type, int value, const char *presetName, const char *customText)
 {
     int imageId = -1;
     int width = 0;
     const char *text = nullptr;
     const char *valueText = nullptr;
     const char *label = nullptr;
-    char buf[10];
+    char buf[LEASHDISPLAY_TEXT_SIZE + 1];
+    int i = 0;
+
+    buf[LEASHDISPLAY_TEXT_SIZE] = 0;
 
     switch (type)
     {
@@ -404,6 +407,27 @@ void Screen::showMenu(int buttons, int type, int value, const char *presetName)
                     valueText = "SPOT";
                     break;
             }
+            break;
+
+        case MENUTYPE_CUSTOM_VALUE:
+            memcpy(buf, customText, LEASHDISPLAY_TEXT_SIZE);
+
+            text = buf;
+            valueText = "";
+
+            // search for line end
+            i = 0;
+            while (buf[i] != 0 && buf[i] != '\n')
+            {
+                i++;
+            }
+
+            if (i < LEASHDISPLAY_TEXT_SIZE)
+            {
+                buf[i] = 0;
+                valueText = buf + i + 1;
+            }
+
             break;
 
         case MENUTYPE_SAVE:

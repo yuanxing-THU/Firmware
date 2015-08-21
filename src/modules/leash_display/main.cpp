@@ -128,7 +128,8 @@ static int leash_display_thread_main(int argc, char *argv[])
                     dm.awaitMask[FD_LeashDisplay] = true;
 
                     Screen::showMenu(dm.leash_display.menuButtons, dm.leash_display.menuType,
-                                     dm.leash_display.menuValue, dm.leash_display.presetName);
+                                     dm.leash_display.menuValue, dm.leash_display.presetName,
+                                     dm.leash_display.customText);
                     break;
 
                 case LEASHDISPLAY_INFO:
@@ -171,7 +172,8 @@ static int leash_display_thread_main(int argc, char *argv[])
 
                 case LEASHDISPLAY_MENU:
                     Screen::showMenu(dm.leash_display.menuButtons, dm.leash_display.menuType,
-                                     dm.leash_display.menuValue, dm.leash_display.presetName);
+                                     dm.leash_display.menuValue, dm.leash_display.presetName,
+                                     dm.leash_display.customText);
                     break;
 
                 case LEASHDISPLAY_INFO:

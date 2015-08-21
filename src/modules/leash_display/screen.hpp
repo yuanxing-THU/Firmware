@@ -9,7 +9,7 @@ public:
     static void showLogo();
     static void showMain(int mode, const char *presetName, int leashBattery, int airdogBattery,
                          int airdogMode, int followMode, int landMode);
-    static void showMenu(int buttons, int type, int value, const char *presetName);
+    static void showMenu(int buttons, int type, int value, const char *presetName, const char *text);
     static void showInfo(int info, int error);
     static void showList(LeashDisplay_Lines lines, int lineCount);
 };

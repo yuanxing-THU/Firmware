@@ -27,7 +27,7 @@ enum
 
 #define LEASHDISPLAY_LINE_COUNT 5
 #define LEASHDISPLAY_LINE_LENGH 25
-
+#define LEASHDISPLAY_TEXT_SIZE 30
 typedef char LeashDisplay_Lines[LEASHDISPLAY_LINE_COUNT][LEASHDISPLAY_LINE_LENGH];
 
 enum
@@ -79,6 +79,7 @@ enum
     MENUTYPE_ALTITUDE,
     MENUTYPE_FOLLOW,
     MENUTYPE_LANDING,
+    MENUTYPE_CUSTOM_VALUE,
     MENUTYPE_SAVE,
     MENUTYPE_CANCEL,
     MENUTYPE_MAX
@@ -126,6 +127,7 @@ struct leash_display_s {
     int menuButtons;
     int infoId;
     int infoError;
+    char customText[LEASHDISPLAY_TEXT_SIZE];
 
     // show text for debug puprose
     LeashDisplay_Lines lines;
