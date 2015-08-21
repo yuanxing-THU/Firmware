@@ -1645,7 +1645,8 @@ Mavlink::task_main(int argc, char *argv[])
 			_subscribe_to_stream = nullptr;
 		}
 
-		if (link_status_sub->update(&link_status_time, &link_status)) {
+		// TODO! [AK] Consider making an exception for QGround with bluetooth!
+		if (!strstr(_device_name, "/dev/ttyACM") && link_status_sub->update(&link_status_time, &link_status)) {
 			stream_rate_mult = get_link_quality_multiplier(link_status.link_quality);
 			DOG_PRINT("link: %d group: %d mult: %6.5f\n", link_status.link_quality, _current_link_group, (double) stream_rate_mult);
 			// TODO! [AK] Consider using built-in multiplier and non-constant rate stream
