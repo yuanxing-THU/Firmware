@@ -48,6 +48,7 @@ MODULES		+= drivers/oreoled
 MODULES		+= drivers/gimbal
 MODULES		+= drivers/pwm_input
 MODULES		+= drivers/camera_trigger
+MODULES		+= drivers/bst
 
 #
 # System commands
