@@ -55,6 +55,7 @@ class __EXPORT ActivityChangeManager {
         ActivityChangeManager();
         ActivityChangeManager(int _activity);
         ~ActivityChangeManager();
+        void init(int _activity);
        
     private:
 

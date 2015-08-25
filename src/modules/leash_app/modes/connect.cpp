@@ -50,8 +50,11 @@ void ModeConnect::listenForEvents(bool awaitMask[])
         case State::DISCONNECTED:
         case State::CONNECTING:
         case State::CONNECTED:
-        case State::GETTING_ACTIVITIES:
             awaitMask[FD_BLRHandler] = 1;
+            break;
+
+        case State::GETTING_ACTIVITIES:
+            awaitMask[FD_AirdogStatus] = 1;
             break;
 
         case State::CHECK_MAVLINK:
@@ -173,7 +176,6 @@ Base* ModeConnect::doEvent(int orbId)
             nextMode = new Acquiring_gps();
         }
     }
-    DOG_PRINT("[modes]{connect} Current state %d\n", currentState);
 
     // Check if we are in service screen
     Base* service = checkServiceScreen(orbId);
@@ -188,6 +190,12 @@ bool ModeConnect::receiveActivityParams()
     bool result = false;
 
     DataManager *dm = DataManager::instance();
+    uint8_t cur_drone_activity = dm->airdog_status.activity;
+    if (cur_drone_activity != 0) //default activity, already got all in dm constructor
+    {
+        dm->activityManager.init(cur_drone_activity);
+    }
+
     result = dm->activityManager.params_received();
 
     return result;

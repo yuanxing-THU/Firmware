@@ -39,6 +39,20 @@ ActivityChangeManager::~ActivityChangeManager() {
    orb_unsubscribe(activity_params_sub);
 }
 
+void
+ActivityChangeManager::init(int _activity)
+{
+    if (_activity != activity)
+    {
+        activity = _activity;
+        cur_param_id = 0;
+        params_up_to_date = false;
+        init_activity_limits();
+
+        request_dog_params();
+    }
+}
+
 bool
 ParamChangeManager::get_param_name(char * buffer, const int buffer_len){
     strncpy ( buffer, ALLOWED_PARAMS[p_id].name, buffer_len );
