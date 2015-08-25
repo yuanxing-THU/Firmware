@@ -159,6 +159,10 @@ __EXPORT int map_projection_project(const struct map_projection_reference_s *ref
 	else {
 		c = acos(pre_c);
 	}
+	/** [AK] c values close to Pi can cause problems, however they can only happen
+	 *  either crossing the equator with longitude diff with reference at least 90degrees
+	 *  or at 0, 0 point, or at poles. None of this is likely to happen.
+	 */
 	double k = (fabs(c) < DBL_EPSILON) ? 1.0 : (c / sin(c));
 
 	*x = k * (ref->cos_lat * sin_lat - ref->sin_lat * cos_lat * cos_d_lon) * CONSTANTS_RADIUS_OF_EARTH;
@@ -187,6 +191,7 @@ __EXPORT int map_projection_reproject(const struct map_projection_reference_s *r
 	double lat_rad;
 	double lon_rad;
 
+	// TODO! [AK] Consider comparing to value greater than DBL_EPSILON
 	if (fabs(c) > DBL_EPSILON) {
 		lat_rad = asin(cos_c * ref->sin_lat + (x_rad * sin_c * ref->cos_lat) / c);
 		lon_rad = (ref->lon_rad + atan2(y_rad * sin_c, c * ref->cos_lat * cos_c - x_rad * ref->sin_lat * sin_c));
@@ -294,6 +299,11 @@ __EXPORT float get_distance_to_next_waypoint(double lat_now, double lon_now, dou
 	double d_lat = lat_next_rad - lat_now_rad;
 	double d_lon = lon_next_rad - lon_now_rad;
 
+	/** [AK] a can be negative only if cos(lat_now) and cos(lat_next) have different signs
+	 * which happens only around poles. Should not be a problem.
+	 * a can be close to 1 near distances comparable to quarter way across the globe
+	 * which is not a common scenario either
+	 */
 	double a = sin(d_lat / 2.0d) * sin(d_lat / 2.0d) + sin(d_lon / 2.0d) * sin(d_lon / 2.0d) * cos(lat_now_rad) * cos(lat_next_rad);
 	double c = 2.0d * atan2(sqrt(a), sqrt(1.0d - a));
 
@@ -352,6 +362,7 @@ __EXPORT void add_vector_to_global_position(double lat_now, double lon_now, floa
 	double lon_now_rad = lon_now * M_DEG_TO_RAD;
 
 	*lat_res = (lat_now_rad + (double)v_n / CONSTANTS_RADIUS_OF_EARTH) * M_RAD_TO_DEG;
+	// [AK] Can result in problems if cos(lat_now) is close to 0, but this can only happen near poles
 	*lon_res = (lon_now_rad + (double)v_e / (CONSTANTS_RADIUS_OF_EARTH * cos(lat_now_rad))) * M_RAD_TO_DEG;
 }
 
@@ -515,6 +526,11 @@ __EXPORT float get_distance_to_point_global_wgs84(double lat_now, double lon_now
 	double d_lat = x_rad - current_x_rad;
 	double d_lon = y_rad - current_y_rad;
 
+	/** [AK] a can be negative only if cos(lat_now) and cos(lat_next) have different signs
+	 * which happens only around poles. Should not be a problem.
+	 * a can be close to 1 near distances comparable to quarter way across the globe
+	 * which is not a common scenario either
+	 */
 	double a = sin(d_lat / 2.0) * sin(d_lat / 2.0) + sin(d_lon / 2.0) * sin(d_lon / 2.0) * cos(current_x_rad) * cos(x_rad);
 	double c = 2 * atan2(sqrt(a), sqrt(1 - a));
 
