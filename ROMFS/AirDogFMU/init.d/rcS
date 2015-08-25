@@ -248,6 +248,19 @@ then
 		echo "dataman FAILED" >> $LOG_FILE
 	fi
 
+	if param compare A_QLOG_WRITE 1
+	then
+		#
+		# Start the Quick_log file writer thread
+		#
+		if qlog start
+		then
+			echo "Quick_log OK" >> $LOG_FILE
+		else
+			echo "Quick_log FAILED" >> $LOG_FILE
+		fi
+	fi
+
 	#
 	# Start the Commander (needs to be this early for in-air-restarts)
 	#
@@ -472,7 +485,20 @@ then
 	fi
 
 	indication start
-
+	
+	if param compare A_QLOG_CHECK 1
+	then
+		#
+		# Check the quick_log files for any non-empty & valids logs
+		#
+		if qlog check
+		then
+			echo "Quick_log check OK" >> $LOG_FILE
+		else
+			echo "Quick_log check FAILED" >> $LOG_FILE
+		fi
+	fi
+	
 	if [ $EXIT_ON_END == yes ]
 	then
 		echo "[init] Exit from nsh"

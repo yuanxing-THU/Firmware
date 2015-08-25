@@ -51,6 +51,7 @@ MODULES		+= modules/sensors
 MODULES		+= modules/sensors_probe
 MODULES		+= modules/sensors_switch
 MODULES		+= modules/spi_exchange
+MODULES		+= modules/quick_log
 MODULES 	+= drivers/pwm_input
 #MODULES		+= drivers/airspeed
 #MODULES		+= drivers/blinkm
