@@ -111,11 +111,11 @@ public:
 
 
 	struct {
-        int first_point_lat;
-        int first_point_lon;
+        long int first_point_lat;
+        long int first_point_lon;
         float first_point_alt;
-        int last_point_lat;
-        int last_point_lon;
+        long int last_point_lat;
+        long int last_point_lon;
         float last_point_alt;
         float down_button_step;
         float up_button_step;

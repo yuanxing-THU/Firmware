@@ -1296,16 +1296,17 @@ int commander_thread_main(int argc, char *argv[])
         orb_check(_pos_restrict_sub, &pos_res_updated);
         if (pos_res_updated) {
             orb_copy(ORB_ID(position_restriction), _pos_restrict_sub, &pos_restrict);
+            if (      (pos_restrict.line.first[0] == 0.0 || pos_restrict.line.first[1] == 0.0)
+                   || (pos_restrict.line.last[0] == 0.0 || pos_restrict.line.last[1] == 0.0)
+                   || (pos_restrict.line.first[0] == pos_restrict.line.last[0] && pos_restrict.line.first[1] == pos_restrict.line.last[1]) //to avoid vector module == NaN
+               ) {
+                status.condition_path_points_valid = false;
+            }
+            else {
+                status.condition_path_points_valid = true;
+            }
         }
-        if (      (pos_restrict.line.first[0] == 0.0 && pos_restrict.line.first[1] == 0.0)
-               || (pos_restrict.line.last[0] == 0.0 && pos_restrict.line.last[1] == 0.0)
-               || (pos_restrict.line.first[0] == pos_restrict.line.last[0] && pos_restrict.line.first[1] == pos_restrict.line.last[1]) //to avoid vector module == NaN
-           ) {
-            status.condition_path_points_valid = false;
-        }
-        else {
-            status.condition_path_points_valid = true;
-        }
+        
 
 
 		/* update parameters */

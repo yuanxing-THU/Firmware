@@ -114,8 +114,8 @@ Navigator::Navigator() :
 	_target_pos_sub(-1),
 	_target_trajectory_sub(-1),
 	_vehicle_attitude_sub(-1),
-    _first_leash_point(),
-    _last_leash_point(),
+    _first_leash_point{0.0,0.0,0.0},
+    _last_leash_point{0.0,0.0,0.0},
 	_pos_sp_triplet_pub(-1),
     _pos_restrict_pub(-1),
 	_mission_result_pub(-1),
@@ -297,9 +297,11 @@ Navigator::set_next_path_point(double point[3], bool force, int num) {
                 break;
             }
             case 1: {
-                if (_first_leash_point[0] != point[0] &&
-                    _first_leash_point[1] != point[1] &&
-                    _first_leash_point[2] != point[2]) {
+                if (_first_leash_point[0] != point[0] ||
+                    _first_leash_point[1] != point[1] ){
+                        mavlink_log_info(_mavlink_fd, "[nav]{cbp} second point %.5f %.5f\n",
+                                _last_leash_point[0],
+                                _last_leash_point[1]);
                         _last_leash_point[0] = point[0];
                         _last_leash_point[1] = point[1];
                         _last_leash_point[2] = point[2];
@@ -318,10 +320,11 @@ Navigator::set_next_path_point(double point[3], bool force, int num) {
             _first_leash_point[2] = point[2];
              return true;
          } else if ( is_empty(_last_leash_point) ) {
-             if (_first_leash_point[0] != point[0] &&
-                 _first_leash_point[1] != point[1] &&
-                 _first_leash_point[2] != point[2]) {
-                     mavlink_log_info(_mavlink_fd, "[nav] Got second point on path\n");
+             if (_first_leash_point[0] != point[0] ||
+                 _first_leash_point[1] != point[1]){
+                     mavlink_log_info(_mavlink_fd, "[nav]{cbp} second point %.5f %.5f\n",
+                             _last_leash_point[0],
+                             _last_leash_point[1]);
                      _last_leash_point[0] = point[0];
                      _last_leash_point[1] = point[1];
                      _last_leash_point[2] = point[2];
@@ -763,8 +766,8 @@ Navigator::publish_position_restriction() {
         _pos_restrict.line.last[0] = _last_leash_point[0];
         _pos_restrict.line.last[1] = _last_leash_point[1];
         _pos_restrict.line.last[2] = _last_leash_point[2];
-        int temp_0[2] = {_first_leash_point[0] * 1e7, _last_leash_point[0] * 1e7};
-        int temp_1[2] = {_first_leash_point[1] * 1e7, _last_leash_point[1] * 1e7};
+        const long int temp_0[2] = {(long int)(_first_leash_point[0] * 1e7),(long int)(_last_leash_point[0] * 1e7)};
+        const long int temp_1[2] = {(long int)(_first_leash_point[1] * 1e7),(long int)( _last_leash_point[1] * 1e7)};
         float temp_2[2] = {(float)_first_leash_point[2], (float)_last_leash_point[2]};
         if (   param_set(param_find("NAV_CP_FIR_LA"), &(temp_0[0]))
             || param_set(param_find("NAV_CP_FIR_LO"), &(temp_1[0]))

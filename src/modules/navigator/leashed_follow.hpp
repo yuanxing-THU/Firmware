@@ -82,8 +82,8 @@ private:
 	float	_vehicle_alt;		/**< prediction for vehicle altitude */
 	float 	_init_alt; 			/**< initial altitude on leased follow start > */
     bool    _ready_to_follow;   /**< true if ready, false if not > */
-    float _first_leash_point[2]; /** {lat, lon, alt} of first point setted from target */
-    float _last_leash_point[2]; /** {lat, lon, alt} of last point setted from target */
+    double _first_leash_point[2]; /** {lat, lon, alt} of first point setted from target */
+    double _last_leash_point[2]; /** {lat, lon, alt} of last point setted from target */
 	math::Vector<3>	_target_vel;	/**< target velocity vector */
 	hrt_abstime _t_prev;
     struct map_projection_reference_s _ref_pos;
