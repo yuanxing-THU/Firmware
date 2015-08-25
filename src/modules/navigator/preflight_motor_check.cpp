@@ -5,6 +5,7 @@
 #include <drivers/drv_hrt.h>
 #include <geo/geo.h>
 #include <poll.h>
+#include <quick_log/quick_log.hpp>
 #include <math.h>
 
 #include "navigator.h"
@@ -43,7 +44,7 @@ commander_error_code Preflight_motor_check::Boot_init() {
     boot_init_complete = false;
     do_checks_enabled = false;
     
-    if ( !do_param.Open("A_PMC_DO") )              return PMC_ERROR;
+    if ( !do_param.Open ("A_PMC_DO")             ) return PMC_ERROR;
     if ( !servo_pwm.Open(PWM_OUTPUT_DEVICE_PATH) ) return PMC_ERROR;
     
     boot_init_complete = true;
@@ -55,7 +56,7 @@ commander_error_code Preflight_motor_check::Pre_check_init() {
     do_checks_enabled = false;
     
     if ( !boot_init_complete ) {
-        printf("[Preflight_motor_check] Pre_check_init - boot init not complete\n");
+        QLOG_literal("[Preflight_motor_check] boot init not complete");
         return PMC_ERROR;
     }
     
@@ -80,7 +81,7 @@ commander_error_code Preflight_motor_check::Pre_check_init() {
         navigator->public_vehicle_attitude_update();
         vehicle_attitude_s * vehicle_attitude = navigator->get_vehicle_attitude();
         if ( !vehicle_attitude->R_valid ) {
-            printf("[Preflight_motor_check] Pre_check_init - vehicle_attitude not R_valid\n");
+            QLOG_literal("[Preflight_motor_check] vehicle_attitude not R_valid");
             return PMC_ERROR;
         }
         
@@ -88,7 +89,7 @@ commander_error_code Preflight_motor_check::Pre_check_init() {
         initial_up_vector = drone_to_world_matrix * s_up_vector;
         const float initial_tilt_cos = s_up_vector * initial_up_vector;
         if ( initial_tilt_cos < initial_tilt_min_cos ) {
-            printf("[Preflight_motor_check] Pre_check_init - initial tilt too big: cos = %.4f\n", double(initial_tilt_cos));
+            QLOG_sprintf("[Preflight_motor_check] initial tilt too big: cos = %.4f", double(initial_tilt_cos));
             return PMC_ERROR_INITIAL_TILT;
         }
     }
@@ -97,7 +98,7 @@ commander_error_code Preflight_motor_check::Pre_check_init() {
         unsigned reported_servo_count = 0;
         if ( !servo_pwm.IOctl(PWM_SERVO_GET_COUNT, (unsigned long) &reported_servo_count) ) return PMC_ERROR;
         if ( reported_servo_count < PMC_USE_SERVO_COUNT ) {
-            printf("[Preflight_motor_check] Pre_check_init - bad reported_servo_count: %u\n", reported_servo_count);
+            QLOG_sprintf("[Preflight_motor_check] bad reported_servo_count: %u", reported_servo_count);
             return PMC_ERROR;
         }
         if ( !servo_pwm.IOctl(PWM_SERVO_GET_MIN_PWM, (unsigned long) &min_pwm) ) return PMC_ERROR;
@@ -121,20 +122,10 @@ commander_error_code Preflight_motor_check::Check() {
     const commander_error_code execute_error_code = Execute();
     if ( execute_error_code != COMMANDER_ERROR_OK ) {
         // Make sure we try to set all motors to safe values before reporting failure.
-        int min_pwm_set_fails = 0;
         for ( unsigned servo = 0; servo < PMC_USE_SERVO_COUNT; ++servo ) {
-            if ( !servo_pwm.IOctl(PWM_SERVO_SET(servo), min_pwm.values[servo], false) ) ++min_pwm_set_fails;
-        }
-        if ( min_pwm_set_fails != 0 ) {
-            printf("[Preflight_motor_check] Do - min_pwm_set_fails: %d\n", min_pwm_set_fails);
-        }
-        
-        if ( execute_error_code == PMC_ERROR_TOO_MUCH_VIBRATION ) {
-            printf("[Preflight_motor_check] Check - failed: too much vibration\n");
-        } else if ( execute_error_code == PMC_ERROR_TOO_MUCH_TILT ) {
-            printf("[Preflight_motor_check] Check - failed: too much tilt\n");
-        } else {
-            printf("[Preflight_motor_check] Check - failed: unknown failure\n");
+            if ( !servo_pwm.IOctl(PWM_SERVO_SET(servo), min_pwm.values[servo], false) ) {
+                QLOG_literal("[Preflight_motor_check] min_pwm set fail");
+            }
         }
         return execute_error_code;
     }
@@ -164,7 +155,10 @@ commander_error_code Preflight_motor_check::Run_ramp_phase() const {
         
         for ( unsigned servo = 0; servo < PMC_USE_SERVO_COUNT; ++servo ) {
             const unsigned pwm = min_pwm.values[servo] + unsigned(max_pwm.values[servo]-min_pwm.values[servo])*use_thrust_percent/100;
-            if ( !servo_pwm.IOctl(PWM_SERVO_SET(servo), pwm, false) ) return PMC_ERROR;
+            if ( !servo_pwm.IOctl(PWM_SERVO_SET(servo), pwm, false) ) {
+                QLOG_literal("[Preflight_motor_check] failed to ramp up servo");
+                return PMC_ERROR;
+            }
         }
         
         const commander_error_code poll_and_check_error_code = Poll_and_check();
@@ -181,7 +175,10 @@ commander_error_code Preflight_motor_check::Run_hold_phase() const {
     for ( uint64_t now_time_ms = start_time_ms; now_time_ms < end_time_ms; now_time_ms = hrt_absolute_time() / 1000 ) {
         for ( unsigned servo = 0; servo < PMC_USE_SERVO_COUNT; ++servo ) {
             const unsigned pwm = min_pwm.values[servo] + unsigned(max_pwm.values[servo]-min_pwm.values[servo])*thrust_percent/100;
-            if ( !servo_pwm.IOctl(PWM_SERVO_SET(servo), pwm, false) ) return PMC_ERROR;
+            if ( !servo_pwm.IOctl(PWM_SERVO_SET(servo), pwm, false) ) {
+                QLOG_literal("[Preflight_motor_check] failed to hold servo");
+                return PMC_ERROR;
+            }
         }
         
         const commander_error_code poll_and_check_error_code = Poll_and_check();
@@ -194,6 +191,7 @@ commander_error_code Preflight_motor_check::Run_hold_phase() const {
 commander_error_code Preflight_motor_check::Poll_and_check() const {
     const int poll_ret = navigator->public_poll_update_sensor_combined_and_vehicle_attitude(timer_precision_ms);
     if ( poll_ret < 0 ) {
+        QLOG_literal("[Preflight_motor_check] poll failed");
         return PMC_ERROR;
     } else if ( poll_ret > 0 ) {
         {
@@ -205,7 +203,10 @@ commander_error_code Preflight_motor_check::Poll_and_check() const {
             const float acc_diff = CONSTANTS_ONE_G * CONSTANTS_ONE_G + threshold * threshold;
             const float to_compare = 2.0f * CONSTANTS_ONE_G * threshold;
             const float tot_acc = sample.x*sample.x + sample.y*sample.y + sample.z*sample.z;
-            if ( fabsf(tot_acc - acc_diff) > to_compare ) return PMC_ERROR_TOO_MUCH_VIBRATION;
+            if ( fabsf(tot_acc - acc_diff) > to_compare ) {
+                QLOG_literal("[Preflight_motor_check] PMC_ERROR_TOO_MUCH_VIBRATION");
+                return PMC_ERROR_TOO_MUCH_VIBRATION;
+            }
             //Uncomment this if we ever want to start doing some history based accelerometer magic, not just on the last sample.
             //if ( last_accelerometer_sample_timestamp != sensor_combined->accelerometer_timestamp ) {
             //    last_accelerometer_sample_timestamp = sensor_combined->accelerometer_timestamp;
@@ -217,11 +218,17 @@ commander_error_code Preflight_motor_check::Poll_and_check() const {
         }
         {
             vehicle_attitude_s * vehicle_attitude = navigator->get_vehicle_attitude();
-            if ( !vehicle_attitude->R_valid ) return PMC_ERROR;
+            if ( !vehicle_attitude->R_valid ) {
+                QLOG_literal("[Preflight_motor_check] vehicle_attitude turned not R_valid");
+                return PMC_ERROR;
+            }
             const math::Matrix<3,3> drone_to_world_matrix(vehicle_attitude->R);
             const math::Vector<3> current_up_vector = drone_to_world_matrix * s_up_vector;
             const float current_tilt_change_cos = current_up_vector * initial_up_vector;
-            if ( current_tilt_change_cos < tilt_change_min_cos ) return PMC_ERROR_TOO_MUCH_TILT;
+            if ( current_tilt_change_cos < tilt_change_min_cos ) {
+                QLOG_literal("[Preflight_motor_check] PMC_ERROR_TOO_MUCH_TILT");
+                return PMC_ERROR_TOO_MUCH_TILT;
+            }
         }
     }
     
