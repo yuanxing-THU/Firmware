@@ -1,6 +1,7 @@
 #ifndef __BGCTST_BGC_UART_MSG_HPP_INCLUDED__
 #define __BGCTST_BGC_UART_MSG_HPP_INCLUDED__
 
+#include <stdio.h>
 #include <stdint.h>
 
 #define SBGC_CMD_MAX_BYTES 255

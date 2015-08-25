@@ -1,5 +1,8 @@
 #include <nuttx/config.h>
+
+#include <quick_log/quick_log.hpp>
 #include <string.h>
+
 #include "bgc.hpp"
 
 extern "C" __EXPORT int bgc_main(int argc, char *argv[]);
@@ -14,6 +17,7 @@ int bgc_main(int argc, char *argv[]) {
             return 3;
         }
     } else {
+        QLOG_literal("[BGC] bad usage of bgc");
         printf("usage: bgc [start|stop]\n");
         return 1;
     }

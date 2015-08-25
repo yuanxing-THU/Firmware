@@ -5,8 +5,10 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <quick_log/quick_log.hpp>
 #include <stdio.h>
 #include <string.h>
+
 #include "bgc_uart_msg.hpp"
 
 namespace BGC {
@@ -21,7 +23,7 @@ bool BGC_uart::Open(const char * const port, const int speed, const int parity) 
 	if (Is_open()) { Close(); }
     fd = open(port, O_RDWR | O_NOCTTY | O_NONBLOCK);
     if ( !Is_open() ) {
-        printf("[BGC::BGC_uart] Open - failed to open at %s: %d\n", port, errno);
+        QLOG_sprintf("[BGC_uart] open fail %s: %d", port, errno);
         return false;
     }
     if ( !Set_attributes(speed, parity) ) {
@@ -50,14 +52,14 @@ BGC_uart::Poll_result BGC_uart::Poll(const int timeout_ms, short int event) {
         struct pollfd pfd; pfd.fd = fd; pfd.events = event;
         const int poll_ret = poll(&pfd, 1, timeout_ms);
         if ( poll_ret < 0 ) {
-            printf("[BGC::BGC_uart] Poll - failed to poll: %d\n", errno);
+            QLOG_sprintf("[BGC_uart] poll fail: %d", errno);
         } else if ( poll_ret == 0 ) {
             return Poll_result::Timeout;
         } else {
             return Poll_result::Ready;
         }
     }
-    printf("[BGC::BGC_uart] Poll - error limit reached\n");
+    QLOG_literal("[BGC_uart] poll error limit reached");
     return Poll_result::Error;
 }
 
@@ -67,7 +69,7 @@ bool BGC_uart::Discover_attributes(int & speed, int & parity, const int response
 }
 
 bool BGC_uart::Discover_attributes(int & speed, int & parity, volatile bool & break_switch, const int response_timeout_ms) {
-    DOG_PRINT("[BGC::BGC_uart] Discover_attributes\n");
+    DOG_PRINT("[BGC_uart] Discover_attributes\n");
     // Spec: https://www.basecamelectronics.com/files/SimpleBGC_2_4_Serial_Protocol_Specification.pdf
     // BGC fw v2.40 only supports EVEN parity, v2.41 supports EVEN and NONE.
     const int test_parities[] = { PARITY_NONE, PARITY_EVEN /*PARITY_NONE, PARITY_EVEN, PARITY_ODD*/ };
@@ -77,13 +79,13 @@ bool BGC_uart::Discover_attributes(int & speed, int & parity, volatile bool & br
         for ( unsigned baud_i = 0; baud_i < sizeof(test_bauds)/sizeof(test_bauds[0]); ++baud_i ) {
             speed = test_bauds[baud_i];
             parity = test_parities[parity_i];
-            DOG_PRINT("[BGC::BGC_uart] trying attributes: speed=%d parity=%d\n", speed, parity);
+            DOG_PRINT("[BGC_uart] trying attributes: speed=%d parity=%d\n", speed, parity);
             if ( Set_attributes(speed, parity) ) {
                 const int get_board_info_tries = 3;
                 for ( int try_nr = 0; try_nr < get_board_info_tries; ++try_nr ) {
                     if ( break_switch ) return false;
                     if ( Get_board_info(response_timeout_ms) ) {
-                        DOG_PRINT("[BGC::BGC_uart] discovered attributes: speed=%d parity=%d\n", speed, parity);
+                        DOG_PRINT("[BGC_uart] discovered attributes: speed=%d parity=%d\n", speed, parity);
                         return true;
                     }
                 }
@@ -107,15 +109,15 @@ bool BGC_uart::Send(const BGC_uart_msg & msg, const int zero_data_timeout) {
             } else {
                 const Poll_result poll_ret = Poll(zero_data_timeout, POLLOUT);
                 if ( poll_ret == Poll_result::Timeout ) {
-                    printf("[BGC::BGC_uart] Send - POLLOUT timeout\n");
+                    QLOG_literal("[BGC_uart] POLLOUT timeout");
                     break;
                 } else if ( poll_ret == Poll_result::Error ) {
-                    printf("[BGC::BGC_uart] Send - POLLOUT error\n");
+                    QLOG_literal("[BGC_uart] POLLOUT error");
                     break;
                 }
             }
         } else {
-            printf("[BGC::BGC_uart] Send - failed to write: %d\n", errno);
+            QLOG_sprintf("[BGC_uart] write fail: %d", errno);
             break;
         }
     }
@@ -150,14 +152,11 @@ bool BGC_uart::Read_junk(const int zero_data_timeout_ms) {
     Poll_result poll_result = Poll_result::Ready;
     while ( poll_result != Poll_result::Timeout ) {
         if ( read(fd, junk_buf, sizeof(junk_buf)) < 0 && errno != EAGAIN ) {
-            printf("[BGC::BGC_uart] Read_junk - failed to read: %d\n", errno);
+            QLOG_sprintf("[BGC_uart] read fail: %d", errno);
             return false;
         }
         poll_result = Poll(zero_data_timeout_ms, POLLIN);
-        if ( poll_result == Poll_result::Error ) {
-            printf("[BGC::BGC_uart] Read_junk - poll error\n");
-            return false;
-        }
+        if ( poll_result == Poll_result::Error ) return false;
     }
     return true;
 }
@@ -166,7 +165,7 @@ bool BGC_uart::Read_junk(const int zero_data_timeout_ms) {
 //    BGC_uart_msg msg;
 //    for ( ; ; ) {
 //        if ( Recv(msg, timeout_ms) ) {
-//            printf("[BGC::BGC_uart] read msg\n");
+//            printf("[BGC_uart] read msg\n");
 //            msg.Dump();
 //        }
 //    }
@@ -176,7 +175,7 @@ bool BGC_uart::Set_attributes(const int speed, const int parity) {
     struct termios tty;
     memset(&tty, 0, sizeof(tty));
     if ( tcgetattr(fd, &tty) != 0 ) {
-        printf("[BGC::BGC_uart] Set_attributes - failed to tcgetattr: %d\n", errno);
+        QLOG_sprintf("[BGC_uart] tcgetattr fail: %d", errno);
         return false;
     }
     tty.c_iflag = 0;
@@ -191,18 +190,18 @@ bool BGC_uart::Set_attributes(const int speed, const int parity) {
     tty.c_cflag |= CLOCAL;
     const int speed_res = cfsetspeed(&tty, speed);
     if ( speed_res != 0 ) {
-        printf("[BGC::BGC_uart] Set_attributes - failed to cfsetspeed: %d %d\n", speed_res, speed);
+        QLOG_sprintf("[BGC_uart] cfsetspeed fail: %d %d", speed_res, speed);
         return false;
     }
     if ( tcsetattr(fd, TCSANOW, &tty) != 0 ) {
-        printf("[BGC::BGC_uart] Set_attributes - failed to tcsetattr: %d\n", errno);
+        QLOG_sprintf("[BGC_uart] tcsetattr fail: %d", errno);
         return false;
     }
     return true;
 }
 
 bool BGC_uart::Get_board_info(const int response_timeout_ms) {
-    DOG_PRINT("[BGC::BGC_uart] Get_board_info\n");
+    DOG_PRINT("[BGC_uart] Get_board_info\n");
     BGC_uart_msg msg;
     msg.Build_OUT_CMD_BOARD_INFO();
     if ( !Read_junk() || !Send(msg) ) return false;
@@ -210,23 +209,23 @@ bool BGC_uart::Get_board_info(const int response_timeout_ms) {
     if ( Recv(msg, response_timeout_ms) && msg.Is_fully_valid() ) {
         if ( msg.Command_id() == SBGC_CMD_BOARD_INFO ) {
             #ifdef ENABLE_DOG_DEBUG
-                DOG_PRINT("[BGC::BGC_uart] Get_board_info - SBGC_CMD_BOARD_INFO\n");
+                DOG_PRINT("[BGC_uart] Get_board_info - SBGC_CMD_BOARD_INFO\n");
                 const uint8_t  board_ver    = msg.Get_IN_CMD_BOARD_INFO_Board_ver();
                 const uint16_t firmware_ver = msg.Get_IN_CMD_BOARD_INFO_Firmware_ver();
                 const uint8_t  debug_mode   = msg.Get_IN_CMD_BOARD_INFO_Debug_mode();
                 const uint16_t board_feat   = msg.Get_IN_CMD_BOARD_INFO_Board_features();
                 const uint8_t  conn_flags   = msg.Get_IN_CMD_BOARD_INFO_Connection_flags();
-                DOG_PRINT("[BGC::BGC_uart] board ver        = %u.%u\n",    board_ver/10, board_ver%10);
-                DOG_PRINT("[BGC::BGC_uart] firmware ver     = %u.%ub%u\n", firmware_ver/1000
+                DOG_PRINT("[BGC_uart] board ver        = %u.%u\n",    board_ver/10, board_ver%10);
+                DOG_PRINT("[BGC_uart] firmware ver     = %u.%ub%u\n", firmware_ver/1000
                                                                       , firmware_ver/10%100
                                                                       , firmware_ver%10);
-                DOG_PRINT("[BGC::BGC_uart] debug mode       = %u\n",       debug_mode);
-                DOG_PRINT("[BGC::BGC_uart] board features   = %04x\n",     board_feat);
-                DOG_PRINT("[BGC::BGC_uart] connection flags = %02x\n",     conn_flags);
+                DOG_PRINT("[BGC_uart] debug mode       = %u\n",       debug_mode);
+                DOG_PRINT("[BGC_uart] board features   = %04x\n",     board_feat);
+                DOG_PRINT("[BGC_uart] connection flags = %02x\n",     conn_flags);
             #endif
             return true;
         } else {
-            printf("[BGC::BGC_uart] Get_board_info - unexpected response\n");
+            QLOG_literal("[BGC_uart] Get_board_info - unexpected response");
             msg.Dump();
         }
     }
@@ -264,7 +263,7 @@ bool BGC_uart::Recv_partial_bytes(BGC_uart_msg & msg, const uint8_t need_bytes) 
     if ( just_read > 0 ) {
         msg.Add_bytes(just_read);
     } else if ( just_read < 0 && errno != EAGAIN ) {
-        printf("[BGC::BGC_uart] Recv_partial_bytes - failed to read: %d\n", errno);
+        QLOG_sprintf("[BGC_uart] read fail: %d", errno);
         return false;
     }
     return true;

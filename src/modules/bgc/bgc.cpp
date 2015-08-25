@@ -2,8 +2,10 @@
 
 #include "bgc.hpp"
 
+#include <quick_log/quick_log.hpp>
 #include <systemlib/systemlib.h>
 #include <poll.h>
+
 #include "bgc_uart.hpp"
 #include "bgc_uart_msg.hpp"
 
@@ -17,27 +19,27 @@ int BGC::s_discovered_parity = -1;
 
 bool BGC::Start_thread() {
     if ( s_thread_running ) {
-        printf("[BGC::BGC] Start_thread - already running\n");
+        QLOG_literal("[BGC] thread already running");
         return true;
     }
     
     s_thread_should_exit = false;
     if ( task_spawn_cmd("bgc", SCHED_DEFAULT, SCHED_PRIORITY_DEFAULT, 2000, Thread_main, (const char **)NULL) < 0 ) {
-        printf("[BGC::BGC] Start_thread - failed to start thread: %d\n", errno);
+        QLOG_sprintf("[BGC] task_spawn_cmd fail: %d", errno);
         return false;
     }
     
     while ( !s_thread_running && !s_thread_should_exit ) {
         usleep(200);
     }
-    printf("[BGC::BGC] Start_thread - started\n");
+    printf("[BGC] thread started\n");
     
     return true;
 }
 
 bool BGC::Stop_thread() {
     if ( !s_thread_running ) {
-        printf("[BGC::BGC] Stop_thread - thread not running\n");
+        QLOG_literal("[BGC] thread not running");
         return false;
     }
     
@@ -46,7 +48,7 @@ bool BGC::Stop_thread() {
         usleep(200000);
         printf(".");
     }
-    printf("[BGC::BGC] Stop_thread - stopped\n");
+    printf("[BGC] thread stopped\n");
     
     return true;
 }
@@ -55,7 +57,7 @@ int BGC::Thread_main(int argc, char *argv[]) {
     s_thread_running = true;
     BGC bgc;
     if ( !bgc.Initial_setup() ) {
-        printf("[BGC::BGC] Thread_main - fatal error, stopping thread\n");
+        QLOG_literal("[BGC] fatal error, stopping thread");
         s_thread_should_exit = true;
     } else {
         for ( ; ; ) {
@@ -74,7 +76,7 @@ BGC::BGC()
     , vehicle_status_subscriber()
     , bgc_uart()
     , prev_arming_state(arming_state_t(ARMING_STATE_MAX))
-    , arm_bgc_motors_param("A_ARM_BGC_MOTORS")
+    , arm_bgc_motors_param("A_BGC_ARM_MOTORS")
 { }
 
 BGC::~BGC() { }
@@ -83,14 +85,14 @@ bool BGC::Initial_setup() {
     if ( !arm_bgc_motors_param.Is_open() ) return false;
     
     if ( !frame_button_subscriber.Open() ) return false;
-    printf("[BGC::BGC] Initial_setup - subscribed to frame button\n");
+    printf("[BGC] subscribed to frame button\n");
     
     if ( !vehicle_status_subscriber.Open() ) return false;
     if ( !vehicle_status_subscriber.Set_interval(1000) ) return false;
-    printf("[BGC::BGC] Initial_setup - subscribed to vehicle status\n");
+    printf("[BGC] subscribed to vehicle status\n");
     
     if ( !bgc_uart.Open() ) return false;
-    printf("[BGC::BGC] Initial_setup - opened BGC_uart\n");
+    printf("[BGC] opened BGC_uart\n");
     
     return true;
 }
@@ -113,15 +115,15 @@ bool BGC::Run() {
             if ( in_msg.Is_fully_present() ) {
                 if ( in_msg.Is_fully_valid() ) {
                     if ( in_msg.Command_id() == SBGC_CMD_CONFIRM ) {
-                        DOG_PRINT("[BGC::BGC] Run - received SBGC_CMD_CONFIRM\n");
+                        DOG_PRINT("[BGC] received SBGC_CMD_CONFIRM\n");
                     } else if ( in_msg.Command_id() == SBGC_CMD_ERROR ) {
-                        printf("[BGC::BGC] Run - received SBGC_CMD_ERROR\n");
+                        QLOG_literal("[BGC] received SBGC_CMD_ERROR");
                         in_msg.Dump();
                     } else if ( in_msg.Command_id() == SBGC_CMD_RESET ) {
-                        printf("[BGC::BGC] Run - received SBGC_CMD_RESET, restarting\n");
+                        QLOG_literal("[BGC] received SBGC_CMD_RESET, restarting");
                         break;
                     } else {
-                        printf("[BGC::BGC] Run - received unexpected message\n");
+                        QLOG_literal("[BGC] received unexpected message");
                         in_msg.Dump();
                     }
                 }
@@ -147,11 +149,9 @@ bool BGC::Run_setup() {
             }
         }
         if ( old_attributes_valid ) {
-            printf("[BGC::BGC] Run_setup - successfully used old BGC_uart attributes: speed=%d parity=%d\n"
-                , s_discovered_speed, s_discovered_parity);
+            printf("[BGC] successfully used old BGC_uart attributes: speed=%d parity=%d\n", s_discovered_speed, s_discovered_parity);
         } else {
-            printf("[BGC::BGC] Run_setup - couldn't use old BGC_uart attributes: speed=%d parity=%d\n"
-                , s_discovered_speed, s_discovered_parity);
+            printf("[BGC] couldn't use old BGC_uart attributes: speed=%d parity=%d\n", s_discovered_speed, s_discovered_parity);
             if ( !Discover_attributes() ) return false;
         }
     }
@@ -182,12 +182,12 @@ bool BGC::Discover_attributes() {
         }
     }
     if ( !attributes_discovered ) {
-        printf("[BGC::BGC] Discover_attributes - failed to discover BGC_uart attributes\n");
+        QLOG_literal("[BGC] failed to discover BGC_uart attributes");
         return false;
     }
     s_discovered_speed = speed;
     s_discovered_parity = parity;
-    printf("[BGC::BGC] Discover_attributes - discovered BGC_uart attributes: speed=%d parity=%d\n", speed, parity);
+    printf("[BGC] discovered BGC_uart attributes: speed=%d parity=%d\n", speed, parity);
     return true;
 }
 
@@ -202,38 +202,38 @@ bool BGC::Process_frame_button_event() {
     /** Don't process frame button events on old revisions
      *  that have direct electric link frame_button -> BGC
      */
-    printf("[BGC::BGC] Process_frame_button_event - skipping event\n");
+    printf("[BGC] Process_frame_button_event - skipping event\n");
     return true;
 #endif
     
     BGC_uart_msg out_msg;
     switch ( frame_button_subscriber.Data().state ) {
         case SINGLE_CLICK: {
-            DOG_PRINT("[BGC::BGC] Process_frame_button_event - SINGLE_CLICK -> SBGC_MENU_CMD_MOTOR_TOGGLE\n");
+            DOG_PRINT("[BGC] SINGLE_CLICK -> SBGC_MENU_CMD_MOTOR_TOGGLE\n");
             out_msg.Build_OUT_CMD_EXECUTE_MENU(SBGC_MENU_CMD_MOTOR_TOGGLE);
             break;
         }
         case DOUBLE_CLICK: {
-            DOG_PRINT("[BGC::BGC] Process_frame_button_event - DOUBLE_CLICK -> SBGC_MENU_CMD_CALIB_ACC\n");
+            DOG_PRINT("[BGC] DOUBLE_CLICK -> SBGC_MENU_CMD_CALIB_ACC\n");
             out_msg.Build_OUT_CMD_EXECUTE_MENU(SBGC_MENU_CMD_CALIB_ACC);
             break;
         }
         case TRIPLE_CLICK: {
-            DOG_PRINT("[BGC::BGC] Process_frame_button_event - TRIPLE_CLICK -> SBGC_MENU_CMD_CALIB_GYRO\n");
+            DOG_PRINT("[BGC] TRIPLE_CLICK -> SBGC_MENU_CMD_CALIB_GYRO\n");
             out_msg.Build_OUT_CMD_EXECUTE_MENU(SBGC_MENU_CMD_CALIB_GYRO);
             break;
         }
         case LONG_KEYPRESS: {
-            DOG_PRINT("[BGC::BGC] Process_frame_button_event - LONG_KEYPRESS -> ignore\n");
+            DOG_PRINT("[BGC] LONG_KEYPRESS -> ignore\n");
             break;
         }
         default: {
-            printf("[BGC::BGC] Process_frame_button_event - unknown frame button state received\n");
+            QLOG_literal("[BGC] unknown frame button state received");
             break;
         }
     }
     if ( out_msg.Is_first_byte_present() && !bgc_uart.Send(out_msg) ) {
-        printf("[BGC::BGC] Process_frame_button_event - failed to send SBGC_CMD_EXECUTE_MENU\n");
+        QLOG_literal("[BGC] failed to send SBGC_CMD_EXECUTE_MENU");
         return false;
     }
     return true;
@@ -242,23 +242,23 @@ bool BGC::Process_frame_button_event() {
 bool BGC::Update_bgc_motor_status() {
     if ( !vehicle_status_subscriber.Read() ) return false;
     
-    // DOG_PRINT("[BGC::BGC] Update_bgc_motor_status - change: %d -> %d\n", prev_arming_state, raw_vehicle_status.arming_state);
+    // DOG_PRINT("[BGC] Update_bgc_motor_status - change: %d -> %d\n", prev_arming_state, raw_vehicle_status.arming_state);
     BGC_uart_msg out_msg;
     if ( prev_arming_state != ARMING_STATE_ARMED && vehicle_status_subscriber.Data().arming_state == ARMING_STATE_ARMED ) {
         if ( arm_bgc_motors_param.Get() != 0 ) {
-            DOG_PRINT("[BGC::BGC] Update_bgc_motor_status - sending CMD_MOTORS_ON\n");
+            DOG_PRINT("[BGC] sending CMD_MOTORS_ON\n");
             out_msg.Build_OUT_CMD_MOTORS_ON();
         }
     } else if ( (prev_arming_state == ARMING_STATE_ARMED || prev_arming_state == ARMING_STATE_MAX)
             && vehicle_status_subscriber.Data().arming_state != ARMING_STATE_ARMED ) {
         if ( arm_bgc_motors_param.Get() != 0 ) {
-            DOG_PRINT("[BGC::BGC] Update_bgc_motor_status - sending CMD_MOTORS_OFF\n");
+            DOG_PRINT("[BGC] sending CMD_MOTORS_OFF\n");
             out_msg.Build_OUT_CMD_MOTORS_OFF();
         }
     }
     prev_arming_state = vehicle_status_subscriber.Data().arming_state;
     if ( out_msg.Is_first_byte_present() && !bgc_uart.Send(out_msg) ) {
-        printf("[BGC::BGC] Run - failed to send CMD_MOTORS_*\n");
+        QLOG_literal("[BGC] failed to send CMD_MOTORS_*");
         return false;
     }
     return true;
@@ -268,10 +268,10 @@ bool BGC::Enable_video_tx_power_pin() {
     BGC_uart_msg out_msg;
     out_msg.Build_OUT_CMD_TRIGGER_PIN(BGC_VIDEO_TX_POWER_PIN, 1);
     if ( !bgc_uart.Send(out_msg) ) {
-        printf("[BGC::BGC] Enable_video_tx_power_pin - failed to send CMD_TRIGGER_PIN\n");
+        QLOG_literal("[BGC] failed to send CMD_TRIGGER_PIN");
         return false;
     }
-    printf("[BGC::BGC] Enable_video_tx_power_pin - sent CMD_TRIGGER_PIN %d/%d\n", BGC_VIDEO_TX_POWER_PIN, 1);
+    printf("[BGC] sent CMD_TRIGGER_PIN %d/%d\n", BGC_VIDEO_TX_POWER_PIN, 1);
     return true;
 }
 
@@ -285,7 +285,7 @@ BGC::Poll_result BGC::Poll() {
         pfds[2].fd = bgc_uart.Fd();                  pfds[2].events = POLLIN;
         const int poll_ret = poll(pfds, 3, timeout_ms);
         if ( poll_ret < 0 ) {
-            printf("[BGC::BGC] Poll - failed to poll: %d\n", errno);
+            QLOG_sprintf("[BGC] poll fail: %d", errno);
         } else if ( poll_ret == 0 ) {
             return Poll_result::Timeout;
         } else {
@@ -296,7 +296,7 @@ BGC::Poll_result BGC::Poll() {
             return Poll_result(result);
         }
     }
-    printf("[BGC::BGC] Poll - error limit reached\n");
+    QLOG_literal("[BGC] poll error limit reached");
     return Poll_result::Error;
 }
 
