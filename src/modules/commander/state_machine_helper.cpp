@@ -406,6 +406,18 @@ main_state_transition(struct vehicle_status_s *status, main_state_t new_main_sta
 	default:
 		break;
 	}
+	
+	if ( status->main_state == MAIN_STATE_EMERGENCY_RTL || status->main_state == MAIN_STATE_EMERGENCY_LAND ) {
+		if (	   new_main_state != MAIN_STATE_MANUAL
+				&& new_main_state != MAIN_STATE_ALTCTL
+				&& new_main_state != MAIN_STATE_POSCTL
+				&& new_main_state != MAIN_STATE_ACRO
+				&& new_main_state != MAIN_STATE_FOLLOW
+				&& new_main_state != MAIN_STATE_EMERGENCY_LAND
+				&& new_main_state != MAIN_STATE_AUTO_STANDBY ) {
+			ret = TRANSITION_DENIED;
+		}
+	}
 
 	if (ret == TRANSITION_CHANGED) {
 		if (status->main_state != new_main_state) {

@@ -202,6 +202,12 @@ PARAM_DEFINE_FLOAT(BAT_CRIT_LVL, 0.09f);
 PARAM_DEFINE_FLOAT(BAT_FLAT_LVL, 0.02f);
 
 /**
+ * Testing / simulator param for faking the battery level readings. Not used if negative, if positive, battery level is set to this.
+ * If set below -1.0f, it's only read at boot time and does not get checked for updates again.
+ */
+PARAM_DEFINE_FLOAT(BAT_FAKE_LVL, -10.0f);
+
+/**
  * Do the emergency actions when battery level is considered CRITIAL
  *
  * @group Battery Calibration

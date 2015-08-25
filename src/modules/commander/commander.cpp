@@ -103,6 +103,7 @@
 #include <dataman/dataman.h>
 #include <airdog/calibrator/calibrator.hpp>
 #include <airdog/activation.hpp>
+#include <quick_log/quick_log.hpp>
 
 #include "px4_custom_mode.h"
 #include "commander_helper.h"
@@ -117,8 +118,12 @@
 #include "commander_error.h"
 
 #include "flight_time_check.hpp"
+#include "safety_action_helper.hpp"
+#include "battery_safety_check.hpp"
 
-static Flight_time_check g_flight_time_check;
+static Flight_time_check    g_flight_time_check;
+       Safety_action_helper g_safety_action_helper;
+static Battery_safety_check g_battery_safety_check;
 
 #include "activity/dog_activity_manager.hpp"
 
@@ -887,31 +892,15 @@ int commander_thread_main(int argc, char *argv[])
 	param_t _param_activity = param_find("A_ACTIVITY");
 
 
-	float battery_warning_level;
-	float battery_critical_level;
-	float battery_flat_level;
-
-    int battery_critical_use;
-    int battery_flat_use;
+	float battery_fake_level = -1.0f;
 
     int require_gps = 1;
 
-	param_t _param_battery_warning_level = param_find("BAT_WARN_LVL");
-	param_t _param_battery_critical_level = param_find("BAT_CRIT_LVL");
-	param_t _param_battery_flat_level = param_find("BAT_FLAT_LVL");
-
-	param_t _param_battery_critical_use = param_find("BAT_CRIT_USE");
-	param_t _param_battery_flat_use = param_find("BAT_FLAT_USE");
+	param_t _param_battery_fake_level = param_find("BAT_FAKE_LVL");
 
 	param_t _param_require_gps = param_find("A_REQUIRE_GPS");
 
-
-	param_get(_param_battery_warning_level, &battery_warning_level);
-	param_get(_param_battery_critical_level, &battery_critical_level);
-	param_get(_param_battery_flat_level, &battery_flat_level);
-
-	param_get(_param_battery_critical_use, &battery_critical_use);
-	param_get(_param_battery_flat_use, &battery_flat_use);
+	param_get(_param_battery_fake_level, &battery_fake_level);
 
 	param_get(_param_require_gps, &require_gps);
 
@@ -1114,10 +1103,6 @@ int commander_thread_main(int argc, char *argv[])
 	unsigned stick_off_counter = 0;
 	unsigned stick_on_counter = 0;
 
-	bool low_battery_voltage_actions_done = false;
-	bool critical_battery_voltage_actions_done = false;
-	bool flat_battery_voltage_actions_done = false;
-
 	hrt_abstime last_idle_time = 0;
 	hrt_abstime start_time = 0;
 
@@ -1255,6 +1240,8 @@ int commander_thread_main(int argc, char *argv[])
 	control_status_leds(&status, &armed, true);
 
 	g_flight_time_check.Boot_init();
+	g_safety_action_helper.Boot_init();
+	g_battery_safety_check.Boot_init();
 	
 	/* now initialized */
 	commander_initialized = true;
@@ -1721,6 +1708,12 @@ int commander_thread_main(int argc, char *argv[])
 				/* get throttle (if armed), as we only care about energy negative throttle also counts */
 				float throttle = (armed.armed) ? fabsf(actuator_controls.control[3]) : 0.0f;
 				status.battery_remaining = battery_remaining_estimate_voltage(battery.voltage_filtered_v, battery.discharged_mah, throttle);
+				if ( battery_fake_level >= -1.0f ) {
+					param_get(_param_battery_fake_level, &battery_fake_level);
+					if ( battery_fake_level >= 0.0f ) {
+						status.battery_remaining = battery_fake_level;
+					}
+				}
 			}
 		}
 
@@ -1780,54 +1773,6 @@ int commander_thread_main(int argc, char *argv[])
 			//struct stat statbuf;
 			//on_usb_power = (stat("/dev/ttyACM0", &statbuf) == 0);
 		}
-
-
-		/* if battery voltage is getting lower, warn using buzzer, etc. */
-		if (status.condition_battery_voltage_valid && status.battery_remaining < battery_warning_level && !low_battery_voltage_actions_done) {
-
-			low_battery_voltage_actions_done = true;
-			mavlink_log_critical(mavlink_fd, "LOW BATTERY, RETURN TO LAND ADVISED");
-			status.battery_warning = VEHICLE_BATTERY_WARNING_LOW;
-
-		} else if (status.condition_battery_voltage_valid && status.battery_remaining < battery_critical_level && !critical_battery_voltage_actions_done && low_battery_voltage_actions_done) {
-
-			/* critical battery voltage, this is rather an emergency, change state machine */
-
-			critical_battery_voltage_actions_done = true;
-			mavlink_log_emergency(mavlink_fd, "CRITICAL BATTERY, EMERGENCY RTL");
-			status.battery_warning = VEHICLE_BATTERY_WARNING_CRITICAL;
-
-            if (battery_critical_use) {
-                mavlink_log_emergency(mavlink_fd, "BATTERY CRITICAL ACTIONS");
-                if (control_mode.flag_control_auto_enabled && status.airdog_state == AIRD_STATE_IN_AIR) {
-                    if (status.main_state!=MAIN_STATE_EMERGENCY_RTL && status.main_state!=MAIN_STATE_EMERGENCY_LAND) {
-                        if (main_state_transition(&status, MAIN_STATE_EMERGENCY_RTL, mavlink_fd) == TRANSITION_CHANGED) {
-                            status_changed = true;
-                        } else if (main_state_transition(&status, MAIN_STATE_EMERGENCY_LAND, mavlink_fd) == TRANSITION_CHANGED) {
-                            status_changed = true;
-                        }
-                    }
-                }
-			}
-
-		} else if (status.condition_battery_voltage_valid && status.battery_remaining < battery_flat_level && !flat_battery_voltage_actions_done  && low_battery_voltage_actions_done && critical_battery_voltage_actions_done){
-
-			flat_battery_voltage_actions_done = true;
-			mavlink_log_emergency(mavlink_fd, "FLAT BATTERY, EMERGENCY LAND");
-			status.battery_warning = VEHICLE_BATTERY_WARNING_FLAT;
-
-            if (battery_flat_use){
-                mavlink_log_emergency(mavlink_fd, "BATTERY FLAT ACTIONS");
-                if (control_mode.flag_control_auto_enabled && status.airdog_state == AIRD_STATE_IN_AIR) {
-                    if (status.main_state!=MAIN_STATE_EMERGENCY_LAND) {
-                        if (main_state_transition(&status, MAIN_STATE_EMERGENCY_LAND, mavlink_fd) == TRANSITION_CHANGED) {
-                            status_changed = true;
-                        }
-                    }
-                }
-            }
-		}
-
 
 		/* If in INIT state, try to proceed to STANDBY state */
 		if (status.arming_state == ARMING_STATE_INIT && low_prio_task == LOW_PRIO_TASK_NONE) {
@@ -2139,7 +2084,24 @@ int commander_thread_main(int argc, char *argv[])
 			case AIRD_STATE_CHANGE:
             {
                 if ( status.airdog_state != AIRD_STATE_TAKING_OFF && commander_request.airdog_state == AIRD_STATE_TAKING_OFF ) {
-                    g_flight_time_check.Takeoff_init();
+                    if ( status.airdog_state != AIRD_STATE_LANDING && status.airdog_state != AIRD_STATE_IN_AIR ) {
+                        commander_error_code init_error = COMMANDER_ERROR_OK;
+                        if ( init_error == COMMANDER_ERROR_OK ) init_error = g_flight_time_check.Takeoff_init();
+                        if ( init_error == COMMANDER_ERROR_OK ) init_error = g_safety_action_helper.Takeoff_init();
+                        if ( init_error == COMMANDER_ERROR_OK ) init_error = g_battery_safety_check.Takeoff_init(home);
+                        if ( init_error != COMMANDER_ERROR_OK ) {
+                            QLOG_literal("[commander] TCI failed");
+                            commander_set_error(init_error);
+                            arm_disarm(false, mavlink_fd, "takeoff check init");
+                            if ( main_state_transition(&status, MAIN_STATE_AUTO_STANDBY, mavlink_fd) == TRANSITION_CHANGED ) {
+                                status_changed = true;
+                            } else {
+                                QLOG_literal("[commander] TCI failed to go to standby");
+                                mavlink_log_info(mavlink_fd, "TCI failed to go to standby\n");
+                            }
+                            break;
+                        }
+                    }
                 }
                 
                 airdog_state_transition(&status, commander_request.airdog_state, mavlink_fd);
@@ -2240,26 +2202,102 @@ int commander_thread_main(int argc, char *argv[])
 				|| control_mode.flag_control_manual_enabled ) ) {
 			commander_error_code check_error_code = COMMANDER_ERROR_OK;
 			
-			if ( status.airdog_state == AIRD_STATE_TAKING_OFF ) {
-				check_error_code = g_flight_time_check.Takeoff_check();
-			} else if ( status.airdog_state == AIRD_STATE_IN_AIR ) {
-				check_error_code = g_flight_time_check.Flight_check();
-			} else if ( status.airdog_state == AIRD_STATE_LANDING ) {
-				check_error_code = g_flight_time_check.Landing_check();
+			if ( check_error_code == COMMANDER_ERROR_OK ) {
+				if ( status.airdog_state == AIRD_STATE_TAKING_OFF ) {
+					check_error_code = g_flight_time_check.Takeoff_check();
+				} else if ( status.airdog_state == AIRD_STATE_IN_AIR ) {
+					check_error_code = g_flight_time_check.Flight_check();
+				} else if ( status.airdog_state == AIRD_STATE_LANDING ) {
+					check_error_code = g_flight_time_check.Landing_check();
+				}
+				
+				if ( check_error_code != COMMANDER_ERROR_OK ) {
+					if ( check_error_code != FTC_ERROR ) {
+						commander_set_error(check_error_code);
+						arm_disarm(false, mavlink_fd, "flight time check");
+						if ( main_state_transition(&status, MAIN_STATE_AUTO_STANDBY, mavlink_fd) == TRANSITION_CHANGED ) {
+							status_changed = true;
+						} else {
+							QLOG_literal("[commander] failed to go to standby after FTC error");
+							mavlink_log_info(mavlink_fd, "FTC failed to go to standby\n");
+						}
+					} else {
+						QLOG_literal("[commander] FTC error");
+					}
+				}
 			}
 			
-			if ( check_error_code != COMMANDER_ERROR_OK ) {
-				if ( check_error_code != FTC_ERROR ) {
-					commander_set_error(check_error_code);
-					arm_disarm(false, mavlink_fd, "flight time check");
-					if ( main_state_transition(&status, MAIN_STATE_AUTO_STANDBY, mavlink_fd) == TRANSITION_CHANGED ) {
-						status_changed = true;
+			if ( check_error_code == COMMANDER_ERROR_OK ) {
+				if ( status.airdog_state == AIRD_STATE_IN_AIR ) {
+					check_error_code = g_battery_safety_check.Flight_check(status, home, global_position
+						, control_mode.flag_control_manual_enabled);
+				}
+				
+				if ( check_error_code != COMMANDER_ERROR_OK ) {
+					if ( check_error_code != BSC_ERROR ) {
+						commander_set_error(check_error_code);
+						if ( check_error_code == BSC_ERROR_BATTERY_RTH_NOTIFY ) {
+							mavlink_log_info(mavlink_fd, "LOW BATTERY, RETURN TO HOME ADVISED");
+						} else if ( check_error_code == BSC_ERROR_BATTERY_RTH ) {
+							mavlink_log_critical(mavlink_fd, "CRITICAL BATTERY, EMERGENCY RETURN TO HOME");
+							if ( status.main_state != MAIN_STATE_EMERGENCY_RTL && !control_mode.flag_control_manual_enabled ) {
+								if ( main_state_transition(&status, MAIN_STATE_EMERGENCY_RTL, mavlink_fd) == TRANSITION_CHANGED ) {
+									status_changed = true;
+								} else {
+									QLOG_literal("[commander] failed to go to emergency rtl after BSC error");
+									if ( g_safety_action_helper.Allowed_to_land() && status.main_state != MAIN_STATE_EMERGENCY_LAND ) {
+										if ( main_state_transition(&status, MAIN_STATE_EMERGENCY_LAND, mavlink_fd) == TRANSITION_CHANGED ) {
+											status_changed = true;
+										} else {
+											QLOG_literal("[commander] failed to go to emergency land after BSC and rtl error");
+										}
+									}
+								}
+							}
+						} else if ( check_error_code == BSC_ERROR_BATTERY_RTH_WO_BATT ) {
+							mavlink_log_emergency(mavlink_fd, "CRITICAL BATTERY, EMERGENCY RETURN TO HOME WO BATT");
+							if ( status.main_state != MAIN_STATE_EMERGENCY_RTL && !control_mode.flag_control_manual_enabled ) {
+								if ( main_state_transition(&status, MAIN_STATE_EMERGENCY_RTL, mavlink_fd) == TRANSITION_CHANGED ) {
+									status_changed = true;
+								} else {
+									QLOG_literal("[commander] failed to go to emergency rtl wo batt after BSC error");
+									if ( g_safety_action_helper.Allowed_to_land() && status.main_state != MAIN_STATE_EMERGENCY_LAND ) {
+										if ( main_state_transition(&status, MAIN_STATE_EMERGENCY_LAND, mavlink_fd) == TRANSITION_CHANGED ) {
+											status_changed = true;
+										} else {
+											QLOG_literal("[commander] failed to go to emergency land after BSC and rtl wo batt error");
+										}
+									}
+								}
+							}
+						} else if ( check_error_code == BSC_ERROR_BATTERY_SWITCH_RTH_TO_LAND ) {
+							mavlink_log_critical(mavlink_fd, "UNEXPECTED BATTERY DROP, SWITCHED FROM RTH TO LAND");
+						} else if ( check_error_code == BSC_ERROR_BATTERY_LAND_NOTIFY ) {
+							mavlink_log_info(mavlink_fd, "LOW BATTERY, LAND ADVISED");
+						} else if ( check_error_code == BSC_ERROR_BATTERY_LAND ) {
+							mavlink_log_critical(mavlink_fd, "LOW BATTERY, EMERGENCY LAND");
+							if ( status.main_state != MAIN_STATE_EMERGENCY_LAND && !control_mode.flag_control_manual_enabled ) {
+								if ( main_state_transition(&status, MAIN_STATE_EMERGENCY_LAND, mavlink_fd) == TRANSITION_CHANGED ) {
+									status_changed = true;
+								} else {
+									QLOG_literal("[commander] failed to go to emergency land after BSC error");
+								}
+							}
+						} else if ( check_error_code == BSC_ERROR_BATTERY_LAND_DEATH ) {
+							mavlink_log_emergency(mavlink_fd, "FLAT BATTERY, EMERGENCY LAND");
+							if ( status.main_state != MAIN_STATE_EMERGENCY_LAND && !control_mode.flag_control_manual_enabled ) {
+								if ( main_state_transition(&status, MAIN_STATE_EMERGENCY_LAND, mavlink_fd) == TRANSITION_CHANGED ) {
+									status_changed = true;
+								} else {
+									QLOG_literal("[commander] failed to go to emergency land after BSC death error");
+								}
+							}
+						} else {
+							QLOG_literal("[commander] unhandled BSC error code");
+						}
 					} else {
-						mavlink_log_info(mavlink_fd, "FTC failed to go to standby\n");
+						QLOG_literal("[commander] BSC error");
 					}
-				} else {
-					// if it was a general error, e.g. the checks failed to read uORBs or something like that
-					// probably we need to do something, but for now, let's just let things slide and not crash
 				}
 			}
 		}
@@ -2507,6 +2545,9 @@ int commander_thread_main(int argc, char *argv[])
 	close(param_changed_sub);
 	close(battery_sub);
 	close(mission_pub);
+	
+	g_safety_action_helper.Shutdown();
+	g_battery_safety_check.Shutdown();
 	g_flight_time_check.Shutdown();
 
 	thread_running = false;

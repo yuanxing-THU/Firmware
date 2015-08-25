@@ -19,6 +19,17 @@ enum commander_error_code
     FTC_ERROR_TAKEOFF_NO_ALTITUDE_GAIN     = 22,
     FTC_ERROR_FLIGHT_TOO_MUCH_TILT         = 23,
     FTC_ERROR_LANDING_TOO_MUCH_TILT        = 24,
+    
+    SAH_ERROR                              = 29,
+    
+    BSC_ERROR                              = 30,
+    BSC_ERROR_BATTERY_RTH_NOTIFY           = 31,
+    BSC_ERROR_BATTERY_RTH                  = 32,
+    BSC_ERROR_BATTERY_RTH_WO_BATT          = 33,
+    BSC_ERROR_BATTERY_SWITCH_RTH_TO_LAND   = 34,
+    BSC_ERROR_BATTERY_LAND_NOTIFY          = 35,
+    BSC_ERROR_BATTERY_LAND                 = 36,
+    BSC_ERROR_BATTERY_LAND_DEATH           = 37,
 };
 
 __EXPORT int commander_set_error(int error_code);

@@ -48,7 +48,11 @@ SRCS		 	= commander.cpp \
 			rc_calibration.cpp \
 			airspeed_calibration.cpp \
 			flight_time_check.cpp \
-			flight_time_check_params.c
+			flight_time_check_params.c \
+			safety_action_helper.cpp \
+			safety_action_helper_params.c \
+			battery_safety_check.cpp \
+			battery_safety_check_params.c
 
 MODULE_STACKSIZE = 3000
 
