@@ -116,6 +116,13 @@ commander_error_code Flight_time_check::Takeoff_init() {
     return COMMANDER_ERROR_OK;
 }
 
+void Flight_time_check::On_in_air_takeoff() {
+    const uint64_t now_time_ms = hrt_absolute_time() / 1000;
+    if ( now_time_ms - takeoff_start_time_ms > takeoff_time_to_achieve_z_diff_ms ) {
+        takeoff_need_z_diff = -1.0f;
+    }
+}
+
 commander_error_code Flight_time_check::Takeoff_check() const {
     if ( !do_checks_enabled ) return COMMANDER_ERROR_OK;
     

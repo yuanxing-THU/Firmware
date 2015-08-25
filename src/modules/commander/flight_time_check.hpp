@@ -38,8 +38,11 @@ public:
     // To be called once after boot (and after Shutdown), opens any required files / uorbs / params / etc.
     commander_error_code Boot_init();
     
-    // To be called right before takeoff.
+    // To be called right before takeoff from land.
     commander_error_code Takeoff_init();
+    
+    // To be called if a repeat in-air takeoff takes place.
+    void On_in_air_takeoff();
     
     // Performs any checks required during takeoff.
     commander_error_code Takeoff_check() const;

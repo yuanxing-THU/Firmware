@@ -2101,6 +2101,8 @@ int commander_thread_main(int argc, char *argv[])
                             }
                             break;
                         }
+                    } else {
+                        g_flight_time_check.On_in_air_takeoff();
                     }
                 }
                 
