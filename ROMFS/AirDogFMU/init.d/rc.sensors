@@ -1,7 +1,4 @@
 #!nsh
-#
-# Standard startup script for PX4FMU onboard sensor drivers.
-#
 
 # MAG selection
 set MAG_started no

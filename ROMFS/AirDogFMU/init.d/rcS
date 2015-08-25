@@ -1,6 +1,4 @@
 #!nsh
-#
-# PX4FMU startup script.
 
 #
 # Default to auto-start mode.
