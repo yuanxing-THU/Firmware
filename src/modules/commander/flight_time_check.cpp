@@ -3,6 +3,7 @@
 #include "flight_time_check.hpp"
 
 #include <drivers/drv_hrt.h>
+#include <quick_log/quick_log.hpp>
 #include <lib/mathlib/mathlib.h>
 #include <math.h>
 
@@ -36,14 +37,14 @@ commander_error_code Flight_time_check::Boot_init() {
     boot_init_complete = false;
     do_checks_enabled = false;
     
-    if ( !do_param.Open("A_FTC_DO")                          ) return FTC_ERROR;
-    if ( !takeoff_tilt_deg_param.Open("A_FTC_TTILT_DEG")     ) return FTC_ERROR;
-    if ( !takeoff_alt_m_param.Open("A_FTC_TALT_M")           ) return FTC_ERROR;
-    if ( !takeoff_alt_ms_param.Open("A_FTC_TALT_MS")         ) return FTC_ERROR;
-    if ( !flight_tilt_deg_param.Open("A_FTC_FTILT_DEG")      ) return FTC_ERROR;
+    if ( !do_param.Open                 ("A_FTC_DO")         ) return FTC_ERROR;
+    if ( !takeoff_tilt_deg_param.Open   ("A_FTC_TTILT_DEG")  ) return FTC_ERROR;
+    if ( !takeoff_alt_m_param.Open      ("A_FTC_TALT_M")     ) return FTC_ERROR;
+    if ( !takeoff_alt_ms_param.Open     ("A_FTC_TALT_MS")    ) return FTC_ERROR;
+    if ( !flight_tilt_deg_param.Open    ("A_FTC_FTILT_DEG")  ) return FTC_ERROR;
     if ( !flight_low_tilt_deg_param.Open("A_FTC_FLTILT_DEG") ) return FTC_ERROR;
-    if ( !flight_low_tilt_ms_param.Open("A_FTC_FLTILT_MS")   ) return FTC_ERROR;
-    if ( !landing_tilt_deg_param.Open("A_FTC_LTILT_DEG")     ) return FTC_ERROR;
+    if ( !flight_low_tilt_ms_param.Open ("A_FTC_FLTILT_MS")  ) return FTC_ERROR;
+    if ( !landing_tilt_deg_param.Open   ("A_FTC_LTILT_DEG")  ) return FTC_ERROR;
     if ( !attitude_orb.Open()                                ) return FTC_ERROR;
     if ( !local_pos_orb.Open()                               ) return FTC_ERROR;
     
@@ -56,7 +57,7 @@ commander_error_code Flight_time_check::Takeoff_init() {
     do_checks_enabled = false;
     
     if ( !boot_init_complete ) {
-        printf("[Flight_time_check] Takeoff_init - boot init not complete\n");
+        QLOG_literal("[Flight_time_check] boot init not complete");
         return FTC_ERROR;
     }
     
@@ -77,7 +78,7 @@ commander_error_code Flight_time_check::Takeoff_init() {
         if ( !local_pos_orb.Read() ) return FTC_ERROR;
         
         if ( !local_pos_orb.Data().z_valid ) {
-            printf("[Flight_time_check] Takeoff_init - vehicle_local_position not z_valid\n");
+            QLOG_literal("[Flight_time_check] Takeoff_init - vehicle_local_position not z_valid");
             return FTC_ERROR;
         }
         
@@ -119,14 +120,28 @@ commander_error_code Flight_time_check::Takeoff_check() const {
     if ( !do_checks_enabled ) return COMMANDER_ERROR_OK;
     
     const commander_error_code tilt_verification_code = Verify_tilt_not_exceeded(takeoff_tilt_min_cos, FTC_ERROR_TAKEOFF_TOO_MUCH_TILT);
-    if ( tilt_verification_code != COMMANDER_ERROR_OK ) return tilt_verification_code;
+    if ( tilt_verification_code != COMMANDER_ERROR_OK ) {
+        if ( tilt_verification_code == FTC_ERROR_TAKEOFF_TOO_MUCH_TILT ) {
+            QLOG_literal("[Flight_time_check] FTC_ERROR_TAKEOFF_TOO_MUCH_TILT");
+        }
+        return tilt_verification_code;
+    }
     
     bool local_pos_updated = false;
-    if ( !local_pos_orb.Check(&local_pos_updated, false) ) return FTC_ERROR;
+    if ( !local_pos_orb.Check(&local_pos_updated, false) ) {
+        QLOG_literal("[Flight_time_check] Takeoff_check - couldn't check vehicle_local_position");
+        return FTC_ERROR;
+    }
     
     if ( local_pos_updated ) {
-        if ( !local_pos_orb.Read(false) )    return FTC_ERROR;
-        if ( !local_pos_orb.Data().z_valid ) return FTC_ERROR;
+        if ( !local_pos_orb.Read(false) ) {
+            QLOG_literal("[Flight_time_check] Takeoff_check - couldn't read vehicle_local_position");
+            return FTC_ERROR;
+        }
+        if ( !local_pos_orb.Data().z_valid ) {
+        	QLOG_literal("[Flight_time_check] Takeoff_check - vehicle_local_position not z_valid");
+            return FTC_ERROR;
+        }
         
         const float diff_z = fabsf(local_pos_orb.Data().z - takeoff_initial_z);
         if ( diff_z > takeoff_max_seen_z_diff ) takeoff_max_seen_z_diff = diff_z;
@@ -135,6 +150,7 @@ commander_error_code Flight_time_check::Takeoff_check() const {
     const uint64_t now_time_ms = hrt_absolute_time() / 1000;
     if ( now_time_ms - takeoff_start_time_ms > takeoff_time_to_achieve_z_diff_ms ) {
         if ( takeoff_max_seen_z_diff < takeoff_need_z_diff ) {
+            QLOG_literal("[Flight_time_check] FTC_ERROR_TAKEOFF_NO_ALTITUDE_GAIN");
             return FTC_ERROR_TAKEOFF_NO_ALTITUDE_GAIN;
         }
     }
@@ -152,6 +168,7 @@ commander_error_code Flight_time_check::Flight_check() const {
             flight_low_tilt_exceeded_start_time_ms = now_time_ms;
         } else {
             if ( now_time_ms - flight_low_tilt_exceeded_start_time_ms > flight_low_tilt_timeout_ms ) {
+                QLOG_literal("[Flight_time_check] FTC_ERROR_FLIGHT_TOO_MUCH_TILT");
                 return FTC_ERROR_FLIGHT_TOO_MUCH_TILT;
             }
         }
@@ -161,23 +178,40 @@ commander_error_code Flight_time_check::Flight_check() const {
         return low_tilt_error_code;
     }
     
-    return Verify_tilt_not_exceeded(flight_tilt_min_cos, FTC_ERROR_FLIGHT_TOO_MUCH_TILT);
+    const commander_error_code tilt_error_code = Verify_tilt_not_exceeded(flight_tilt_min_cos, FTC_ERROR_FLIGHT_TOO_MUCH_TILT);
+    if ( tilt_error_code == FTC_ERROR_FLIGHT_TOO_MUCH_TILT ) {
+        QLOG_literal("[Flight_time_check] FTC_ERROR_FLIGHT_TOO_MUCH_TILT");
+    }
+    return tilt_error_code;
 }
 
 commander_error_code Flight_time_check::Landing_check() const {
     if ( !do_checks_enabled ) return COMMANDER_ERROR_OK;
-    return Verify_tilt_not_exceeded(landing_tilt_min_cos, FTC_ERROR_LANDING_TOO_MUCH_TILT);
+    const commander_error_code tilt_error_code = Verify_tilt_not_exceeded(landing_tilt_min_cos, FTC_ERROR_LANDING_TOO_MUCH_TILT);
+    if ( tilt_error_code == FTC_ERROR_LANDING_TOO_MUCH_TILT ) {
+        QLOG_literal("[Flight_time_check] FTC_ERROR_LANDING_TOO_MUCH_TILT");
+    }
+    return tilt_error_code;
 }
 
 commander_error_code Flight_time_check::Verify_tilt_not_exceeded(const float tilt_min_cos, commander_error_code error_code) const {
     bool attitude_updated = false;
     
-    if ( !attitude_orb.Check(&attitude_updated, false) ) return FTC_ERROR;
+    if ( !attitude_orb.Check(&attitude_updated, false) ) {
+        QLOG_literal("[Flight_time_check] couldn't check vehicle_attitude");
+        return FTC_ERROR;
+    }
     if ( attitude_updated ) {
-        if ( !attitude_orb.Read() ) return FTC_ERROR;
+        if ( !attitude_orb.Read(false) ) {
+            QLOG_literal("[Flight_time_check] couldn't read vehicle_attitude");
+            return FTC_ERROR;
+        }
     }
     
-    if ( !attitude_orb.Data().R_valid ) return FTC_ERROR;
+    if ( !attitude_orb.Data().R_valid ) {
+        QLOG_literal("[Flight_time_check] vehicle_attitude not R_valid");
+        return FTC_ERROR;
+    }
     
     const math::Vector<3> up_vector(0.0f, 0.0f, 1.0f);
     const math::Matrix<3,3> drone_to_world_matrix(attitude_orb.Data().R);

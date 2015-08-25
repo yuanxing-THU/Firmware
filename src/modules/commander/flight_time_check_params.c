@@ -2,7 +2,7 @@
 #include <systemlib/param/param.h>
 
 /**
- * Enable takeoff check. 0 = disable, any non-zero value = enable.
+ * Enable flight time check. 0 = disable, any non-zero value = enable.
  */
 PARAM_DEFINE_INT32(A_FTC_DO, 1);
 
