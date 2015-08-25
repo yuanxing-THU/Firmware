@@ -12,6 +12,7 @@ Battery_safety_check::Battery_safety_check()
     : do_param()
     , safety_action_param()
     , check_interval_ms_param()
+    , block_interval_ms_param()
     , rtl_ret_alt_m_param()
     , battery_capacity_mah_param()
     , battery_flat_lvl_param()
@@ -33,7 +34,9 @@ Battery_safety_check::Battery_safety_check()
     , action_taken(false)
     , death_done(false)
     , check_interval_ms(1)
+    , block_interval_ms(1)
     , next_check_ms(0)
+    , block_until_ms(0)
     , rtl_ret_alt_m(0.0f)
     , battery_capacity_mah(1.0f)
     , battery_flat_mah(100000.0f)
@@ -59,6 +62,7 @@ commander_error_code Battery_safety_check::Boot_init() {
     if ( !do_param.Open                     ("A_BSC_DO")         ) return BSC_ERROR;
     if ( !safety_action_param.Open          ("A_BSC_SAF_ACT")    ) return BSC_ERROR;
     if ( !check_interval_ms_param.Open      ("A_BSC_INT_MS")     ) return BSC_ERROR;
+    if ( !block_interval_ms_param.Open      ("A_BSC_BLOCK_MS")   ) return BSC_ERROR;
     if ( !rtl_ret_alt_m_param.Open          ("RTL_RET_ALT")      ) return BSC_ERROR;
     if ( !battery_capacity_mah_param.Open   ("BAT_CAPACITY")     ) return BSC_ERROR;
     if ( !battery_flat_lvl_param.Open       ("BAT_FLAT_LVL")     ) return BSC_ERROR;
@@ -126,7 +130,9 @@ commander_error_code Battery_safety_check::Takeoff_init(const home_position_s & 
     death_done = false;
     
     if ( !Utils::Get_param(check_interval_ms,       check_interval_ms_param,       BSC_INT_MS_MIN,   BSC_INT_MS_MAX)   ) return BSC_ERROR;
+    if ( !Utils::Get_param(block_interval_ms,       block_interval_ms_param,       BSC_BLOCK_MS_MIN, BSC_BLOCK_MS_MAX) ) return BSC_ERROR;
     next_check_ms = 0;  // Check as soon as needed / possible, schedule next interval-timed check then.
+    block_until_ms = 0; // Nothing blocks any actions initially.
     
     rtl_ret_alt_m = rtl_ret_alt_m_param.Get();
     
@@ -253,7 +259,9 @@ commander_error_code Battery_safety_check::Flight_rth_check(const uint64_t now_t
         , const home_position_s & home_pos
         , const vehicle_global_position_s & veh_pos
         , const bool manual_control_enabled) const {
-    if ( action_taken && !manual_control_enabled
+    const bool blocked = now_time_ms < block_until_ms;
+    
+    if ( action_taken && !manual_control_enabled && !blocked
             && status.main_state != MAIN_STATE_EMERGENCY_RTL
             && status.main_state != MAIN_STATE_EMERGENCY_LAND ) {
         user_notified = false;
@@ -263,8 +271,8 @@ commander_error_code Battery_safety_check::Flight_rth_check(const uint64_t now_t
     
     const float mah_to_rth = Mah_to_rth(home_pos, veh_pos);
     
-    const bool should_rth = g_safety_action_helper.Allowed_to_rth()  && Should_rth(filtered_battery_level, mah_to_rth);
-    const bool must_rth   = g_safety_action_helper.Allowed_to_rth()  && Must_rth  (filtered_battery_level, mah_to_rth);
+    const bool should_rth = g_safety_action_helper.Allowed_to_rth()  && Should_rth(filtered_battery_level, mah_to_rth) && !blocked;
+    const bool must_rth   = g_safety_action_helper.Allowed_to_rth()  && Must_rth  (filtered_battery_level, mah_to_rth) && !blocked;
     const bool can_rth    =                                             Can_rth   (filtered_battery_level, mah_to_rth);
     const bool death_land = g_safety_action_helper.Allowed_to_land() && Death_land(filtered_battery_level);
     
@@ -307,14 +315,16 @@ commander_error_code Battery_safety_check::Flight_rth_check(const uint64_t now_t
 
 commander_error_code Battery_safety_check::Flight_land_on_spot_check(const uint64_t now_time_ms
         , vehicle_status_s & status, const bool manual_control_enabled) const {
-    if ( action_taken && !manual_control_enabled && status.main_state != MAIN_STATE_EMERGENCY_LAND ) {
+    const bool blocked = now_time_ms < block_until_ms;
+    
+    if ( action_taken && !manual_control_enabled && !blocked && status.main_state != MAIN_STATE_EMERGENCY_LAND ) {
         user_notified = false;
         action_taken = false;
         death_done = false;
     }
     
-    const bool should_land = g_safety_action_helper.Allowed_to_land() && Should_land(filtered_battery_level);
-    const bool must_land   = g_safety_action_helper.Allowed_to_land() && Must_land  (filtered_battery_level);
+    const bool should_land = g_safety_action_helper.Allowed_to_land() && Should_land(filtered_battery_level) && !blocked;
+    const bool must_land   = g_safety_action_helper.Allowed_to_land() && Must_land  (filtered_battery_level) && !blocked;
     const bool death_land  = g_safety_action_helper.Allowed_to_land() && Death_land (filtered_battery_level);
     
     if ( should_land ) {
@@ -365,6 +375,13 @@ commander_error_code Battery_safety_check::Unexpected_battery_drop_below_can_rth
     }
 }
 
+void Battery_safety_check::On_user_action() const {
+    if ( action_taken ) {
+        const uint64_t now_time_ms = hrt_absolute_time() / 1000;
+        block_until_ms = now_time_ms + block_interval_ms;
+    }
+}
+
 void Battery_safety_check::Shutdown() {
     boot_init_complete = false;
     do_checks_enabled = false;
@@ -372,6 +389,7 @@ void Battery_safety_check::Shutdown() {
     do_param.Close();
     safety_action_param.Close();
     check_interval_ms_param.Close();
+    block_interval_ms_param.Close();
     rtl_ret_alt_m_param.Close();
     battery_capacity_mah_param.Close();
     battery_flat_lvl_param.Close();

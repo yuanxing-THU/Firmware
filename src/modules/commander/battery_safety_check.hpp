@@ -18,6 +18,9 @@
 #define BSC_INT_MS_MIN         1
 #define BSC_INT_MS_MAX         5000
 
+#define BSC_BLOCK_MS_MIN       1000
+#define BSC_BLOCK_MS_MAX       60000
+
 #define BSC_CAP_MAH_MIN        1000
 #define BSC_CAP_MAH_MAX        20000
 
@@ -88,6 +91,8 @@ public:
     bool Must_rth   (const float battery_level, const float mah_to_rth) const;
     bool Can_rth    (const float battery_level, const float mah_to_rth) const;
     
+    void On_user_action() const;
+    
     void Shutdown();
     
     ~Battery_safety_check();
@@ -108,6 +113,7 @@ private:
     Utils::Param_reader<int32_t> do_param;
     Utils::Param_reader<int32_t> safety_action_param;
     Utils::Param_reader<int32_t> check_interval_ms_param;
+    Utils::Param_reader<int32_t> block_interval_ms_param;
     Utils::Param_reader<float  > rtl_ret_alt_m_param;
     Utils::Param_reader<float  > battery_capacity_mah_param;
     Utils::Param_reader<float  > battery_flat_lvl_param;
@@ -134,7 +140,9 @@ private:
     mutable bool death_done;
     
     uint64_t check_interval_ms;
+    uint64_t block_interval_ms;
     mutable uint64_t next_check_ms;
+    mutable uint64_t block_until_ms;
     
     float rtl_ret_alt_m;
     float battery_capacity_mah;

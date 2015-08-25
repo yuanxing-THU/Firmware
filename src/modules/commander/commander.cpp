@@ -121,9 +121,9 @@
 #include "safety_action_helper.hpp"
 #include "battery_safety_check.hpp"
 
-static Flight_time_check    g_flight_time_check;
-       Safety_action_helper g_safety_action_helper;
-static Battery_safety_check g_battery_safety_check;
+Flight_time_check    g_flight_time_check;
+Safety_action_helper g_safety_action_helper;
+Battery_safety_check g_battery_safety_check;
 
 #include "activity/dog_activity_manager.hpp"
 

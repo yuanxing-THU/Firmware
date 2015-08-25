@@ -71,6 +71,11 @@
 
 #include "state_machine_helper.h"
 #include "commander_helper.h"
+#include "safety_action_helper.hpp"
+#include "battery_safety_check.hpp"
+
+extern Safety_action_helper g_safety_action_helper;
+extern Battery_safety_check g_battery_safety_check;
 
 /* oddly, ERROR is not defined for c++ */
 #ifdef ERROR
@@ -407,15 +412,24 @@ main_state_transition(struct vehicle_status_s *status, main_state_t new_main_sta
 		break;
 	}
 	
-	if ( status->main_state == MAIN_STATE_EMERGENCY_RTL || status->main_state == MAIN_STATE_EMERGENCY_LAND ) {
-		if (	   new_main_state != MAIN_STATE_MANUAL
-				&& new_main_state != MAIN_STATE_ALTCTL
-				&& new_main_state != MAIN_STATE_POSCTL
-				&& new_main_state != MAIN_STATE_ACRO
-				&& new_main_state != MAIN_STATE_FOLLOW
-				&& new_main_state != MAIN_STATE_EMERGENCY_LAND
-				&& new_main_state != MAIN_STATE_AUTO_STANDBY ) {
-			ret = TRANSITION_DENIED;
+	// TODO: Hack? Assume all non-emergency related main state changes are triggered by user actions?
+	if (	   new_main_state != MAIN_STATE_EMERGENCY_RTL
+			&& new_main_state != MAIN_STATE_EMERGENCY_LAND
+			&& new_main_state != MAIN_STATE_AUTO_STANDBY ) {
+		g_battery_safety_check.On_user_action();
+	}
+	
+	if ( !g_safety_action_helper.Control_allowed_after_emergency() ) {
+		if ( status->main_state == MAIN_STATE_EMERGENCY_RTL || status->main_state == MAIN_STATE_EMERGENCY_LAND ) {
+			if (	   new_main_state != MAIN_STATE_MANUAL
+					&& new_main_state != MAIN_STATE_ALTCTL
+					&& new_main_state != MAIN_STATE_POSCTL
+					&& new_main_state != MAIN_STATE_ACRO
+					&& new_main_state != MAIN_STATE_FOLLOW
+					&& new_main_state != MAIN_STATE_EMERGENCY_LAND
+					&& new_main_state != MAIN_STATE_AUTO_STANDBY ) {
+				ret = TRANSITION_DENIED;
+			}
 		}
 	}
 

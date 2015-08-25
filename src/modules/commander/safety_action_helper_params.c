@@ -7,8 +7,8 @@
 PARAM_DEFINE_INT32(A_SAH_DO, 1);
 
 /**
- * Configure the allowed safety actions for the current activity. This should be the action codes ORed together.
- * 1 = land on spot only, 2 = return to home only, 3 = land on spot or return to home.
+ * Configure the allowed safety actions for the current activity.
+ * This is a bit-mask, see Safety_action_helper::Safety_action for what each bit means.
  */
-PARAM_DEFINE_INT32(A_SAH_ALLOWED, 2);
+PARAM_DEFINE_INT32(A_SAH_ALLOWED, 258);
 

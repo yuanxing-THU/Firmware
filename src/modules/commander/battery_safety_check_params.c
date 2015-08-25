@@ -17,6 +17,11 @@ PARAM_DEFINE_INT32(A_BSC_SAF_ACT, 2);
 PARAM_DEFINE_INT32(A_BSC_INT_MS, 2000);
 
 /**
+ * Configure, in milliseconds, the interval that a user action blocks safety actions for. Limited to [BSC_BLOCK_MS_MIN;BSC_BLOCK_MS_MAX].
+ */
+PARAM_DEFINE_INT32(A_BSC_BLOCK_MS, 20000);
+
+/**
  * Configure Rth Battery Low-Spare level. Limited to [BSC_RLO_LVL_MIN;BSC_RLO_LVL_MAX].
  */
 PARAM_DEFINE_FLOAT(A_BSC_RLO_LVL, 0.01f);

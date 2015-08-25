@@ -10,6 +10,7 @@ Safety_action_helper::Safety_action_helper()
     , do_checks_enabled(false)
     , land_allowed(false)
     , rth_allowed(false)
+    , control_allowed_after_emergency(false)
 { }
 
 commander_error_code Safety_action_helper::Boot_init() {
@@ -37,8 +38,7 @@ commander_error_code Safety_action_helper::Takeoff_init() {
     
     const int32_t allowed_safety_actions = allowed_safety_actions_param.Get();
     
-    const uint32_t all_valid_action_bits = int32_t(Safety_action::Land_on_spot) | int32_t(Safety_action::Return_to_home);
-    if ( (allowed_safety_actions & ~all_valid_action_bits) != 0 ) {
+    if ( (allowed_safety_actions & ~int32_t(Safety_action::Known_bits)) != 0 ) {
         QLOG_sprintf("[Safety_action_helper] weird bits on allowed actions: %u", allowed_safety_actions);
         return SAH_ERROR;
     }
@@ -51,6 +51,8 @@ commander_error_code Safety_action_helper::Takeoff_init() {
         return SAH_ERROR;
     }
     
+    control_allowed_after_emergency = bool(allowed_safety_actions & int32_t(Safety_action::Allow_control_after_emergency));
+    
     do_checks_enabled = true;
     
     return COMMANDER_ERROR_OK;
@@ -62,6 +64,10 @@ bool Safety_action_helper::Allowed_to_land() const {
 
 bool Safety_action_helper::Allowed_to_rth() const {
     return !do_checks_enabled || rth_allowed;
+}
+
+bool Safety_action_helper::Control_allowed_after_emergency() const {
+    return !do_checks_enabled || control_allowed_after_emergency;
 }
 
 void Safety_action_helper::Shutdown() {
