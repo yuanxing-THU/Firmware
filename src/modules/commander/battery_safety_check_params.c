@@ -24,32 +24,32 @@ PARAM_DEFINE_INT32(A_BSC_BLOCK_MS, 20000);
 /**
  * Configure Rth Battery Low-Spare level. Limited to [BSC_RLO_LVL_MIN;BSC_RLO_LVL_MAX].
  */
-PARAM_DEFINE_FLOAT(A_BSC_RLO_LVL, 0.01f);
+PARAM_DEFINE_FLOAT(A_BSC_RLO_LVL, 0.05f);
 
 /**
  * Configure Rth Battery Mid-Spare level. Limited to [BSC_RMI_LVL_MIN;BSC_RMI_LVL_MAX].
  */
-PARAM_DEFINE_FLOAT(A_BSC_RMI_LVL, 0.03f);
+PARAM_DEFINE_FLOAT(A_BSC_RMI_LVL, 0.15f);
 
 /**
  * Configure Rth Battery High-Spare level. Limited to [BSC_RHI_LVL_MIN;BSC_RHI_LVL_MAX].
  */
-PARAM_DEFINE_FLOAT(A_BSC_RHI_LVL, 0.08f);
+PARAM_DEFINE_FLOAT(A_BSC_RHI_LVL, 0.25f);
 
 /**
  * Configure Land Battery Low-Spare level. Limited to [BSC_LLO_LVL_MIN;BSC_LLO_LVL_MAX].
  */
-PARAM_DEFINE_FLOAT(A_BSC_LLO_LVL, 0.0025f);
+PARAM_DEFINE_FLOAT(A_BSC_LLO_LVL, 0.03f);
 
 /**
  * Configure Land Battery Mid-Spare level. Limited to [BSC_LMI_LVL_MIN;BSC_LMI_LVL_MAX].
  */
-PARAM_DEFINE_FLOAT(A_BSC_LMI_LVL, 0.005f);
+PARAM_DEFINE_FLOAT(A_BSC_LMI_LVL, 0.06f);
 
 /**
  * Configure Land Battery High-Spare level. Limited to [BSC_LHI_LVL_MIN;BSC_LHI_LVL_MAX].
  */
-PARAM_DEFINE_FLOAT(A_BSC_LHI_LVL, 0.05f);
+PARAM_DEFINE_FLOAT(A_BSC_LHI_LVL, 0.16f);
 
 /**
  * Configure estimated battery usage per 100m altitude gain. Limited to [BSC_GAIN_MAH_MIN;BSC_GAIN_MAH_MAX].
