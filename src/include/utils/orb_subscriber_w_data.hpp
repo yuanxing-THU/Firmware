@@ -3,6 +3,7 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <quick_log/quick_log.hpp>
 #include <uORB/uORB.h>
 
 namespace Utils {
@@ -19,9 +20,7 @@ namespace Utils {
             Close();
             fd = orb_subscribe(s_uorb_meta);
             if ( !Is_open() ) {
-                if ( verbose_failure ) {
-                    printf("[Utils::ORB_subscriber_w_data] failed to orb_subscribe %s: %d\n", s_uorb_meta->o_name, errno);
-                }
+                if ( verbose_failure ) QLOG_sprintf("[ORB_subscriber_w_data] orb_subscribe fail %s: %d", s_uorb_meta->o_name, errno);
                 return false;
             }
             return true;
@@ -48,9 +47,7 @@ namespace Utils {
         
         bool Check(bool * const updated, const bool verbose_failure = true) const {
             if ( orb_check(fd, updated) < 0 ) {
-                if ( verbose_failure ) {
-                    printf("[Utils::ORB_subscriber_w_data] failed to orb_check %s: %d\n", s_uorb_meta->o_name, errno);
-                }
+                if ( verbose_failure ) QLOG_sprintf("[ORB_subscriber_w_data] orb_check fail %s: %d", s_uorb_meta->o_name, errno);
                 return false;
             }
             return true;
@@ -58,9 +55,7 @@ namespace Utils {
         
         bool Read(const bool verbose_failure = true) const {
             if ( orb_copy(s_uorb_meta, fd, &data) < 0 ) {
-                if ( verbose_failure ) {
-                    printf("[Utils::ORB_subscriber_w_data] failed to orb_copy %s: %d\n", s_uorb_meta->o_name, errno);
-                }
+                if ( verbose_failure ) QLOG_sprintf("[ORB_subscriber_w_data] orb_copy fail %s: %d", s_uorb_meta->o_name, errno);
                 return false;
             }
             return true;
@@ -68,9 +63,7 @@ namespace Utils {
         
         bool Set_interval(const int interval_ms, const bool verbose_failure = true) const {
             if ( orb_set_interval(fd, interval_ms) < 0 ) {
-                if ( verbose_failure ) {
-                    printf("[Utils::ORB_subscriber_w_data] failed to orb_set_interval %s: %d\n", s_uorb_meta->o_name, errno);
-                }
+                if ( verbose_failure ) QLOG_sprintf("[ORB_subscriber_w_data] orb_set_interval fail %s: %d", s_uorb_meta->o_name, errno);
                 return false;
             }
             return true;

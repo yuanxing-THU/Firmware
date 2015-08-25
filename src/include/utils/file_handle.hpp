@@ -3,6 +3,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <quick_log/quick_log.hpp>
 #include <stdio.h>
 #include <sys/ioctl.h>
 
@@ -19,7 +20,7 @@ namespace Utils {
             Close();
             fd = open(path, oflags);
             if ( !Is_open() ) {
-                if ( verbose_failure ) printf("[Utils::File_handle] failed to open %s: %d\n", path, errno);
+                if ( verbose_failure ) QLOG_sprintf("[File_handle] open fail %s: %d", path, errno);
                 return false;
             }
             return true;
@@ -42,7 +43,31 @@ namespace Utils {
         
         bool IOctl(const int req, const unsigned long arg, const bool verbose_failure = true) const {
             if ( ioctl(fd, req, arg) < 0 ) {
-                if ( verbose_failure ) printf("[Utils::File_handle] failed to ioctl on %d: %d/%lu", fd, req, arg);
+                if ( verbose_failure ) QLOG_sprintf("[File_handle] ioctl fail %d: %d/%lu", fd, req, arg);
+                return false;
+            }
+            return true;
+        }
+        
+        int Read(void * const buf, const int buf_len, const bool verbose_failure = true) const {
+            const int read_res = read(fd, buf, buf_len);
+            if ( read_res < 0 ) {
+                if ( verbose_failure ) QLOG_sprintf("[File_handle] read fail %d: %d/%d %d", fd, read_res, buf_len, errno);
+            }
+            return read_res;
+        }
+        
+        int Write(const void * const buf, const int buf_len, const bool verbose_failure = true) const {
+            const int write_res = write(fd, buf, buf_len);
+            if ( write_res < 0 ) {
+                if ( verbose_failure ) QLOG_sprintf("[File_handle] write fail %d: %d/%d %d", fd, write_res, buf_len, errno);
+            }
+            return write_res;
+        }
+        
+        bool Fsync(const bool verbose_failure = true) const {
+            if ( fsync(fd) < 0 ) {
+                if ( verbose_failure ) QLOG_sprintf("[File_handle] fsync fail %d: %d", fd, errno);
                 return false;
             }
             return true;
