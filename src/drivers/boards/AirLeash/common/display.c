@@ -129,7 +129,7 @@ void display_fill_rectangle(int x1, int y1, int x2, int y2)
         x2 = x;
     }
 
-    for (x = x1; x < x2; x++)
+    for (x = x1; x <= x2; x++)
     {
         display_draw_line(x, y1, x, y2);
     }

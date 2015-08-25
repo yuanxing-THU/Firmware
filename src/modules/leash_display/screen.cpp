@@ -106,10 +106,10 @@ void Screen::showMain(int mode, const char *presetName, int leashBattery, int ai
 
     display_draw_line(0, 19, 127, 19);
 
-    BitmapBlock blockBattery(103, 6, IMAGE_SCREENS_BATTERY);
+    BitmapBlock blockBattery(108, 6, IMAGE_SCREENS_BATTERY);
     blockBattery.draw();
 
-    BitmapBlock blockBatterySegment(105, 8, IMAGE_SCREENS_BATTERY_SEGMENT);
+    BitmapBlock blockBatterySegment(110, 8, IMAGE_SCREENS_BATTERY_SEGMENT);
     if (leashBattery >=20)
     {
         blockBatterySegment.draw();
@@ -185,41 +185,70 @@ void Screen::showMain(int mode, const char *presetName, int leashBattery, int ai
         display_draw_line(64, 41, 113, 41);
 
         display_draw_line(0, 29, 64, 29); // horizontal gps line
-        //display_draw_line(32, 19, 32, 29); // vertical gps line
 
         DOG_PRINT("[screen] leash_gps: %d\n", leashGPS);
-        if (leashGPS > 0)
-        {
-            display_draw_rectangle(13,21,16,27);
-            display_draw_rectangle(19,21,22,27);
-            display_draw_rectangle(25,21,28,27);
+
+        //Display AirLeash icon
+        display_draw_line(2, 23, 2, 25);
+        display_draw_line(10, 23, 10, 25);
+        display_draw_line(4, 21, 8, 21);
+        display_draw_line(4, 27, 8, 27);
+        display_put_pixel(3, 22);
+        display_put_pixel(3, 26);
+        display_put_pixel(9, 22);
+        display_put_pixel(9, 26);
+        display_fill_rectangle(4, 23, 6, 25);
+
+        //Display AirDog icon
+        display_fill_rectangle(39, 22, 40, 26);
+        display_draw_line(36, 23, 43, 23);
+        display_draw_line(36, 25, 43, 25);
+
+        display_draw_line(35, 22, 36, 22);
+        display_draw_line(35, 26, 36, 26);
+
+        display_draw_line(43, 22, 44, 22);
+        display_draw_line(43, 26, 44, 26);
+
+        display_put_pixel(35, 21);
+        display_put_pixel(44, 21);
+        display_put_pixel(35, 27);
+        display_put_pixel(44, 27);
+
+        //Display AirLeash GPS signal
+        if (leashGPS == 1)
+        {            
+            display_draw_line(14, 24, 15, 24);
+            display_draw_line(20, 24, 21, 24);
+            display_draw_line(26, 24, 27, 24);
         }
         if (leashGPS > 1)
         {
-            display_fill_rectangle(13,21,16,27);
+            display_fill_rectangle(13,23,16,25);
         }
         if (leashGPS > 2)
         {
-            display_fill_rectangle(19,21,22,27);
+            display_fill_rectangle(19,22,22,26);
         }
         if (leashGPS > 3)
         {
             display_fill_rectangle(25,21,28,27);
         }
 
-        if (airdogGPS > 0)
+        //Display AirDog GPS signal
+        if (airdogGPS == 1)
         {
-            display_draw_rectangle(47,21,50,27);
-            display_draw_rectangle(53,21,56,27);
-            display_draw_rectangle(59,21,62,27);
+            display_draw_line(48, 24, 49, 24);
+            display_draw_line(54, 24, 55, 24);
+            display_draw_line(60, 24, 61, 24);
         }
         if (airdogGPS > 1)
         {
-            display_fill_rectangle(47,21,50,27);
+            display_fill_rectangle(47,23,50,25);
         }
         if (airdogGPS > 2)
         {
-            display_fill_rectangle(53,21,56,27);
+            display_fill_rectangle(53,22,56,26);
         }
         if (airdogGPS > 3)
         {
