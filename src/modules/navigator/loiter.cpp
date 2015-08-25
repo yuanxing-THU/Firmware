@@ -720,6 +720,8 @@ Loiter::start_follow() {
         commander_request->request_type = V_MAIN_STATE_CHANGE;
         commander_request->main_state = MAIN_STATE_CIRCLE_AROUND;
         _navigator->set_commander_request_updated();
+    } else if (_parameters.afol_mode == 5) {
+        // Do nothing! Reserved for "Hover aim and shoot", so stay in Loiter
     }
 }
 
