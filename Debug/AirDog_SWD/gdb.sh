@@ -12,4 +12,7 @@
 #     $ ./Debug/AirDog_SWD/gdb.sh Build/AirDogFMU.build/firmware.elf
 #
 
-arm-none-eabi-gdb -x ./Debug/dump_memory.gdb -x ./Debug/AirDog_SWD/gdb.openocd
+arm-none-eabi-gdb \
+	-x ./Debug/dump_memory.gdb \
+	-x ./Debug/AirDog_SWD/gdb.openocd \
+	$*
