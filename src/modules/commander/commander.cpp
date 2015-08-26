@@ -937,6 +937,7 @@ int commander_thread_main(int argc, char *argv[])
 	main_states_str[MAIN_STATE_FOLLOW]			= "FOLLOW";
 	main_states_str[MAIN_STATE_EMERGENCY_RTL]			= "EMERGENCY_RTL";
 	main_states_str[MAIN_STATE_EMERGENCY_LAND]			= "EMERGENCY_LAND";
+	main_states_str[MAIN_STATE_LAND]					= "LAND";
 	main_states_str[MAIN_STATE_AUTO_STANDBY]			= "AUTO_STANDBY";
 
 	const char *arming_states_str[ARMING_STATE_MAX];

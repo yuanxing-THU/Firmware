@@ -81,6 +81,7 @@ typedef enum {
     MAIN_STATE_CIRCLE_AROUND,
     MAIN_STATE_KITE_LITE,
     MAIN_STATE_FRONT_FOLLOW,
+    MAIN_STATE_LAND,
 	MAIN_STATE_MAX,
 } main_state_t;
 

@@ -371,6 +371,10 @@ main_state_transition(struct vehicle_status_s *status, main_state_t new_main_sta
         ret = TRANSITION_CHANGED;
         break;
 
+    case MAIN_STATE_LAND:
+        ret = TRANSITION_CHANGED;
+        break;
+
 	case MAIN_STATE_CABLE_PARK:
         {
             /* need global position estimate */
@@ -794,6 +798,11 @@ bool set_nav_state(struct vehicle_status_s *status, const bool data_link_loss_en
         break;
     case MAIN_STATE_EMERGENCY_LAND:
 		status->nav_state_fallback = false;
+        status->nav_state = NAVIGATION_STATE_LAND;
+        break;
+        
+    case MAIN_STATE_LAND:
+        status->nav_state_fallback = false;
         status->nav_state = NAVIGATION_STATE_LAND;
         break;
 
