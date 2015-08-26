@@ -156,7 +156,7 @@ bool BGC::Run_setup() {
         }
     }
 
-#if BOARD_REVISION >= 006
+#if CONFIG_BOARD_REVISION >= 6
     /** On newer revisions that don't have BGC Video Tx Power enabled by default through a hardware jumper,
      *  we need to send a message to the BGC chip to enable Video Tx Power by setting a pin to 1.
      */
@@ -198,7 +198,7 @@ bool BGC::Process_frame_button_event() {
  *  https://docs.google.com/document/d/1m2cnf1UrndAgbCF8fEZWD3Evr-s2qAcHdLWIV6tyzqg/edit?usp=sharing
  *  section "Main processor LED and buttons" for more info.
  */
-#if BOARD_REVISION < 006
+#if CONFIG_BOARD_REVISION < 6
     /** Don't process frame button events on old revisions
      *  that have direct electric link frame_button -> BGC
      */
