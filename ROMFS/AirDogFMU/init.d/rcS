@@ -471,6 +471,8 @@ then
 		commander error 1
 	fi
 
+	indication start
+
 	if [ $EXIT_ON_END == yes ]
 	then
 		echo "[init] Exit from nsh"

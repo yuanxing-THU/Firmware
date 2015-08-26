@@ -45,6 +45,7 @@ MODULES		+= modules/cl_helper
 MODULES		+= modules/debug_button
 MODULES		+= modules/gpio_tool
 MODULES		+= modules/fs_test
+MODULES		+= modules/indication
 MODULES		+= modules/kbd_test
 MODULES		+= modules/sensors
 MODULES		+= modules/sensors_probe

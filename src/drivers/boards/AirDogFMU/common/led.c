@@ -41,10 +41,28 @@
 
 #include <stdbool.h>
 
-#include "stm32.h"
+#include <stm32.h>
+#include <stm32_gpio.h>
+#include <stm32_tim.h>
+#include <arch/board/board.h>
+
+#include <stdio.h>
+
+#include "board_leds.h"
 #include "board_config.h"
 
-#include <arch/board/board.h>
+#define REG(_reg)	(*(volatile uint32_t *)(_reg))
+#define TIMER_CR1_EN (1 << 0)
+
+static struct {
+    int active;
+    float intensity;
+} leds[LED_SIZE] = {
+{ 0, 100 },
+{ 0, 100 },
+{ 0, 100 },
+{ 0, 100 }
+};
 
 /*
  * Ideally we'd be able to get these from up_internal.h,
@@ -53,47 +71,208 @@
  * separate switch, we need to build independent of the
  * CONFIG_ARCH_LEDS configuration switch.
  */
-__BEGIN_DECLS
-extern void led_init(void);
-extern void led_on(int led);
-extern void led_off(int led);
-extern void led_toggle(int led);
-__END_DECLS
 
-__EXPORT void led_init()
+void led_init(void)
 {
-	stm32_configgpio(GPIO_LED1);
-	stm32_configgpio(GPIO_LED_FL);
-	stm32_configgpio(GPIO_LED_FR);
-	stm32_configgpio(GPIO_LED_RL);
-	stm32_configgpio(GPIO_LED_RR);
+    //stm32_configgpio(GPIO_LED1);
+    stm32_configgpio(GPIO_LED_FL);
+    stm32_configgpio(GPIO_LED_FR);
+    stm32_configgpio(GPIO_LED_RL);
+    stm32_configgpio(GPIO_LED_RR);
+
+    // enable timer
+    modifyreg32(STM32_RCC_APB2ENR, 0, RCC_APB2ENR_TIM1EN);
+
+    // disable timer and configure it
+    REG(STM32_TIM1_CR1) = 0;
+    REG(STM32_TIM1_CR2) = 0;
+    REG(STM32_TIM1_SMCR) = 0;
+    REG(STM32_TIM1_DIER) = 0;
+    REG(STM32_TIM1_SR) = 0;
+    REG(STM32_TIM1_EGR) = GTIM_EGR_UG;
+    REG(STM32_TIM1_CCMR1) =
+        (GTIM_CCMR_MODE_PWM1 << GTIM_CCMR1_OC1M_SHIFT) | GTIM_CCMR1_OC1PE |
+        (GTIM_CCMR_MODE_PWM1 << GTIM_CCMR1_OC2M_SHIFT) | GTIM_CCMR1_OC2PE;
+    REG(STM32_TIM1_CCMR2) =
+            (GTIM_CCMR_MODE_PWM1 << GTIM_CCMR2_OC4M_SHIFT) | GTIM_CCMR2_OC4PE |
+            (GTIM_CCMR_MODE_PWM1 << GTIM_CCMR2_OC3M_SHIFT) | GTIM_CCMR2_OC3PE;
+    REG(STM32_TIM1_CCER) =
+            GTIM_CCER_CC1E | GTIM_CCER_CC2E | GTIM_CCER_CC3E | GTIM_CCER_CC4E;
+    REG(STM32_TIM1_CNT) = 0;
+    REG(STM32_TIM1_PSC) = 0;
+    REG(STM32_TIM1_ARR) = 0;
+    REG(STM32_TIM1_RCR) = 0;
+    REG(STM32_TIM1_CCR1) = 0;
+    REG(STM32_TIM1_CCR2) = 0;
+    REG(STM32_TIM1_CCR3) = 0;
+    REG(STM32_TIM1_CCR4) = 0;
+    REG(STM32_TIM1_BDTR) = ATIM_BDTR_MOE;
+    REG(STM32_TIM1_DCR) = 0;
+    REG(STM32_TIM1_DMAR) = 0;
+
+    REG(STM32_TIM1_PSC) = 10;
+
+    // run the full span of the counter. All timers can handle uint16
+    REG(STM32_TIM1_ARR) = UINT16_MAX;
+
+    // generate an update event; reloads the counter, all registers
+    REG(STM32_TIM1_EGR) = GTIM_EGR_UG |
+            GTIM_EGR_CC1G | GTIM_EGR_CC2G | GTIM_EGR_CC4G | GTIM_EGR_CC3G;
+
+    // enable the timer
+    REG(STM32_TIM1_CR1) = GTIM_CR1_CEN;
+
+    led_set_intensity(LED_FL, 0);
+    led_set_intensity(LED_FR, 0);
+    led_set_intensity(LED_RL, 0);
+    led_set_intensity(LED_RR, 0);
+
+    led_on(LED_FL);
+    led_on(LED_FR);
+    led_on(LED_RL);
+    led_on(LED_RR);
 }
 
-__EXPORT void led_on(int led)
+static int led_set_ccr(int led, int ccr)
 {
-	if (led == 1)
-	{
-		/* Pull down to switch on */
-		stm32_gpiowrite(GPIO_LED1, false);
-	}
+    int result = 0;
+
+    if (led >= LED_SIZE || led < 0) {
+        result = -1;
+    }
+
+    if (result == 0)
+    {
+        switch (led)
+        {
+            case LED_RR:
+                REG(STM32_TIM1_CCR1) = ccr;
+                break;
+
+            case LED_FR:
+                REG(STM32_TIM1_CCR2) = ccr;
+                break;
+
+            case LED_RL:
+                REG(STM32_TIM1_CCR3) = ccr;
+                break;
+
+            case LED_FL:
+                REG(STM32_TIM1_CCR4) = ccr;
+                break;
+        }
+    }
+
+    return result;
 }
 
-__EXPORT void led_off(int led)
+int led_set_intensity(int led, float intensity)
 {
-	if (led == 1)
-	{
-		/* Pull up to switch off */
-		stm32_gpiowrite(GPIO_LED1, true);
-	}
+    int result = 0;
+
+    if (led >= LED_SIZE || led < 0) {
+        result = -1;
+    }
+
+    if (result == 0)
+    {
+        leds[led].intensity = intensity;
+    }
+
+    if (result == 0 && leds[led].active)
+    {
+        float i = leds[led].intensity;
+        int ccr = (int)(UINT16_MAX * i / (float)100.0);
+        led_set_ccr(led, ccr);
+    }
+
+    return result;
 }
 
-__EXPORT void led_toggle(int led)
+int led_on(int led)
 {
-	if (led == 1)
-	{
-		if (stm32_gpioread(GPIO_LED1))
-			stm32_gpiowrite(GPIO_LED1, false);
-		else
-			stm32_gpiowrite(GPIO_LED1, true);
-	}
+    int result = 0;
+
+    if (led >= LED_SIZE || led < 0) {
+        result = -1;
+    }
+
+    if (result == 0)
+    {
+        leds[led].active = 1;
+        led_set_intensity(led, leds[led].intensity);
+    }
+
+    return result;
+}
+
+int led_off(int led)
+{
+    int result = 0;
+
+    if (led >= LED_SIZE || led < 0) {
+        result = -1;
+    }
+
+    if (result == 0)
+    {
+        leds[led].active = 0;
+        led_set_ccr(led, UINT16_MAX);
+    }
+
+    return result;
+}
+
+static int led_perform_action(led_action_t action)
+{
+    int result = 0;
+    int i = 0;
+    int j = 0;
+    int delay = action.duration / action.iteration;
+    float steps[LED_SIZE];
+
+    // calculate intensity step
+
+    for (i = 0; i < LED_SIZE; i++)
+    {
+        if (action.leds & (1 << i))
+        {
+            steps[i] = (action.intensity - leds[i].intensity) / action.iteration;
+        }
+    }
+
+    for (j = 0; j < action.iteration; j++)
+    {
+        for (i = 0; i < LED_SIZE; i++)
+        {
+            if (action.leds & (1 << i))
+            {
+                float intensity = leds[i].intensity + steps[i];
+
+                result = led_set_intensity(i, intensity);
+
+                if (result != 0)
+                {
+                    break;
+                }
+            }
+        }
+
+        usleep(delay * 1000);
+    }
+    return result;
+}
+
+int led_perform_actions(led_action_t *actions, unsigned int size)
+{
+    int result = 0;
+
+    unsigned int i = 0;
+
+    for (i = 0; i < size; i++)
+    {
+        led_perform_action(actions[i]);
+    }
+
+    return result;
 }

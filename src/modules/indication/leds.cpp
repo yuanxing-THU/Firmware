@@ -14,7 +14,6 @@
 #include <drivers/drv_led_config.h>
 
 #include "leds.hpp"
-#include "pwm_led.h"
 
 __BEGIN_DECLS
 extern void led_init(void);
@@ -27,7 +26,6 @@ struct State
 	uint32_t pattern_play_once;
 	uint32_t pattern_repeat;
 	uint32_t repeat_phase;
-        uint32_t pwm_led_id;
 
 	State() { reset(); }
 
@@ -40,17 +38,20 @@ struct State
 	}
 };
 
-volatile State state[N_LEDS];
+volatile State state[LED_SIZE];
+
 
 void set_default()
 {
-    state[0].pwm_led_id = PWM_LED_RED;
-    state[1].pwm_led_id = PWM_LED_BLUE;
+	for (size_t i=0; i < LED_SIZE; ++i)
+	{
+		led_off(i);
+	}
 }
 
 void set_pattern_once(unsigned led, uint32_t pattern)
 {
-	if (led < N_LEDS)
+	if (led < LED_SIZE)
 	{
 		state[led].pattern_play_once = pattern;
 		state[led].repeat_phase = state[led].pattern_repeat;
@@ -59,7 +60,7 @@ void set_pattern_once(unsigned led, uint32_t pattern)
 
 void set_pattern_repeat(unsigned led, uint32_t pattern)
 {
-	if (led < N_LEDS)
+	if (led < LED_SIZE)
 	{
 		state[led].pattern_repeat = pattern;
 		state[led].repeat_phase = state[led].pattern_repeat;
@@ -69,7 +70,7 @@ void set_pattern_repeat(unsigned led, uint32_t pattern)
 void
 update()
 {
-	for (size_t i=0; i < N_LEDS; ++i)
+	for (size_t i=0; i < LED_SIZE; ++i)
 	{
 		bool next_bit;
 
@@ -86,28 +87,27 @@ update()
 			state[i].pattern_play_once >>= 1;
 		}
 
-                if (next_bit)
-                {
-                    pwm_led_start(state[i].pwm_led_id);
-                }
-                else
-                {
-                    pwm_led_stop(state[i].pwm_led_id);
-                }
+		if (next_bit)
+		{
+			led_on(i);
+		}
+		else
+		{
+			led_off(i);
+		}
 	}
 }
 
 void
 status()
 {
-	for (size_t i=0; i < N_LEDS; ++i)
+	for (size_t i=0; i < LED_SIZE; ++i)
 	{
 		printf("LED %i: repeat 0x%08x, once 0x%08x.\n",
 				i,
 				state[i].pattern_repeat,
 				state[i].pattern_play_once);
 	}
-
 }
 
 }} // end of namespace indication::leds

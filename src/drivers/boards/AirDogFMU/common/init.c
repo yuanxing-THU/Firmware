@@ -268,7 +268,6 @@ __EXPORT int nsh_archinitialize(void)
 		       NULL);
 
 	/* initial LED state */
-	drv_led_start();
 	led_off(LED_AMBER);
 
 	/* Configure SPI-based devices */

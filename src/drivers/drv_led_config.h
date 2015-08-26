@@ -52,6 +52,4 @@
 
 __BEGIN_DECLS
 
-extern const uint32_t led_config[N_LEDS];
-
 __END_DECLS

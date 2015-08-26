@@ -10,14 +10,20 @@ extern "C" __EXPORT int main(int argc, const char * argv[]);
 
 #include <unistd.h>
 
+#include <board_leds.h>
+
 #include "leds.hpp"
 #if CONFIG_ARCH_BOARD_AIRLEASH
-# include "status_leash.hpp"
+// this define is a FastFix to avoid using leds namespace for airdog
+// in future we should avoid it in airleash as well
+// cleanup is needed for this module.
+#define USE_LEDS_CALLS
+#include "status_leash.hpp"
+#elif CONFIG_ARCH_BOARD_AIRDOG_FMU
+#include "status_dog.hpp"
 #else
 # error Only AirLeash board is supported.
 #endif
-
-#include "pwm_led.h"
 
 namespace indication
 {
@@ -31,18 +37,24 @@ daemon(int argc, char *argv[])
 	daemon_running = true;
 	fprintf(stderr, "%s has started.\n", argv[0]);
 
+#ifdef USE_LEDS_CALLS
 	leds::set_default();
+#endif
 	status::init();
 
 	while (daemon_should_run)
 	{
 		hrt_abstime now = hrt_absolute_time();
 		status::update(now);
+#ifdef USE_LEDS_CALLS
 		leds::update();
+#endif
 		usleep(1000000u / LED_TOGGLE_MAX_Hz);
 	}
 
+#ifdef USE_LEDS_CALLS
 	leds::set_default();
+#endif
 	status::done();
 
 	daemon_running = false;
@@ -67,14 +79,9 @@ main(int argc, const char * argv[])
 
 	if (streq(argv[1], "start"))
 	{
-                pwm_led_init();
-                pwm_led_set_intensity(PWM_LED_RED, 2);
-                pwm_led_set_intensity(PWM_LED_BLUE, 2);
+		led_init();
 
-                pwm_led_start(PWM_LED_BLUE);
-                pwm_led_start(PWM_LED_RED);
-
-                if (daemon_running)
+		if (daemon_running)
 		{
 			fprintf(stderr, "%s is already running.\n", argv[0]);
 			return 1;

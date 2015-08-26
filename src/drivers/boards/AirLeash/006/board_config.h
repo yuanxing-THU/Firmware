@@ -61,11 +61,6 @@ __BEGIN_DECLS
 /* Configuration ************************************************************************************/
 
 /* PX4FMU GPIOs ***********************************************************************************/
-/* LEDs */
-
-#define LED_GPIO_ACTIVE_LOW	1
-#define GPIO_LED_RED		(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTE|GPIO_PIN12)
-#define GPIO_LED_BLUE		(GPIO_OUTPUT|GPIO_PUSHPULL|GPIO_SPEED_2MHz|GPIO_OUTPUT_CLEAR|GPIO_PORTE|GPIO_PIN14)
 
 // AirLeash Keyboard
 // Output is on port B, pins 3,4,5
