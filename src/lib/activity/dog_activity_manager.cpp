@@ -97,7 +97,7 @@ DogActivityManager::check_file_state(){
 bool 
 DogActivityManager::set_activity(int32_t activity){
 
-    printf("Setting activity %d\n", activity);
+    fprintf(stderr, "Setting activity %d\n", activity);
 
     _current_activity = activity;
 

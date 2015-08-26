@@ -67,7 +67,7 @@ enum
 {
     MENUTYPE_SETTINGS,
     MENUTYPE_ACTIVITIES,
-    MENUTYPE_SNOWBOARD,
+    MENUTYPE_SELECTED_ACTIVITY,
     MENUTYPE_PAIRING,
     MENUTYPE_CALIBRATION,
     MENUTYPE_CALIBRATION_AIRDOG,
@@ -130,6 +130,7 @@ struct leash_display_s {
     int infoError;
     int leashGPS;
     int airdogGPS;
+    int activity;
     char customText[LEASHDISPLAY_TEXT_SIZE];
 
     // show text for debug puprose

@@ -17,8 +17,6 @@
 #include <uORB/topics/vehicle_status.h>
 
 #include <activity/activity_change_manager.hpp>
-#include <activity/activity_files.hpp>
-#include <activity/activity_lib_constants.h>
 
 enum Orbs
 {

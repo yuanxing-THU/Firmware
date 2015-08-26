@@ -56,7 +56,7 @@ void DisplayHelper::showMain(int mode, const char *presetName, int airdogMode, i
 }
 
 void DisplayHelper::showMenu(int buttons, int type, int value, const char *presetName,
-                             const char *customText)
+                             const char *customText, int current_activity)
 {
     struct leash_display_s leash_display;
 
@@ -64,6 +64,7 @@ void DisplayHelper::showMenu(int buttons, int type, int value, const char *prese
     leash_display.menuButtons = buttons;
     leash_display.menuType = type;
     leash_display.menuValue = value;
+    leash_display.activity = current_activity;
     if (presetName != nullptr)
     {
         strncpy(leash_display.presetName, presetName, 20);

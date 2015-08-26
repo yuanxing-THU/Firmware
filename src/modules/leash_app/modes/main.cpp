@@ -19,6 +19,9 @@ Main::Main() :
     leashGPS(NO_GPS),
     airdogGPS(NO_GPS)
 {
+    checkGPS();
+    DataManager *dm = DataManager::instance();
+    dm->activityManager.get_display_name(currentActivity, sizeof(currentActivity)/sizeof(char));
 
     displayInfo.mode = MAINSCREEN_INFO;
     displayInfo.airdog_mode = AIRDOGMODE_NONE;
@@ -30,7 +33,7 @@ Main::Main() :
     baseCondition.main = GROUNDED;
     baseCondition.sub = NONE;
 
-    DisplayHelper::showMain(MAINSCREEN_INFO, "airdog"
+    DisplayHelper::showMain(MAINSCREEN_INFO, currentActivity
                                 ,displayInfo.airdog_mode
                                 ,displayInfo.follow_mode
                                 ,displayInfo.land_mode
@@ -294,29 +297,31 @@ Base* Main::makeAction()
     Base *nextMode = nullptr;
     DataManager *dm = DataManager::instance();
 
+    dm->activityManager.get_display_name(currentActivity, sizeof(currentActivity));
+
     // On ground
     if (baseCondition.main == GROUNDED && !isErrorShowed)
     {
         switch (baseCondition.sub)
         {
             case NONE:
-                DisplayHelper::showMain(MAINSCREEN_INFO, "airdog",
+                DisplayHelper::showMain(MAINSCREEN_INFO, currentActivity,
                                         AIRDOGMODE_NONE, FOLLOW_PATH, LAND_SPOT,
                                         leashGPS, airdogGPS);
                 break;
             case HELP:
-                DisplayHelper::showMain(MAINSCREEN_READY_TO_TAKEOFF, "airdog",
+                DisplayHelper::showMain(MAINSCREEN_READY_TO_TAKEOFF, currentActivity,
                                         AIRDOGMODE_NONE, FOLLOW_PATH, LAND_SPOT,
                                         leashGPS, airdogGPS);
                 break;
             case CONFIRM_TAKEOFF:
                 DOG_PRINT("[leash_app]{main menu} confirm airdog screen\n");
-                DisplayHelper::showMain(MAINSCREEN_CONFIRM_TAKEOFF, "airdog", 0, 0, 0,
+                DisplayHelper::showMain(MAINSCREEN_CONFIRM_TAKEOFF, currentActivity, 0, 0, 0,
                                         leashGPS, airdogGPS);
                 break;
             case TAKEOFF_CONFIRMED:
                 DOG_PRINT("[leash_app]{main menu} takeoff confirm\n");
-                DisplayHelper::showMain(MAINSCREEN_TAKING_OFF, "airdog", 0, 0, 0,
+                DisplayHelper::showMain(MAINSCREEN_TAKING_OFF, currentActivity, 0, 0, 0,
                                         leashGPS, airdogGPS);
                 if (local_timer == 0)
                 {
@@ -325,7 +330,7 @@ Base* Main::makeAction()
                 }
                 break;
             case TAKING_OFF:
-                DisplayHelper::showMain(MAINSCREEN_TAKING_OFF, "airdog", 0, 0, 0,
+                DisplayHelper::showMain(MAINSCREEN_TAKING_OFF, currentActivity, 0, 0, 0,
                                         leashGPS, airdogGPS);
                 break;
             case TAKEOFF_FAILED:
@@ -344,22 +349,22 @@ Base* Main::makeAction()
             case NONE:
             case PAUSE:
             case PLAY:
-                DisplayHelper::showMain(displayInfo.mode, "airdog"
+                DisplayHelper::showMain(displayInfo.mode, currentActivity
                                 ,displayInfo.airdog_mode
                                 ,displayInfo.follow_mode
                                 ,displayInfo.land_mode,
                                 leashGPS, airdogGPS);
                 break;
             case TAKING_OFF:
-                DisplayHelper::showMain(MAINSCREEN_TAKING_OFF, "airdog", 0, 0, 0,
+                DisplayHelper::showMain(MAINSCREEN_TAKING_OFF, currentActivity, 0, 0, 0,
                                         leashGPS, airdogGPS);
                 break;
             case LANDING:
-                DisplayHelper::showMain(MAINSCREEN_LANDING, "airdog", 0, 0, 0,
+                DisplayHelper::showMain(MAINSCREEN_LANDING, currentActivity, 0, 0, 0,
                                         leashGPS, airdogGPS);
                 break;
             case RTL:
-                DisplayHelper::showMain(MAINSCREEN_GOING_HOME, "airdog", 0, 0, 0,
+                DisplayHelper::showMain(MAINSCREEN_GOING_HOME, currentActivity, 0, 0, 0,
                                         leashGPS, airdogGPS);
                 break;
             default:

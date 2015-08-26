@@ -434,7 +434,7 @@ activity_orb_to_file(){
     } else {
         printf("Failed to write file: %s\n", new_file_path);
     }
-
+    return true;
 } 
 
 __EXPORT bool

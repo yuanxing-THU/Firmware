@@ -49,6 +49,7 @@ class __EXPORT ActivityChangeManager {
 
         bool process_received_params(activity_params_s);
         bool params_received();
+        bool set_waiting_for_params();
 
         bool request_dog_params();
 

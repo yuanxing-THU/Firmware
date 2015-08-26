@@ -4,6 +4,7 @@
 
 #include <uORB/topics/leash_display.h>
 #include <activity/activity_change_manager.hpp>
+#include <activity/activity_config_list.hpp>
 
 namespace modes
 {
@@ -32,8 +33,7 @@ protected:
         MENUENTRY_SETTINGS,
 
         // Activities list
-        MENUENTRY_SNOWBOARD,
-        MENUENTRY_SURF,
+        MENUENTRY_CUR_ACTIVITY,
 
         // Activity menu
         MENUENTRY_SELECT,
@@ -88,9 +88,21 @@ protected:
     Base* switchEntry(int newEntry);
 
     void makeMenu(int menuEntry[], int size);
-    void buildActivityMenu(bool switching_from_prev_entry = false);
-    Activity::ParamChangeManager * activity_param;
     void backToCustomize(bool);
+
+    /* === ACTIVITIES === */
+    int current_activity;
+    Activity::ParamChangeManager * activity_param;
+
+    void buildActivityParams(bool switching_from_prev_entry = false);
+
+    /*
+     * Descr:  processing activity menu from hard-coded enum
+     *         refer to <uOrb/topics/leash_display.h> for current activity list
+     *
+     *         Handling right-click and left-click for itself
+     */
+    void buildActivityMenu();
 };
 
 }

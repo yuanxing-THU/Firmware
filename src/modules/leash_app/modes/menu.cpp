@@ -4,11 +4,14 @@
 #include <cstring>
 #include <stdio.h>
 
+#include <uORB/topics/vehicle_command.h>
+
 #include "main.h"
 #include "connect.h"
 #include "calibrate.h"
 #include "acquiring_gps.h"
 #include "../displayhelper.h"
+#include "../uorb_functions.h"
 
 namespace modes
 {
@@ -24,7 +27,7 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     nullptr,
     Menu::MENUENTRY_CUSTOMIZE,
     Menu::MENUENTRY_SETTINGS,
-    Menu::MENUENTRY_SNOWBOARD,
+    Menu::MENUENTRY_CUR_ACTIVITY,
     Menu::MENUENTRY_EXIT,
 },
 {
@@ -52,24 +55,13 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
 
 // -------- Activities list
 {
-    // Menu::MENUENTRY_SNOWBOARD,
-    MENUTYPE_SNOWBOARD,
+    // Menu::MENUENTRY_CUR_ACTIVITY,
+    MENUTYPE_SELECTED_ACTIVITY,
     0,
     MENUBUTTON_LEFT | MENUBUTTON_RIGHT,
-    "Snowboarding",
-    Menu::MENUENTRY_SURF,
-    Menu::MENUENTRY_SURF,
-    Menu::MENUENTRY_SELECT,
-    Menu::MENUENTRY_ACTIVITIES,
-},
-{
-    // Menu::MENUENTRY_SURF,
-    MENUTYPE_SNOWBOARD,
-    0,
-    MENUBUTTON_LEFT | MENUBUTTON_RIGHT,
-    "Surf",
-    Menu::MENUENTRY_SNOWBOARD,
-    Menu::MENUENTRY_SNOWBOARD,
+    nullptr,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_SELECT,
     Menu::MENUENTRY_ACTIVITIES,
 },
@@ -215,7 +207,9 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
 },
 };
 
-Menu::Menu()
+Menu::Menu() :
+    current_activity(0),
+    activity_param(nullptr)
 {
     DataManager *dm = DataManager::instance();
 
@@ -227,6 +221,7 @@ Menu::Menu()
         };
         makeMenu(modes, sizeof(modes)/sizeof(int));
         newMode = modes[0];
+        //current_activity = dm->activityManager.get_current_activity();
     }
     else
     {
@@ -240,6 +235,7 @@ Menu::Menu()
 
         activity_param = dm->activityManager.get_current_param();
         dm->activityManager.get_display_name(currentPresetName, sizeof(currentPresetName)/sizeof(char));
+        DOG_PRINT("[menu] current activity name %s\n", currentPresetName);
     }
     calibrateMode = CALIBRATE_NONE;
     previousEntry = -1;
@@ -250,18 +246,21 @@ void Menu::buildActivityMenu()
 {
     if (key_pressed(BTN_RIGHT))
     {
-        if(current_activity++ == ACTIVITY_MAX)
+        if (++current_activity == ACTIVITY_MAX)
+        {
             current_activity = 0;
+        }
     }
     if (key_pressed(BTN_LEFT))
     {
-        if(current_activity-- == -1)
+        if (--current_activity == -1)
+        {
             current_activity = ACTIVITY_MAX-1;
+        }
     }
-
     const char *presetName = entries[currentEntry].text;
     DisplayHelper::showMenu(entries[currentEntry].menuButtons, entries[currentEntry].menuType,
-                            0, presetName, "dummy", current_activity);
+                            0, presetName, nullptr, current_activity);
 }
 
 void Menu::buildActivityParams(bool switching_from_prev_entry)
@@ -272,32 +271,34 @@ void Menu::buildActivityParams(bool switching_from_prev_entry)
     char c_value[10];
     char result[LEASHDISPLAY_TEXT_SIZE];
 
-    activity_param->get_param_name(c_name, sizeof(c_name)/sizeof(char));
+    activity_param->get_display_name(c_name, sizeof(c_name)/sizeof(char));
     activity_param->get_display_value(c_value, sizeof(c_value)/sizeof(char));
 
     if (key_pressed(BTN_UP))
     {
         memset(c_value, 0, sizeof(c_value));
         activity_param->get_next_value(c_value, sizeof(c_value)/sizeof(char));
+        activity_param->save_value();
         backToCustomize(false);
     }
     else if (key_pressed(BTN_DOWN))
     {
         memset(c_value, 0, sizeof(c_value));
         activity_param->get_prev_value(c_value, sizeof(c_value)/sizeof(char));
+        activity_param->save_value();
         backToCustomize(false);
     }
     else if (key_pressed(BTN_RIGHT)) //Don't switch param if comming from prev entry
     {
         activity_param = dm->activityManager.get_next_visible_param();
         activity_param->get_display_value(c_value, sizeof(c_value)/sizeof(char));
-        activity_param->get_param_name(c_name, sizeof(c_name)/sizeof(char));
+        activity_param->get_display_name(c_name, sizeof(c_name)/sizeof(char));
     }
     else if (key_pressed(BTN_LEFT)) //Don't switch param if comming from prev entry
     {
         activity_param = dm->activityManager.get_prev_visible_param();
         activity_param->get_display_value(c_value, sizeof(c_value)/sizeof(char));
-        activity_param->get_param_name(c_name, sizeof(c_name)/sizeof(char));
+        activity_param->get_display_name(c_name, sizeof(c_name)/sizeof(char));
     }
 
     if (currentEntry == MENUENTRY_GENERATED) //If not - we switched entry with Right/Left
@@ -344,14 +345,16 @@ Base* Menu::doEvent(int orbId)
     }
     else if (key_pressed(BTN_RIGHT))
     {
-        if (currentEntry != MENUENTRY_GENERATED)
+        if (currentEntry != MENUENTRY_GENERATED &&
+            currentEntry != MENUENTRY_CUR_ACTIVITY)
             nextMode = switchEntry(entries[currentEntry].next);
         else
             nextMode = makeAction();
     }
     else if (key_pressed(BTN_LEFT))
     {
-        if (currentEntry != MENUENTRY_GENERATED)
+        if (currentEntry != MENUENTRY_GENERATED &&
+            currentEntry != MENUENTRY_CUR_ACTIVITY)
             nextMode = switchEntry(entries[currentEntry].prev);
         else
             nextMode = makeAction();
@@ -377,15 +380,17 @@ Base* Menu::makeAction()
     switch (currentEntry)
     {
         case MENUENTRY_SELECT:
-            nextMode = new Main();
+            dm->activityManager.set_waiting_for_params();
+            sendAirDogCommnad(VEHICLE_CMD_NAV_REMOTE_CMD, REMOTE_CMD_SWITCH_ACTIVITY,
+                    current_activity, 0, 0, 0, 0, 0);
+            nextMode = new ModeConnect(); //Connect will wait for new params
             break;
 
         case MENUENTRY_SAVE:
             if (dm->activityManager.save_params())
             {
                 backToCustomize(true);
-                currentEntry = MENUENTRY_CUSTOMIZE;
-                showEntry();
+                nextMode = new ModeConnect(); //Connect will wait for new params
             }
             else
             {
@@ -402,6 +407,10 @@ Base* Menu::makeAction()
             break;
 
         case MENUENTRY_GENERATED:
+            buildActivityParams();
+            break;
+
+        case MENUENTRY_CUR_ACTIVITY:
             buildActivityMenu();
             break;
 
@@ -531,7 +540,11 @@ void Menu::showEntry()
     if (currentEntry == MENUENTRY_GENERATED)
     {
         bool switching_from_prev_entry = true;
-        buildActivityMenu(switching_from_prev_entry);
+        buildActivityParams(switching_from_prev_entry);
+    }
+    else if (currentEntry == MENUENTRY_CUR_ACTIVITY)
+    {
+        buildActivityMenu();
     }
     else
     {

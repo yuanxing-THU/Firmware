@@ -195,7 +195,7 @@ init_activity_config_list(){
         });
 
     ACTIVITY_CONFIG_LIST[0] = ActivityConfig(
-            0, 
+            ACTIVITY_TEST, 
             "Demo", 
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values  
@@ -203,7 +203,7 @@ init_activity_config_list(){
             });
 
     ACTIVITY_CONFIG_LIST[1] = ActivityConfig( 
-            1, 
+            ACTIVITY_SURF, 
             "Surf", 
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values  
@@ -214,8 +214,8 @@ init_activity_config_list(){
             });
 
     ACTIVITY_CONFIG_LIST[2] = ActivityConfig(
-            2, 
-            "Snow/Ski", 
+            ACTIVITY_SKI, 
+            "Ski", 
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values  
                 ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                 ),
@@ -226,19 +226,19 @@ init_activity_config_list(){
             });
 
     ACTIVITY_CONFIG_LIST[3] = ActivityConfig(
-            3, 
+            ACTIVITY_SKATE,
             "Skatepark", 
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values  
-                ParamConfig("NAV_AFOL_MODE",      STATIC,      DOG,    0,      -1,    -1,   -1,   {0}                ),
-                ParamConfig("A_INIT_POS_U",       STATIC,      DOG,    1,      -1,    -1,   -1,   {1}                ),
+                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,      DOG,    0,      -1,    -1,   -1,   {0}                ),
+                ParamConfig("A_INIT_POS_U",       VALUES_STR,      DOG,    1,      -1,    -1,   -1,   {1}                ),
                 ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    0,      -1,    -1,   -1,   {0}                ),
                 ParamConfig("BAT_WARN_LVL",       INVISIBLE,   DOG,    0.3f,    0,    1, 0.05f,   {}                 ),
                 ParamConfig("BAT_CRIT_LVL",       INVISIBLE,   DOG,    0.15f,   0,    1, 0.05f,   {}                 ),
             });
 
     ACTIVITY_CONFIG_LIST[4] = ActivityConfig(
-            4, 
+            ACTIVITY_CYCLE, 
             "MTB", 
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values  
@@ -250,7 +250,7 @@ init_activity_config_list(){
             });
 
     ACTIVITY_CONFIG_LIST[5] = ActivityConfig(
-            5, 
+            ACTIVITY_WAKE, 
             "Wakeboard", 
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values  
@@ -262,7 +262,7 @@ init_activity_config_list(){
             });
 
     ACTIVITY_CONFIG_LIST[6] = ActivityConfig(
-            6, 
+            ACTIVITY_BIKE, 
             "Motocross", 
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values  
@@ -273,19 +273,25 @@ init_activity_config_list(){
             });
 
     ACTIVITY_CONFIG_LIST[7] = ActivityConfig(
-            7, 
-            "Cable park", 
-            {}
-            );
+            ACTIVITY_SNOWBOARD, 
+            "Snow", 
+            {
+                //           Param name           Type         Device  Default Istart Iend  Step  Values  
+                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                 ),
+                ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}               ),
+                ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                 ),
+                ParamConfig("SENS_SON_MIN",       INTERVAL,    DOG,    7.0f,    3,    20, 0.5f,   {}                  ),
+                ParamConfig("PAFOL_OPT_D",        INTERVAL,    DOG,    10.0f,   5,    40,    1,   {}                  ),
+            });
 
     ACTIVITY_CONFIG_LIST[8] = ActivityConfig(
-            8, 
+            ACTIVITY_KITE, 
             "Kiteboard", 
             {}
             );
 
     ACTIVITY_CONFIG_LIST[9] = ActivityConfig(
-            9, 
+            ACTIVITY_CUSTOM, 
             "Custom", 
             {   
                 //           Param name           Type         Device  Default Istart Iend  Step  Values  

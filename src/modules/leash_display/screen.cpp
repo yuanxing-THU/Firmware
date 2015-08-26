@@ -4,6 +4,7 @@
 #include <string.h>
 #include <display.h>
 #include <uORB/topics/leash_display.h>
+#include <lib/activity/activity_config_list.hpp>
 
 #include "block.hpp"
 #include "images/images.h"
@@ -373,7 +374,7 @@ void Screen::showMain(int mode, const char *presetName, int leashBattery, int ai
     */
 }
 
-void Screen::showMenu(int buttons, int type, int value, const char *presetName, const char *customText)
+void Screen::showMenu(int buttons, int type, int value, const char *presetName, int activity, const char *customText)
 {
     int imageId = -1;
     int width = 0;
@@ -402,41 +403,49 @@ void Screen::showMenu(int buttons, int type, int value, const char *presetName, 
             {
                 case ACTIVITY_SKI:
                     imageId = IMAGE_SCREENS_ICONS_SKI;
+                    text = "Ski";
                     break;
                 case ACTIVITY_SNOWBOARD:
                     imageId = IMAGE_SCREENS_ICONS_SNOW;
+                    text = "Snow";
                     break;
                 case ACTIVITY_SURF:
                     imageId = IMAGE_SCREENS_ICONS_SURF;
+                    text = "Surf";
                     break;
-                case ACTIVITY_CUSOM:
+                case ACTIVITY_CUSTOM:
                     imageId = IMAGE_SCREENS_ICONS_CUSTOM;
+                    text = "Custom";
                     break;
                 case ACTIVITY_TEST:
                     imageId = IMAGE_SCREENS_ICONS_TEST;
+                    text = "Test";
                     break;
                 case ACTIVITY_WAKE:
                     imageId = IMAGE_SCREENS_ICONS_WAKE;
+                    text = "Wake";
                     break;
                 case ACTIVITY_BIKE:
                     imageId = IMAGE_SCREENS_ICONS_BIKE;
+                    text = "Bike";
                     break;
                 case ACTIVITY_CYCLE:
                     imageId = IMAGE_SCREENS_ICONS_CYCLE;
+                    text = "Cycle";
                     break;
                 case ACTIVITY_SKATE:
                     imageId = IMAGE_SCREENS_ICONS_SKATE;
+                    text = "Skate";
                     break;
                 case ACTIVITY_KITE:
                     imageId = IMAGE_SCREENS_ICONS_KITE;
+                    text = "Kite";
                     break;
             }
-            //text = presetName;
-            text = "activity";
             break;
 
         case MENUTYPE_PAIRING:
-            imageId = IMAGE_SCREENS_ICONS_PARING;
+            imageId = IMAGE_SCREENS_ICONS_PAIRING;
             text = "Pairing";
             break;
 
@@ -575,6 +584,10 @@ void Screen::showMenu(int buttons, int type, int value, const char *presetName, 
         ImageInfo info = imageInfo[imageId];
         BitmapBlock blockImage(64 - info.w / 2, 42 - info.h, imageId);
         blockImage.draw();
+        fprintf(stderr, "[screen] info.w %d info.h %d info.offset %d\n"
+                ,info.w
+                ,info.h
+                ,info.offset);
 
         width = Font::LucideGrandeSmall.getTextWidth(text);
         TextBlock blockText(text, 64 - width / 2, 44, &Font::LucideGrandeSmall);
@@ -598,8 +611,8 @@ void Screen::showMenu(int buttons, int type, int value, const char *presetName, 
         TextBlock blockText(text, 64 - width / 2, 10, &Font::LucideGrandeSmall);
         blockText.draw();
 
-        width = Font::LucideGrandeBig.getTextWidth(valueText);
-        TextBlock blockValueText(valueText, 64 - width / 2, yc - 2, &Font::LucideGrandeBig);
+        width = Font::LucideGrandeMed.getTextWidth(valueText);
+        TextBlock blockValueText(valueText, 64 - width / 2, yc - 2, &Font::LucideGrandeMed);
         blockValueText.draw();
     }
 

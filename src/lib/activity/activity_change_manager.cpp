@@ -47,11 +47,15 @@ ActivityChangeManager::init(int _activity)
         activity = _activity;
         cur_param_id = 0;
         params_up_to_date = false;
-        init_activity_limits();
-
-        request_dog_params();
+        init_activity_config();
     }
 }
+
+bool
+ActivityChangeManager::set_waiting_for_params(){
+    params_up_to_date = false;
+}
+
 
 bool
 ParamChangeManager::get_param_name(char * buffer, const int buffer_len){

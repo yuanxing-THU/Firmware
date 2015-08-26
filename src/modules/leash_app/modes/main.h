@@ -63,6 +63,7 @@ private:
         EXCELENT_GPS,
     } gps_qality;
 
+    char currentActivity[20];
 	const hrt_abstime command_responce_time = 10000000;
 	hrt_abstime local_timer = 0;
 

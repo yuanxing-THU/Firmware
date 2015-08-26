@@ -5,6 +5,22 @@
 #include "activity_lib_constants.h"
 #include "activity_config_list.hpp"
 
+// hose activities are predefined and should be referenced in all corresponding lists
+enum
+{
+    ACTIVITY_TEST,
+    ACTIVITY_SURF,
+    ACTIVITY_SKI,
+    ACTIVITY_SKATE,
+    ACTIVITY_CYCLE,
+    ACTIVITY_WAKE,
+    ACTIVITY_BIKE,
+    ACTIVITY_SNOWBOARD,
+    ACTIVITY_KITE,
+    ACTIVITY_CUSTOM,
+    ACTIVITY_MAX
+};
+
 namespace Activity {
 
 class __EXPORT ParamConfig {
