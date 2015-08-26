@@ -166,7 +166,6 @@ DogActivityManager::send_params_to_leash(){
     if (_activity_params_sndr_pub >  0) {
         orb_publish(ORB_ID(activity_params_sndr), _activity_params_sndr_pub, &_activity_params_sndr);
     } else {
-    
         _activity_params_sndr_pub = orb_advertise(ORB_ID(activity_params_sndr), &_activity_params_sndr);
     }
 
@@ -226,8 +225,6 @@ DogActivityManager::apply_params() {
 
 bool
 DogActivityManager::is_inited() {
-
-    send_params_to_leash();
 
     check_file_state();
     return _inited;

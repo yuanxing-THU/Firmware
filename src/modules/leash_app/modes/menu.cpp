@@ -246,7 +246,25 @@ Menu::Menu()
     switchEntry(newMode);
 }
 
-void Menu::buildActivityMenu(bool switching_from_prev_entry)
+void Menu::buildActivityMenu()
+{
+    if (key_pressed(BTN_RIGHT))
+    {
+        if(current_activity++ == ACTIVITY_MAX)
+            current_activity = 0;
+    }
+    if (key_pressed(BTN_LEFT))
+    {
+        if(current_activity-- == -1)
+            current_activity = ACTIVITY_MAX-1;
+    }
+
+    const char *presetName = entries[currentEntry].text;
+    DisplayHelper::showMenu(entries[currentEntry].menuButtons, entries[currentEntry].menuType,
+                            0, presetName, "dummy", current_activity);
+}
+
+void Menu::buildActivityParams(bool switching_from_prev_entry)
 {
     DataManager *dm = DataManager::instance();
 

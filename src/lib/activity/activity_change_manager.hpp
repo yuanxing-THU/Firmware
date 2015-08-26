@@ -1,6 +1,6 @@
 #pragma once
 
-#include "activity_limits_list.hpp"
+#include "activity_config_list.hpp"
 #include "uORB/topics/activity_params.h"
 
 namespace Activity {
@@ -22,7 +22,7 @@ class __EXPORT ParamChangeManager {
 
         // TODO: move those to private and handle trough constructor
         int p_id;
-        ParamLimits * limits; 
+        ParamConfig * config; 
 
         // TODO: move those to private and handle trough functions
         float value;
@@ -59,7 +59,7 @@ class __EXPORT ActivityChangeManager {
        
     private:
 
-        bool init_activity_limits(); 
+        bool init_activity_config(); 
         bool send_params_to_dog();
 
         ParamChangeManager params[ALLOWED_PARAM_COUNT];

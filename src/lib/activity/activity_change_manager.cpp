@@ -25,13 +25,13 @@ ActivityChangeManager::ActivityChangeManager(int _activity) :
 {
 
         if (!allowed_params_inited) init_allowed_params();
-        if (!activity_limits_list_inited) init_activity_limits_list();
+        if (!activity_config_list_inited) init_activity_config_list();
 
-        init_activity_limits();
+        init_activity_config();
         
         activity_params_sub = orb_subscribe(ORB_ID(activity_params));
 
-        request_dog_params();
+        // request_dog_params();
 
 }
 
@@ -68,15 +68,15 @@ ParamChangeManager::get_display_name(char * buffer, const int buffer_len){
 bool
 ParamChangeManager::get_display_value(char * buffer, const int buffer_len){
 
-    switch (limits->type){
-        case PARAM_LIMIT_TYPE::VALUES_INT: 
+    switch (config->limit_kind){
+        case PARAM_LIMIT_KIND::VALUES_INT: 
             snprintf(buffer, buffer_len, "%i", (int)value);
             return true;
-        case PARAM_LIMIT_TYPE::INTERVAL:
-        case PARAM_LIMIT_TYPE::VALUES_FLOAT:
+        case PARAM_LIMIT_KIND::INTERVAL:
+        case PARAM_LIMIT_KIND::VALUES_FLOAT:
             snprintf(buffer, buffer_len, "%.2f", (double)value);
             return true;
-        case PARAM_LIMIT_TYPE::VALUES_STR:
+        case PARAM_LIMIT_KIND::VALUES_STR:
 
             if ( !(value >= 0 && value <= ALLOWED_PARAMS[p_id].display_value_count) ) {
                printf("Value %i out of range.\n", (int)value);
@@ -86,7 +86,7 @@ ParamChangeManager::get_display_value(char * buffer, const int buffer_len){
             }
             return true;
         default:
-            strncpy(buffer, "No such type", buffer_len);
+            strncpy(buffer, "No such limit kind", buffer_len);
             return false;
     }
 }
@@ -99,8 +99,8 @@ ParamChangeManager::move_value(int step_dir){
 
     float eps = 1e-6;
 
-    for (;ind < (limits->value_num); ind++ ) {
-        if (float_eq(value, limits->values[ind]) && value -eps < limits->values[ind]) {
+    for (;ind < (config->value_num); ind++ ) {
+        if (float_eq(value, config->values[ind]) && value -eps < config->values[ind]) {
             found = true;
             break;
         }
@@ -111,10 +111,10 @@ ParamChangeManager::move_value(int step_dir){
     else 
         ind = ind+step_dir;
 
-    if (ind < 0) ind += limits->value_num;
-    if (ind >= limits->value_num) ind -= limits->value_num;
+    if (ind < 0) ind += config->value_num;
+    if (ind >= config->value_num) ind -= config->value_num;
 
-    value = (limits->values[ind]);
+    value = (config->values[ind]);
 
     return 0;
 }
@@ -123,9 +123,9 @@ ParamChangeManager::move_value(int step_dir){
 int 
 ParamChangeManager::move_interval(int step_dir){
 
-    float istart = (limits->istart);
-    float iend = (limits->iend);
-    float step = (limits->step);
+    float istart = (config->istart);
+    float iend = (config->iend);
+    float step = (config->step);
 
     if (value < istart) 
         value = istart;
@@ -172,13 +172,13 @@ ParamChangeManager::move_interval(int step_dir){
 bool
 ParamChangeManager::get_next_value(char * buffer, int buffer_len){
 
-    switch ( limits->type ){
-        case PARAM_LIMIT_TYPE::INTERVAL:
+    switch ( config->limit_kind ){
+        case PARAM_LIMIT_KIND::INTERVAL:
             move_interval(1);
         break;
-        case PARAM_LIMIT_TYPE::VALUES_INT: 
-        case PARAM_LIMIT_TYPE::VALUES_FLOAT:
-        case PARAM_LIMIT_TYPE::VALUES_STR:
+        case PARAM_LIMIT_KIND::VALUES_INT: 
+        case PARAM_LIMIT_KIND::VALUES_FLOAT:
+        case PARAM_LIMIT_KIND::VALUES_STR:
             move_value(1);
         break;
     }
@@ -189,13 +189,13 @@ ParamChangeManager::get_next_value(char * buffer, int buffer_len){
 bool
 ParamChangeManager::get_prev_value(char * buffer, int buffer_len){
 
-    switch ( limits->type ){
-        case PARAM_LIMIT_TYPE::INTERVAL:
+    switch ( config->limit_kind ){
+        case PARAM_LIMIT_KIND::INTERVAL:
             move_interval(-1);
         break;
-        case PARAM_LIMIT_TYPE::VALUES_INT: 
-        case PARAM_LIMIT_TYPE::VALUES_FLOAT:
-        case PARAM_LIMIT_TYPE::VALUES_STR:
+        case PARAM_LIMIT_KIND::VALUES_INT: 
+        case PARAM_LIMIT_KIND::VALUES_FLOAT:
+        case PARAM_LIMIT_KIND::VALUES_STR:
             move_value(-1);
         break;
     }
@@ -223,7 +223,7 @@ ParamChangeManager::get_id(){
 
 bool
 ActivityChangeManager::get_display_name(char * buffer, const int buffer_len){
-   snprintf(buffer, buffer_len, "%s", ACTIVITY_LIMITS_LIST[activity].name); 
+   snprintf(buffer, buffer_len, "%s", ACTIVITY_CONFIG_LIST[activity].name); 
    return true; 
 }
 
@@ -241,7 +241,7 @@ ActivityChangeManager::get_next_visible_param(){
         if (it>=ALLOWED_PARAM_COUNT)
             break;
 
-        if (params[cur_param_id].limits->type != PARAM_LIMIT_TYPE::INVISIBLE) {
+        if (params[cur_param_id].config->limit_kind != PARAM_LIMIT_KIND::INVISIBLE) {
             break;
         }
 
@@ -258,7 +258,7 @@ ActivityChangeManager::get_current_param(){
     int it = 0;
     while (true) {
 
-        if (params[cur_param_id].limits->type != PARAM_LIMIT_TYPE::INVISIBLE) {
+        if (params[cur_param_id].config->limit_kind != PARAM_LIMIT_KIND::INVISIBLE) {
             break;
         }
 
@@ -291,7 +291,7 @@ ActivityChangeManager::get_prev_visible_param(){
         if (it >= ALLOWED_PARAM_COUNT)
             break;
 
-        if (params[cur_param_id].limits->type != PARAM_LIMIT_TYPE::INVISIBLE) {
+        if (params[cur_param_id].config->limit_kind != PARAM_LIMIT_KIND::INVISIBLE) {
            break;
          }
 
@@ -306,7 +306,7 @@ ActivityChangeManager::process_received_params(activity_params_s activity_params
 
     activity = activity_params.values[0];
 
-    init_activity_limits();
+    init_activity_config();
 
     for (int i=0;i<ALLOWED_PARAM_COUNT;i++) {
 
@@ -329,22 +329,13 @@ ActivityChangeManager::process_received_params(activity_params_s activity_params
 }
 
 bool
-ActivityChangeManager::init_activity_limits() {
+ActivityChangeManager::init_activity_config() {
 
     for (int i=0;i<ALLOWED_PARAM_COUNT;i++) {
-
         params[i].p_id = i;
-        params[i].limits = nullptr;
+        params[i].config = get_activity_param_config(activity, i);
+    } 
 
-        for (int j=0;j<ACTIVITY_LIMITS_LIST[activity].param_count;j++)
-            if (ACTIVITY_LIMITS_LIST[0].params[i].p_id == ACTIVITY_LIMITS_LIST[activity].params[j].p_id) {
-                params[i].limits = &ACTIVITY_LIMITS_LIST[activity].params[j];
-            }
-
-        if (params[i].limits == nullptr) {
-            params[i].limits = &ACTIVITY_LIMITS_LIST[0].params[i];
-        }
-    }
 }
 
 bool
@@ -428,19 +419,19 @@ ActivityChangeManager::params_received() {
     return params_up_to_date;
 }
 
-bool 
-ActivityChangeManager::request_dog_params() {
-
-    activity_request_sndr_s activity_request_sndr;
-    activity_request_sndr.type = ACTIVITY_REQUEST_PARAMS; 
-
-    int activity_request_sndr_pub = orb_advertise(ORB_ID(activity_request_sndr), &activity_request_sndr);
-
-    if (activity_request_sndr_pub <= 0) {
-        printf("Error: failed to publish to activity request sender orb! ");
-    }
-
-}
+// bool 
+// ActivityChangeManager::request_dog_params() {
+//
+//     activity_request_sndr_s activity_request_sndr;
+//     activity_request_sndr.type = ACTIVITY_REQUEST_PARAMS; 
+//
+//     int activity_request_sndr_pub = orb_advertise(ORB_ID(activity_request_sndr), &activity_request_sndr);
+//
+//     if (activity_request_sndr_pub <= 0) {
+//         printf("Error: failed to publish to activity request sender orb! ");
+//     }
+//
+// }
 
 bool
 float_eq(float a, float b) {

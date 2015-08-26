@@ -25,8 +25,10 @@ struct AllowedParam {
     uint8_t display_value_count;
     const char * const * display_values;
 
+    const char * units;
+
     AllowedParam();
-    AllowedParam(int _id, const char * _name, param_target_device _target_device, const char * _display_name, const char * const * _display_values); 
+    AllowedParam(int _id, const char * _name, param_target_device _target_device, const char * _units, const char * _display_name, const char * const * _display_values); 
 
 };
 

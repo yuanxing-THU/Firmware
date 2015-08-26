@@ -187,6 +187,7 @@ private:
 	orb_advert_t _airdog_status_pub;
 	struct airdog_status_s _airdog_status;
 	orb_advert_t _target_gps_raw_pub;
+    uint64_t _activity_params_update_ts;
 
 	/* do not allow copying this class */
 	MavlinkReceiver(const MavlinkReceiver&);

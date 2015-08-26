@@ -305,7 +305,7 @@ int commander_main(int argc, char *argv[])
 		daemon_task = task_spawn_cmd("commander",
 					     SCHED_DEFAULT,
 					     SCHED_PRIORITY_MAX - 40,
-					     4096,
+					     8096,
 					     commander_thread_main,
 					     (argv) ? (const char **)&argv[2] : (const char **)NULL);
 
@@ -2466,13 +2466,16 @@ int commander_thread_main(int argc, char *argv[])
 
 		status_changed = false;
 
-        if (activity_manager != nullptr) {
 
-            if (activity_manager->is_inited()) 
-                activity_manager->check_received_params();
-            else
-                activity_manager->init();
+        // TODO: If failed to init - don't allow to takeoff ? 
+        if (status.airdog_state == AIRD_STATE_STANDBY) {
 
+            if (activity_manager != nullptr) {
+                if (activity_manager->is_inited()) 
+                    activity_manager->check_received_params();
+                else
+                    activity_manager->init();
+            }
         }
 
 

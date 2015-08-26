@@ -19,7 +19,7 @@ namespace Files
 
     // Exported functions
     __EXPORT bool
-    get_path(uint8_t activity, uint8_t attribute, char (&pathname)[PATH_MAX]);
+    get_path(int activity, int attribute, char * pathname);
 
     __EXPORT bool
     has_valid_content(uint8_t activity, uint8_t attribute, const char pathname[]);
@@ -42,8 +42,11 @@ namespace Files
     __EXPORT bool
     clear_file_state();
 
+    __EXPORT bool
+    reset_activity_params_file(int activity);
 
     // Private functions
+
     bool
     full_file_state_check();
     
@@ -58,6 +61,8 @@ namespace Files
 
     bool
     isdigit(char c);
+
+    extern bool directory_structure_created;
 
 }
 // end of namespace Files

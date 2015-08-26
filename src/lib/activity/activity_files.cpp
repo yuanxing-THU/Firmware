@@ -22,6 +22,7 @@
 
 #include "activity_lib_constants.h"
 #include "activity_files.hpp"
+#include "activity_config_list.hpp"
 
 
 namespace Activity
@@ -29,8 +30,12 @@ namespace Activity
 namespace Files
 {
 
+bool directory_structure_created = false;
+
 bool
 create_directory_structure() {
+
+    directory_structure_created = true;
 
     if (chdir(ACTIVITY_FILE_DIR) != 0) {
 
@@ -56,7 +61,7 @@ create_directory_structure() {
     for (int i=0;i<ACTIVITIES_COUNT;i++){
 
         char dir_path[PATH_MAX];
-        sprintf(dir_path, "%s/%i", ACTIVITY_FILE_DIR, i);
+        snprintf(dir_path, PATH_MAX-1, "%s/%i", ACTIVITY_FILE_DIR, i);
 
         if (chdir(dir_path) != 0) {
      
@@ -74,39 +79,51 @@ create_directory_structure() {
             printf("Directory %s exists.\n", dir_path);
         }
     }
+
+
+    return true;
 }
 
 __EXPORT bool
-get_path(uint8_t activity, uint8_t attribute, char (&pathname)[PATH_MAX]) {
+get_path(int activity, int attribute, char *pathname ) {
     
     char dir[PATH_MAX];
+    
     switch(attribute) {
         case PARAMS:
-            sprintf(dir,"%s/%d", ACTIVITY_FILE_DIR, activity);
-            sprintf(pathname,"%s/%d/%d", ACTIVITY_FILE_DIR, activity, attribute);
+
+            snprintf(dir, PATH_MAX-1, "%s/%d", ACTIVITY_FILE_DIR, activity);
+            snprintf(pathname, PATH_MAX-1, "%s/%d/%d", ACTIVITY_FILE_DIR, activity, attribute);
+
             break;
         default:
             return false;
     }
 
-   if (chdir(dir) != 0) {
-       printf("Directory %s doesn't exist. \nLet's check and create directory structure if needed.\n", dir);
-       create_directory_structure();
-   }
+   if (!directory_structure_created && (chdir(dir) != 0)) {
+        printf("Directory %s doesn't exist. \nLet's check and create directory structure if needed.\n", dir);
+        create_directory_structure();
+    }
 
+   return true; 
 
-    return true;
 }
 
 
 __EXPORT bool
 has_valid_content(uint8_t activity, uint8_t attribute, const char pathname[]){
 
-    if (attribute == PARAMS) 
-        return validate_activity_params_file(activity, pathname);
+    if (attribute == PARAMS) {
+
+        if (validate_activity_params_file(activity, pathname)){
+            return true;
+        } else {
+            reset_activity_params_file(activity);
+            return false;
+        }
+    }  
     else
         return false;
-
 }
 
 bool
@@ -139,8 +156,6 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
     }
 
     while (file_ok && fgets(line, MAX_STR_LEN, activity_params_file) != NULL) {
-
-        printf("line: %s\n", line);
 
         line_no++;
 
@@ -226,8 +241,6 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
         sscanf(key_str,"%f", &param_id);
         sscanf(value_str,"%f", &param_val);
 
-        printf("%s:%f | %s:%f\n", key_str, (double)param_id, value_str, (double)param_val);
-
         if (param_id >= ALLOWED_PARAM_COUNT) {
             printf("%s Error: Param number %f not allowed. \n", pathname, (double)param_id);
             file_ok = false;
@@ -277,6 +290,42 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
 
     return true;
 }
+
+__EXPORT bool 
+reset_activity_params_file(int activity) {
+
+    char activity_file_pathname[PATH_MAX];
+    get_path(activity, 0, activity_file_pathname);
+
+    FILE * activity_file = fopen(activity_file_pathname, "w");
+
+    printf("Resetting activity params file %s\n", activity_file_pathname);
+
+    ParamConfig * pc = nullptr;
+
+    for (int i=0;i<ALLOWED_PARAM_COUNT;i++) {
+
+        pc = get_activity_param_config(activity, i);
+
+        if (pc == nullptr) {
+            fclose(activity_file);
+            return false;
+        }
+
+        float default_value;
+        if (i==0)
+            default_value = activity;
+        else 
+            default_value = pc->default_value;
+
+        fprintf(activity_file, "%i:%.6f\n", i, (double)default_value); 
+
+    }
+
+    fclose(activity_file);
+    return true;
+}
+
 
 bool isdigit(char c){
     return c>='0' && c<='9';
@@ -335,7 +384,6 @@ check_file_state() {
             ok = false;
         else 
             printf("File %s ok!\n", pathname);
-        
     }
 
     if (ok) {
@@ -379,6 +427,7 @@ activity_orb_to_file(){
     get_path(activity, 0, new_file_path);
 
     unlink(new_file_path);
+
 
     if (rename(tmp_file_path, new_file_path) == 0) {
         printf("Successfully written %d params file.\n", activity);

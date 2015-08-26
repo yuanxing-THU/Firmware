@@ -135,7 +135,8 @@ MavlinkReceiver::MavlinkReceiver(Mavlink *parent) :
 	_hil_local_proj_ref{},
 	_airdog_status_pub(-1),
 	_airdog_status{},
-	_target_gps_raw_pub(-1)
+	_target_gps_raw_pub(-1),
+    _activity_params_update_ts(0)
 {
 
 	// make sure the FTP server is started
@@ -404,16 +405,23 @@ MavlinkReceiver::handle_message_activity_params(mavlink_message_t *msg)
     mavlink_activity_params_t mav_activity_params;
     mavlink_msg_activity_params_decode(msg, &mav_activity_params);
 
-    activity_params_s activity_params;
+    if (mav_activity_params.timestamp > _activity_params_update_ts) {
 
-    activity_params.type = ACTIVITY_PARAMS_RECEIVED; 
-    activity_params.ts = hrt_absolute_time();
+        fprintf(stderr, "New activity params!");
+        
+        _activity_params_update_ts = mav_activity_params.timestamp;
 
-    for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++){
-        activity_params.values[i] = mav_activity_params.values[i];
-    } 
+        activity_params_s activity_params;
+        activity_params.type = ACTIVITY_PARAMS_RECEIVED; 
 
-    orb_advertise(ORB_ID(activity_params), &activity_params);
+        for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++){
+            activity_params.values[i] = mav_activity_params.values[i];
+            fprintf(stderr, "%.2f : %.2f\n", (double)i, (double)activity_params.values[i]);
+        } 
+
+        orb_advertise(ORB_ID(activity_params), &activity_params);
+
+    }
 
 }
 

@@ -397,11 +397,42 @@ void Screen::showMenu(int buttons, int type, int value, const char *presetName, 
             text = "Activities";
             break;
 
-        case MENUTYPE_SNOWBOARD:
-            imageId = IMAGE_SCREENS_ICONS_SNOWBOARD;
-            //text = "Snowboard";
-            // TODO: use snowboard
-            text = presetName;
+        case MENUTYPE_SELECTED_ACTIVITY:
+            switch(activity)
+            {
+                case ACTIVITY_SKI:
+                    imageId = IMAGE_SCREENS_ICONS_SKI;
+                    break;
+                case ACTIVITY_SNOWBOARD:
+                    imageId = IMAGE_SCREENS_ICONS_SNOW;
+                    break;
+                case ACTIVITY_SURF:
+                    imageId = IMAGE_SCREENS_ICONS_SURF;
+                    break;
+                case ACTIVITY_CUSOM:
+                    imageId = IMAGE_SCREENS_ICONS_CUSTOM;
+                    break;
+                case ACTIVITY_TEST:
+                    imageId = IMAGE_SCREENS_ICONS_TEST;
+                    break;
+                case ACTIVITY_WAKE:
+                    imageId = IMAGE_SCREENS_ICONS_WAKE;
+                    break;
+                case ACTIVITY_BIKE:
+                    imageId = IMAGE_SCREENS_ICONS_BIKE;
+                    break;
+                case ACTIVITY_CYCLE:
+                    imageId = IMAGE_SCREENS_ICONS_CYCLE;
+                    break;
+                case ACTIVITY_SKATE:
+                    imageId = IMAGE_SCREENS_ICONS_SKATE;
+                    break;
+                case ACTIVITY_KITE:
+                    imageId = IMAGE_SCREENS_ICONS_KITE;
+                    break;
+            }
+            //text = presetName;
+            text = "activity";
             break;
 
         case MENUTYPE_PAIRING:
