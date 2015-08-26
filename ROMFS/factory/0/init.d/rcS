@@ -1,0 +1,29 @@
+echo "[init] Looking for microSD..."
+if mount -t vfat /dev/mmcsd0 /fs/microsd
+then
+	if [ $ENABLE_LOG_FILE = yes ]
+	then
+		set LOG_FILE /fs/microsd/bootlog.txt
+		echo "-----------------------------------" >> $LOG_FILE
+	fi
+	echo "[init] microSD mounted: /fs/microsd"
+	# Start playing the startup tune
+	tone_alarm start
+else
+	set LOG_FILE /dev/null
+	echo "[init] No microSD card found"
+	# Play SOS
+	tone_alarm error
+fi
+
+if sercon
+then
+	echo "[rcS] USB interface connected."
+	nshterm /dev/ttyACM0 &
+else
+	echo "[rcS] USB interface failed."
+fi
+
+echo
+echo Welcome
+echo
