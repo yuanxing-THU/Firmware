@@ -487,6 +487,8 @@ bool handle_command(struct vehicle_status_s *status_local
 		}
 	}
 
+	g_battery_safety_check.On_user_action();
+
 	/* result of the command */
 	enum VEHICLE_CMD_RESULT cmd_result = VEHICLE_CMD_RESULT_UNSUPPORTED;
 

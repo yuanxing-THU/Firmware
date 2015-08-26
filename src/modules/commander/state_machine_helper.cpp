@@ -416,13 +416,6 @@ main_state_transition(struct vehicle_status_s *status, main_state_t new_main_sta
 		break;
 	}
 	
-	// TODO: Hack? Assume all non-emergency related main state changes are triggered by user actions?
-	if (	   new_main_state != MAIN_STATE_EMERGENCY_RTL
-			&& new_main_state != MAIN_STATE_EMERGENCY_LAND
-			&& new_main_state != MAIN_STATE_AUTO_STANDBY ) {
-		g_battery_safety_check.On_user_action();
-	}
-	
 	if ( !g_safety_action_helper.Control_allowed_after_emergency() ) {
 		if ( status->main_state == MAIN_STATE_EMERGENCY_RTL || status->main_state == MAIN_STATE_EMERGENCY_LAND ) {
 			if (	   new_main_state != MAIN_STATE_MANUAL
