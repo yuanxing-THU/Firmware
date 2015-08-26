@@ -421,6 +421,7 @@ daemon()
 		and sync_soft_reset(service_io, svc.sync)
 		and configure_after_reboot(service_io)
 		and dump_s_registers(service_io)
+		and dump_module_info(service_io)
 	);
 
     if (should_run && service_mode == ServiceMode::FACTORY) {

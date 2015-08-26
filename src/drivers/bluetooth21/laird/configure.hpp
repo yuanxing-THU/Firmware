@@ -208,6 +208,25 @@ dump_s_registers(ServiceIO & io)
 	return ok;
 }
 
+template <typename ServiceIO>
+bool
+dump_module_info(ServiceIO & io) {
+	bool ok = true;
+	uint8_t result[8];
+
+	if (request_module_info(io, INFORMATION_VERSION, result)) {
+		uint16_t build_number = (result[4] << 8) + result[5];
+		uint8_t platform_id = result[0] & 0b1111; // other bits are reserved
+		// Format similar to ATI3 command: Platform.Stack.App.Build
+		log_info("BT firmware version: %d.%d.%d.%d\n", platform_id, result[1], result[2], build_number);
+	}
+	else {
+		log_err("Failed getting module information!\n");
+	}
+
+	return ok;
+}
+
 #undef BT_LOCAL_NAME_PREFIX
 #undef BT_CLASS_OF_DEVICE
 }

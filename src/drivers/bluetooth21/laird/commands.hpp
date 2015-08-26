@@ -356,6 +356,24 @@ request_rssi_linkquality(ServiceIO & io, const Address6 & addr, int8_t & rssi, u
 	return ok;
 }
 
+template <typename ServiceIO>
+bool
+request_module_info(ServiceIO & io, INFORMATION_TYPE infoType, uint8_t results[8])
+{
+	RESPONSE_INFORMATION rsp;
+	auto cmd = prefill_packet<COMMAND_INFORMATION, CMD_INFORMATION>();
+	cmd.infoReq = infoType;
+	bool ok = send_receive_verbose(io, cmd, rsp)
+		and get_response_status(rsp) == MPSTATUS_OK;
+	dbg("-> command information type: 0x%02x - %s.\n"
+		, infoType
+		, ok ? "ok" : "failed");
+	if (ok) {
+		memcpy(results, rsp.infoData, 8);
+	}
+	return ok;
+}
+
 }
 // end of namespace Laird
 }
