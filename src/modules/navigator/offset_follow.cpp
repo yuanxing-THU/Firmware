@@ -49,7 +49,7 @@ OffsetFollow::on_activation()
 
     init_follow_offset_vector(); 
 
-    if (_vstatus->nav_state = NAVIGATION_STATE_CIRCLE_AROUND) {
+    if (_vstatus->nav_state == NAVIGATION_STATE_CIRCLE_AROUND) {
         _rotation_speed_ms = _parameters.offset_rot_speed_ch_cmd_step;;
     } 
 }
