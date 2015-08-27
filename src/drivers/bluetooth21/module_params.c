@@ -43,3 +43,10 @@ PARAM_DEFINE_INT32(A_BT_CONNECT_TO, -1 );
  *
  */
 PARAM_DEFINE_INT32(A_BT_SVC_MODE, 1 );
+
+/*
+ * Minimum BT firmware version allowed
+ * Relies on the fact that BT firmware build numbers grow,
+ * which might not be the case if major versions change
+ */
+PARAM_DEFINE_INT32(A_BT_MIN_BUILD, 277 );
