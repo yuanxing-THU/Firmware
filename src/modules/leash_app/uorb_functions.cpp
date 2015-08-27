@@ -90,6 +90,7 @@ void send_rtl_command(const airdog_status_s &s)
     cmd.param1 = mode;
     cmd.param2 = PX4_CUSTOM_MAIN_MODE_RTL;
     cmd.param3 = 0;
+    cmd.param7 = 1.0f; // Mark this as a real/full message from AirLeash, with airdog_status_s.base_mode included.
     cmd.target_system = 1;
     cmd.target_component = 50;
 

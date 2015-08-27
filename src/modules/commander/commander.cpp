@@ -508,9 +508,12 @@ bool handle_command(struct vehicle_status_s *status_local
 
 			transition_result_t main_ret = TRANSITION_NOT_CHANGED;
 
-			/* set HIL state */
-			hil_state_t new_hil_state = (base_mode & MAV_MODE_FLAG_HIL_ENABLED) ? HIL_STATE_ON : HIL_STATE_OFF;
-			transition_result_t hil_ret = hil_state_transition(new_hil_state, status_pub, status_local, mavlink_fd);
+			/* set HIL state, but for PX4_CUSTOM_MAIN_MODE_RTL messages only do it if param7 > -0.5f, meaning it's not a fake. */
+			transition_result_t hil_ret = TRANSITION_NOT_CHANGED;
+			if ( custom_main_mode != PX4_CUSTOM_MAIN_MODE_RTL || cmd->param7 > -0.5f ) {
+				hil_state_t new_hil_state = (base_mode & MAV_MODE_FLAG_HIL_ENABLED) ? HIL_STATE_ON : HIL_STATE_OFF;
+				hil_ret = hil_state_transition(new_hil_state, status_pub, status_local, mavlink_fd);
+			}
 
 			// Transition the arming state
 			//TODO: [INE] check if AIRDOG can arm and takeoff

@@ -52,7 +52,8 @@ SRCS		 	= commander.cpp \
 			safety_action_helper.cpp \
 			safety_action_helper_params.c \
 			battery_safety_check.cpp \
-			battery_safety_check_params.c
+			battery_safety_check_params.c \
+			commander_shared.cpp
 
 MODULE_STACKSIZE = 3000
 

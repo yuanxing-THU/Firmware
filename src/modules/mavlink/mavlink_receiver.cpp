@@ -82,6 +82,8 @@
 #include <uORB/topics/activity_params.h>
 #include <uORB/uORB.h>
 
+#include <commander/commander_shared.hpp>
+
 __BEGIN_DECLS
 
 #include "mavlink_bridge_header.h"
@@ -330,6 +332,8 @@ MavlinkReceiver::internal_command_long_handle(const mavlink_command_long_t &cmd_
 			vcmd.source_component = msg->compid;
 			vcmd.confirmation =  cmd_mavlink.confirmation;
 
+			commander_shared_preprocess_vehicle_command(&vcmd);
+			
 			if (_cmd_pub < 0) {
 				_cmd_pub = orb_advertise(ORB_ID(vehicle_command), &vcmd);
 
@@ -386,6 +390,8 @@ MavlinkReceiver::handle_message_command_int(mavlink_message_t *msg)
 			vcmd.source_system = msg->sysid;
 			vcmd.source_component = msg->compid;
 
+			commander_shared_preprocess_vehicle_command(&vcmd);
+			
 			if (_cmd_pub < 0) {
 				_cmd_pub = orb_advertise(ORB_ID(vehicle_command), &vcmd);
 
@@ -526,6 +532,8 @@ MavlinkReceiver::handle_message_set_mode(mavlink_message_t *msg)
 	vcmd.source_component = msg->compid;
 	vcmd.confirmation = 1;
 
+	commander_shared_preprocess_vehicle_command(&vcmd);
+	
 	if (_cmd_pub < 0) {
 		_cmd_pub = orb_advertise(ORB_ID(vehicle_command), &vcmd);
 
