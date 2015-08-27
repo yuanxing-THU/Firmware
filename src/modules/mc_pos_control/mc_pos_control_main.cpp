@@ -1820,6 +1820,10 @@ MulticopterPositionControl::task_main()
 				_target_alt_start_valid = false;
 			}
 		}
+		else if (!_control_mode.flag_armed) {
+			was_armed = false;
+			_mode_auto = false;
+		}
 
 		was_armed = _control_mode.flag_armed;
 
