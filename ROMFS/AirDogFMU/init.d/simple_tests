@@ -1,3 +1,5 @@
+#!nsh
+
 echo "Test system power (sensors power should be about 3V, system power - about 4.5-5V)"
 if sensors_switch status
 then
@@ -53,6 +55,12 @@ fi
 echo "------------------------CONTINUING--------------------------"
 echo "Test if SD card is mounted (on FAILURE reports 'no such directory')"
 if ls /fs/microsd
+then
+fi
+echo "------------------------CONTINUING--------------------------"
+echo "Test bluetooth driver (reports 'running' for all 3 components if ok)"
+echo "Check BT module firmware version and deep switch in case of errors"
+if bluetooth21 status
 then
 fi
 echo "------------------------CONTINUING--------------------------"
