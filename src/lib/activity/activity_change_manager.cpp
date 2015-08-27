@@ -74,11 +74,11 @@ ParamChangeManager::get_display_value(char * buffer, const int buffer_len){
 
     switch (config->limit_kind){
         case PARAM_LIMIT_KIND::VALUES_INT: 
-            snprintf(buffer, buffer_len, "%i", (int)value);
+            snprintf(buffer, buffer_len, "%i %s", (int)value, ALLOWED_PARAMS[p_id].units);
             return true;
         case PARAM_LIMIT_KIND::INTERVAL:
         case PARAM_LIMIT_KIND::VALUES_FLOAT:
-            snprintf(buffer, buffer_len, "%.2f", (double)value);
+            snprintf(buffer, buffer_len, "%.2f %s", (double)value, ALLOWED_PARAMS[p_id].units);
             return true;
         case PARAM_LIMIT_KIND::VALUES_STR:
 
