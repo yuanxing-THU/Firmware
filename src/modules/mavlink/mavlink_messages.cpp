@@ -83,7 +83,9 @@
 #include "mavlink_messages.h"
 #include "mavlink_main.h"
 
-
+#if defined(CONFIG_ARCH_BOARD_PX4FMU_V2) || defined(CONFIG_ARCH_BOARD_AIRDOG_FMU)
+#define IS_FMU 1
+#endif
 
 static uint16_t cm_uint16_from_m_float(float m);
 static void get_mavlink_mode_state(struct vehicle_status_s *status, struct position_setpoint_triplet_s *pos_sp_triplet,
@@ -2223,7 +2225,7 @@ private:
 	uint64_t _gps_time;
 
         // Calibration variables
-#if defined(CONFIG_IS_AIRDOG_FMU) || defined(CONFIG_IS_PX4_FMU)
+#if IS_FMU
         MavlinkOrbSubscription *_calibrator_sub;
         uint64_t _calibrator_time;
 #endif
@@ -2249,10 +2251,10 @@ protected:
 			_gps_sub(_mavlink->add_orb_subscription(ORB_ID(vehicle_gps_position))),
 			_gps_time(0),
                         // Calibration inits
-                #if defined(CONFIG_IS_AIRDOG_FMU) || defined(CONFIG_IS_PX4_FMU)
+#if IS_FMU
                         _calibrator_sub(_mavlink->add_orb_subscription(ORB_ID(calibrator))),
                         _calibrator_time(0),
-                #endif
+#endif
 			// Trajectory inits
 			trajectory_sub(mavlink->add_orb_subscription(ORB_ID(trajectory))),
 			trajectory_time(0)
@@ -2268,7 +2270,7 @@ protected:
 		struct vehicle_gps_position_s gps;
 		trajectory_s report;
                 struct vehicle_command_s cmd;
-#if defined(CONFIG_IS_AIRDOG_FMU) || defined(CONFIG_IS_PX4_FMU)
+#if IS_FMU
                 struct calibrator_s calibrator;
 #endif
 
@@ -2351,7 +2353,7 @@ protected:
 			}
 		}
 
-#if defined(CONFIG_IS_AIRDOG_FMU) || defined(CONFIG_IS_PX4_FMU)
+#if IS_FMU
         // only airdog should send to leash calibration status
         if (_calibrator_sub->update(&_calibrator_time, &calibrator)) {
             msg.fresh_messages |= MAVLINK_COMBO_MESSAGE_CALIBRATOR;

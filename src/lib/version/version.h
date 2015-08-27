@@ -56,7 +56,6 @@
 #endif
 
 #ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
-#define CONFIG_IS_PX4_FMU 1
 #define	HW_ARCH "PX4FMU_V2"
 #endif
 
@@ -69,7 +68,6 @@
 #endif
 
 #ifdef CONFIG_ARCH_BOARD_AIRDOG_FMU
-#define CONFIG_IS_AIRDOG_FMU 1
 #define	HW_ARCH "AIRDOG_FMU"
 #endif
 
