@@ -7,3 +7,5 @@ SRCS	=	activity_change_manager.cpp \
 			virtual_params.c
 
 EXTRACXXFLAGS += -std=c++11 
+
+DEFAULT_VISIBILITY = protected

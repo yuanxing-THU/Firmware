@@ -2559,6 +2559,11 @@ int commander_thread_main(int argc, char *argv[])
 	g_flight_time_check.Shutdown();
 
 	thread_running = false;
+	
+    if ( activity_manager != nullptr ) {
+        delete activity_manager;
+        activity_manager = nullptr;
+    }
 
 	return 0;
 }
