@@ -42,6 +42,7 @@ MODULES		+= modules/kbd_test
 MODULES		+= modules/leash
 MODULES		+= modules/leash_app
 MODULES		+= modules/leash_display
+MODULES		+= modules/quick_log
 MODULES		+= modules/sensors
 MODULES		+= modules/sensors_probe
 MODULES		+= modules/sensors_switch
