@@ -6,7 +6,9 @@
 
 Safety_action_helper::Safety_action_helper()
     : do_param()
-    , boot_init_complete(false)
+    , land_disallowed_param()
+    , rth_allowed_param()
+    , control_allowed_after_emergency_param()
     , do_checks_enabled(false)
     , land_allowed(false)
     , rth_allowed(false)
@@ -17,8 +19,10 @@ commander_error_code Safety_action_helper::Boot_init() {
     boot_init_complete = false;
     do_checks_enabled = false;
     
-    if ( !do_param.Open                    ("A_SAH_DO")      ) return SAH_ERROR;
-    if ( !allowed_safety_actions_param.Open("A_SAH_ALLOWED") ) return SAH_ERROR;
+    if ( !do_param.Open                             ("A_SAH_DO")      ) return SAH_ERROR;
+    if ( !land_disallowed_param.Open                ("A_SAH_NO_SPOT") ) return SAH_ERROR;
+    if ( !rth_allowed_param.Open                    ("A_SAH_RTH")     ) return SAH_ERROR;
+    if ( !control_allowed_after_emergency_param.Open("A_SAH_CTRL")    ) return SAH_ERROR;
     
     boot_init_complete = true;
     
@@ -36,22 +40,14 @@ commander_error_code Safety_action_helper::Takeoff_init() {
     const bool temp_do_checks_enabled = (do_param.Get() != 0);
     if ( !temp_do_checks_enabled ) return COMMANDER_ERROR_OK;
     
-    const int32_t allowed_safety_actions = allowed_safety_actions_param.Get();
-    
-    if ( (allowed_safety_actions & ~int32_t(Safety_action::Known_bits)) != 0 ) {
-        QLOG_sprintf("[Safety_action_helper] weird bits on allowed actions: %u", allowed_safety_actions);
-        return SAH_ERROR;
-    }
-    
-    land_allowed = bool(allowed_safety_actions & int32_t(Safety_action::Land_on_spot));
-    rth_allowed  = bool(allowed_safety_actions & int32_t(Safety_action::Return_to_home));
+    land_allowed                    = !bool(land_disallowed_param.Get());
+    rth_allowed                     =  bool(rth_allowed_param.Get());
+    control_allowed_after_emergency =  bool(control_allowed_after_emergency_param.Get());
     
     if ( !land_allowed && !rth_allowed ) {
         QLOG_literal("[Safety_action_helper] all safety actions not allowed in activity");
         return SAH_ERROR;
     }
-    
-    control_allowed_after_emergency = bool(allowed_safety_actions & int32_t(Safety_action::Allow_control_after_emergency));
     
     do_checks_enabled = true;
     
@@ -75,7 +71,9 @@ void Safety_action_helper::Shutdown() {
     do_checks_enabled = false;
     
     do_param.Close();
-    allowed_safety_actions_param.Close();
+    land_disallowed_param.Close();
+    rth_allowed_param.Close();
+    control_allowed_after_emergency_param.Close();
 }
 
 Safety_action_helper::~Safety_action_helper() { }

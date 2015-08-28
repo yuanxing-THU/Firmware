@@ -11,6 +11,7 @@
 #include "activity_files.hpp"
 
 #include <drivers/drv_hrt.h>
+#include <quick_log/quick_log.hpp>
 
 #include "dog_activity_manager.hpp"
 
@@ -65,11 +66,11 @@ DogActivityManager::check_file_state(){
 
         last_file_state_check_time = hrt_absolute_time();
 
-        printf("Checking files.. \n");
+        // printf("Checking files.. \n");
 
         if (Activity::Files::get_file_state()) {
 
-            printf("Ok file present.\n");
+            // printf("Ok file present.\n");
             _file_state_ok = true;
 
         } else {
@@ -211,13 +212,31 @@ DogActivityManager::apply_params() {
 
     for (int p=0;p<ALLOWED_PARAM_COUNT;p++) {
         if (ALLOWED_PARAMS[p].target_device == DOG || ALLOWED_PARAMS[p].target_device == ALL) {
-          
             printf("Applying param on dog - %s: %.2f\n", ALLOWED_PARAMS[p].name, (double)activity_params.values[p]);
-            if (param_set(param_find(ALLOWED_PARAMS[p].name), &activity_params.values[p]) != 0) {
-                printf("Param %s connot be found.\n", ALLOWED_PARAMS[p].name);
+            const param_t param = param_find(ALLOWED_PARAMS[p].name);
+            if ( param != PARAM_INVALID ) {
+                const param_type_e ptype = param_type(param);
+                if ( ptype == PARAM_TYPE_FLOAT ) {
+                    const float value = activity_params.values[p];
+                    if ( param_set(param, &value) != 0 ) {
+                        QLOG_sprintf("[DAM] Param %s could not be set.\n", ALLOWED_PARAMS[p].name);
+                        return false;
+                    }
+                } else if ( ptype == PARAM_TYPE_INT32 ) {
+                    const int32_t value = int32_t(activity_params.values[p]+0.5f);
+                    if ( param_set(param, &value) != 0 ) {
+                        QLOG_sprintf("[DAM] Param %s could not be set.\n", ALLOWED_PARAMS[p].name);
+                        return false;
+                    }
+                } else {
+                    QLOG_sprintf("[DAM] Param %s has bad type.\n", ALLOWED_PARAMS[p].name);
+                    return false;
+                }
+            } else {
+                QLOG_sprintf("[DAM] Param %s connot be found.\n", ALLOWED_PARAMS[p].name);
                 return false;
-            }  
-        }   
+            }
+        }
     }
 
     return true;

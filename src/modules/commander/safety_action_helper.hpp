@@ -8,16 +8,8 @@
 class Safety_action_helper {
 public:
     enum class Safety_action {
-        // Bit-mask bits used for the safety actions allowed during flight.
-        // At least one of them must be set during take off.
-          Land_on_spot                    = (1 << 0)
-        , Return_to_home                  = (1 << 1)
-        
-        // Additional control bits - these can all be zero.
-        , Allow_control_after_emergency   = (1 << 8)
-        
-        // All of the above, combined.
-        , Known_bits = (Land_on_spot | Return_to_home | Allow_control_after_emergency)
+          Return_to_home = 1
+        , Land_on_spot   = 2
     };
     
 public:
@@ -41,7 +33,9 @@ public:
     
 private:
     Utils::Param_reader<int32_t> do_param;
-    Utils::Param_reader<int32_t> allowed_safety_actions_param;
+    Utils::Param_reader<int32_t> land_disallowed_param;
+    Utils::Param_reader<int32_t> rth_allowed_param;
+    Utils::Param_reader<int32_t> control_allowed_after_emergency_param;
     
 private:
     bool boot_init_complete;

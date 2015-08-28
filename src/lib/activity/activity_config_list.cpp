@@ -147,6 +147,7 @@ ActivityConfig::operator=(ActivityConfig &&a) {
     params = a.params;
     a.params = nullptr;
 
+    return *this;
 }
 
 ParamConfig *
@@ -180,6 +181,7 @@ init_activity_config_list(){
             //           Param name           Type         Device  Default Istart Iend  Step  Values  
             ParamConfig("A_ACTIVITY",         INVISIBLE,    ALL,    0,      -1,    -1,   -1,   {}                 ),
             ParamConfig("NAV_AFOL_MODE",      VALUES_STR,   DOG,    1,      -1,    -1,   -1,   {0,1,2,3,4}        ),
+            ParamConfig("A_BSC_SAF_ACT",      VALUES_STR,   DOG,    1,      -1,    -1,   -1,   {1,2}              ),
             ParamConfig("RET_RTL_ALT",        INTERVAL,     DOG,    20.0f,  10,   100,    5,   {}                 ),
             ParamConfig("NAV_TAKEOFF_ALT",    INTERVAL,     DOG,    8.0f,    5,    50,    1,   {}                 ),
             ParamConfig("A_INIT_POS_U",       VALUES_STR,   DOG,    0,      -1,    -1,   -1,   {0,1}              ),
@@ -193,6 +195,7 @@ init_activity_config_list(){
             ParamConfig("FOL_VEL_FF_XY",      INVISIBLE,    DOG,    0.7f,    0,    2, 0.05f,   {}                 ),
             ParamConfig("BAT_WARN_LVL",       INVISIBLE,    DOG,    0.2f,    0,    1, 0.05f,   {}                 ),
             ParamConfig("BAT_CRIT_LVL",       INVISIBLE,    DOG,    0.1f,    0,    1, 0.05f,   {}                 ),
+            ParamConfig("A_SAH_NO_SPOT",      INVISIBLE,    DOG,    0,      -1,    -1,   -1,   {0,1}              ),
         });
 
     ACTIVITY_CONFIG_LIST[0] = ActivityConfig(
@@ -200,7 +203,8 @@ init_activity_config_list(){
             "Demo", 
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values  
-                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1,4}            )
+                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1,4}            ),
+                ParamConfig("A_SAH_NO_SPOT",      VALUES_STR,  DOG,    0,      -1,    -1,   -1,   {0,1}              ),
             });
 
     ACTIVITY_CONFIG_LIST[1] = ActivityConfig( 

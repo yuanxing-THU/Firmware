@@ -2,6 +2,7 @@
 #include "activity_lib_constants.h"
 
 #include <drivers/drv_hrt.h>
+#include <quick_log/quick_log.hpp>
 
 #include <systemlib/param/param.h>
 #include <string.h>
@@ -318,11 +319,29 @@ ActivityChangeManager::process_received_params(activity_params_s activity_params
         params[i].value = activity_params.values[i]; 
 
         if (ALLOWED_PARAMS[i].target_device == ALL || ALLOWED_PARAMS[i].target_device == LEASH) {
-
-            if (param_set(param_find(ALLOWED_PARAMS[i].name), &activity_params.values[i]) != 0) {
+            const param_t param = param_find(ALLOWED_PARAMS[i].name);
+            if ( param != PARAM_INVALID ) {
+                const param_type_e ptype = param_type(param);
+                if ( ptype == PARAM_TYPE_FLOAT ) {
+                    const float value = activity_params.values[i];
+                    if ( param_set(param, &value) != 0 ) {
+                        QLOG_sprintf("[DAM] Param %s could not be set.\n", ALLOWED_PARAMS[i].name);
+                        return false;
+                    }
+                } else if ( ptype == PARAM_TYPE_INT32 ) {
+                    const int32_t value = int32_t(activity_params.values[i]+0.5f);
+                    if ( param_set(param, &value) != 0 ) {
+                        QLOG_sprintf("[DAM] Param %s could not be set.\n", ALLOWED_PARAMS[i].name);
+                        return false;
+                    }
+                } else {
+                    QLOG_sprintf("[DAM] Param %s has bad type.\n", ALLOWED_PARAMS[i].name);
+                    return false;
+                }
+            } else {
+                QLOG_sprintf("[DAM] Param %s connot be found.\n", ALLOWED_PARAMS[i].name);
                 return false;
             }
-
         }
     }
 

@@ -7,9 +7,9 @@
 PARAM_DEFINE_INT32(A_BSC_DO, 1);
 
 /**
- * Configure the safety action to be taken for low battery levels. 1 = land on spot, 2 = return to home.
+ * Configure the safety action to be taken for low battery levels. 1 = rth, 2 = land on spot.
  */
-PARAM_DEFINE_INT32(A_BSC_SAF_ACT, 2);
+PARAM_DEFINE_INT32(A_BSC_SAF_ACT, 1);
 
 /**
  * Configure, in milliseconds, the interval between battery safety checks. Limited to [BSC_INT_MS_MIN;BSC_INT_MS_MAX].
