@@ -450,12 +450,12 @@ void Screen::showMenu(int buttons, int type, int value, const char *presetName, 
             break;
 
         case MENUTYPE_CALIBRATION:
-            imageId = IMAGE_SCREENS_ICONS_CALIBRATION;
+            imageId = IMAGE_SCREENS_ICONS_CALIBRATE_LEASH;
             text = "Calibration";
             break;
 
         case MENUTYPE_CALIBRATION_AIRDOG:
-            imageId = IMAGE_SCREENS_ICONS_CALIBRATION;
+            imageId = IMAGE_SCREENS_ICONS_CALIBRATE_DOG;
             text = "Airdog calib";
             break;
 
