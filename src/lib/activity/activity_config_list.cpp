@@ -296,7 +296,8 @@ init_activity_config_list(){
     ACTIVITY_CONFIG_LIST[8] = ActivityConfig(
             ACTIVITY_KITE, 
             "Kiteboard", 
-            {}
+            {
+            }
             );
 
     ACTIVITY_CONFIG_LIST[9] = ActivityConfig(
@@ -304,11 +305,35 @@ init_activity_config_list(){
             "Custom", 
             {   
                 //           Param name           Type         Device  Default Istart Iend  Step  Values  
-                ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}              ),
-                ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    0,      -1,    -1,   -1,   {0,1}              ),
-                ParamConfig("BAT_WARN_LVL",       INVISIBLE,   DOG,    0.3f,    0,    1, 0.05f,   {}                 ),
-                ParamConfig("BAT_CRIT_LVL",       INVISIBLE,   DOG,    0.15f,   0,    1, 0.05f,   {}                 ),
+                ParamConfig("A_ACTIVITY",         INVISIBLE,    ALL,    0,      -1,    -1,   -1,   {}                 ),
+                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,   DOG,    1,      -1,    -1,   -1,   {0,1,2,3,4}        ),
+                ParamConfig("A_BSC_SAF_ACT",      VALUES_STR,   DOG,    1,      -1,    -1,   -1,   {1,2}              ),
+                ParamConfig("RET_RTL_ALT",        INTERVAL,     DOG,    20.0f,  10,   100,    5,   {}                 ),
+                ParamConfig("NAV_TAKEOFF_ALT",    INTERVAL,     DOG,    8.0f,    5,    50,    1,   {}                 ),
+                ParamConfig("A_INIT_POS_U",       VALUES_STR,   DOG,    0,      -1,    -1,   -1,   {0,1}              ),
+                ParamConfig("A_INIT_POS_D",       INTERVAL,     DOG,    8.0f,    5,   100,    1,   {}                 ),
+                ParamConfig("V_REACTION",         VALUES_STR,   DOG,    2,      -1,    -1,   -1,   {0,1,2}            ),
+                ParamConfig("FOL_RPT_ALT",        VALUES_STR,   DOG,    1,      -1,    -1,   -1,   {0,1}              ),
+                ParamConfig("SENS_SON_MIN",       INTERVAL,     DOG,    5.0f,    3,    20, 0.5f,   {}                 ),
+                ParamConfig("PAFOL_OPT_D",        INTERVAL,     DOG,    12.0f,   5,    40,    1,   {}                 ),
+                ParamConfig("AIRD_TRAJ_RAD",      INTERVAL,     ALL,    5.0f,    3,    20,    1,   {}                 ),
+                ParamConfig("FOL_LPF_XY",         INTERVAL,     DOG,    1.0f,    0,    2, 0.05f,   {}                 ),
+                ParamConfig("FOL_VEL_FF_XY",      INTERVAL,     DOG,    0.7f,    0,    2, 0.05f,   {}                 ),
+                ParamConfig("BAT_WARN_LVL",       INTERVAL,     DOG,    0.2f,    0,    1, 0.05f,   {}                 ),
+                ParamConfig("BAT_CRIT_LVL",       INTERVAL,     DOG,    0.1f,    0,    1, 0.05f,   {}                 ),
+                ParamConfig("A_SAH_NO_SPOT",      VALUES_STR,   DOG,    0,      -1,    -1,   -1,   {0,1}              ),
             });
+
+    // ACTIVITY_CONFIG_LIST[9] = ActivityConfig(
+    //         ACTIVITY_CUSTOM, 
+    //         "Custom", 
+    //         {   
+    //             //           Param name           Type         Device  Default Istart Iend  Step  Values  
+    //             ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}              ),
+    //             ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    0,      -1,    -1,   -1,   {0,1}              ),
+    //             ParamConfig("BAT_WARN_LVL",       INVISIBLE,   DOG,    0.3f,    0,    1, 0.05f,   {}                 ),
+    //             ParamConfig("BAT_CRIT_LVL",       INVISIBLE,   DOG,    0.15f,   0,    1, 0.05f,   {}                 ),
+    //         });
 
     activity_config_list_inited = true;
     return true; 

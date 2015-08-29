@@ -239,6 +239,8 @@ DogActivityManager::apply_params() {
         }
     }
 
+    param_save_default();
+
     return true;
 }
 
