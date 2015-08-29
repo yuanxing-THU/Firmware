@@ -190,6 +190,7 @@ int Quick_log::Thread_main(int argc, char *argv[]) {
         }
     } else {
         printf("[Quick_log] failed to run main loop");
+        s_thread_should_exit = true;
     }
     
     s_thread_running = false;
