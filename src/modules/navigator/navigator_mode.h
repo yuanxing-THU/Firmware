@@ -175,6 +175,8 @@ public:
         float offset_rot_speed_ch_cmd_step;
         float offset_rot_speed_ratio;
 
+        float front_follow_additional_angle;
+
 	} _parameters;
 
 
@@ -245,6 +247,8 @@ public:
 
         param_t offset_rot_speed_ch_cmd_step;
         param_t offset_rot_speed_ratio;
+
+        param_t front_follow_additional_angle;
 
 	} _parameter_handles;
 

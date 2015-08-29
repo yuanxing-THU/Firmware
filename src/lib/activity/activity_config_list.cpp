@@ -196,6 +196,7 @@ init_activity_config_list(){
             ParamConfig("BAT_WARN_LVL",       INVISIBLE,    DOG,    0.2f,    0,    1, 0.05f,   {}                 ),
             ParamConfig("BAT_CRIT_LVL",       INVISIBLE,    DOG,    0.1f,    0,    1, 0.05f,   {}                 ),
             ParamConfig("A_SAH_NO_SPOT",      INVISIBLE,    DOG,    0,      -1,    -1,   -1,   {0,1}              ),
+            ParamConfig("OFF_FR_ADD_ANG",     INTERVAL,     DOG,    0,      0.00f,   6.28318f,  0.78539f,   {0,1}              ),
         });
 
     ACTIVITY_CONFIG_LIST[0] = ActivityConfig(

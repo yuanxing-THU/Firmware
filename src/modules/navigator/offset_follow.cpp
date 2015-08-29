@@ -98,8 +98,8 @@ OffsetFollow::on_active_front_follow() {
     float target_speed = target_vel.length();
     float min_angle_err = 0.0f;
 
-
     _rotation_angle_sp = - atan2(target_vel(0), target_vel(1));
+    _rotation_angle_sp += _parameters.front_follow_additional_angle;
 
     if (isnan(_rotation_angle_sp))
         _rotation_angle_sp = 0.0f;

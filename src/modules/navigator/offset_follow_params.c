@@ -42,3 +42,8 @@ PARAM_DEFINE_FLOAT(OFF_ROT_SPD_R, 1.0f);
  * @unit m/s
  */
 PARAM_DEFINE_FLOAT(OFF_ROT_SPD_STP, 2.0f);
+
+/**
+ * Aditional angle in front follow
+ */
+PARAM_DEFINE_FLOAT(OFF_FR_ADD_ANG, 0.0f);

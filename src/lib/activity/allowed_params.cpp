@@ -57,6 +57,8 @@ init_allowed_params() {
     ALLOWED_PARAMS[14] = AllowedParam(14,   "BAT_WARN_LVL",     DOG, "%", "Battery WARN lvl", DISPLAY_VALUES_EMPTY);
     ALLOWED_PARAMS[15] = AllowedParam(15,   "BAT_CRIT_LVL",     DOG, "%", "Battery CRIT lvl", DISPLAY_VALUES_EMPTY);
     ALLOWED_PARAMS[16] = AllowedParam(16,   "A_SAH_NO_SPOT",    DOG, "", "Enforce RTH", DISPLAY_VALUES_ON_OFF);
+    ALLOWED_PARAMS[17] = AllowedParam(17,   "OFF_FR_ADD_ANG",    DOG, "", "Relative angle", DISPLAY_VALUES_ON_OFF);
+    
 
     allowed_params_inited = true;
     return true;

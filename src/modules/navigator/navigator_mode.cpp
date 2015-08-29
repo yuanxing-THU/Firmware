@@ -161,6 +161,8 @@ NavigatorMode::updateParamHandles() {
 
     _parameter_handles.offset_rot_speed_ch_cmd_step = param_find("OFF_ROT_SPD_STP");
     _parameter_handles.offset_rot_speed_ratio = param_find("OFF_ROT_SPD_R");
+    
+    _parameter_handles.front_follow_additional_angle = param_find("OFF_FR_ADD_ANG");
 }
 
 void
@@ -227,6 +229,8 @@ NavigatorMode::updateParamValues() {
 
     param_get(_parameter_handles.offset_rot_speed_ch_cmd_step,&(_parameters.offset_rot_speed_ch_cmd_step));
     param_get(_parameter_handles.offset_rot_speed_ratio,&(_parameters.offset_rot_speed_ratio));
+
+    param_get(_parameter_handles.front_follow_additional_angle, &(_parameters.front_follow_additional_angle));
 
 }
 
