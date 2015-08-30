@@ -9,6 +9,8 @@
 // #include <iterator>
 #include <utility>
 
+#include <cstdio>
+
 // #include "string_algorithms.hpp"
 
 namespace AT {
@@ -86,9 +88,11 @@ wait_ok_error(Device &f) {
 		}
 		n += s;
 		buf[n] = '\0';
+		printf("\nwaiting OK or ERROR: %s.\n\n", buf);
 		ok = std::strstr(buf, "OK\r\n");
 		found = ok or std::strstr(buf, "ERROR\r\n");
 	}
+	printf("\nStopped waiting OK or ERROR: %s.\n\n", buf);
 	if (not found and n > 0) {
 		buf[n] = '\0';
 		ok = std::strstr(buf, "OK\r\n");

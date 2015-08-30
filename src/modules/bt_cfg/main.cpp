@@ -32,8 +32,8 @@ open_serial_default(const char name[]) {
 	}
 
 #ifdef FORCE_SERIAL_TERMIOS_RAW
-	if (not (serial_set_raw(fd) and serial_set_speed(fd, B57600))) {
-		fprintf(stderr, "failed setting raw mode and speed\n");
+	if (not serial_set_raw(fd)) {
+		fprintf(stderr, "failed setting raw mode\n");
 		exit(1);
 	}
 #endif
