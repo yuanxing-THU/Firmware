@@ -311,6 +311,12 @@ PARAM_DEFINE_INT32(SENS_ACC_CDATE, 0);
  */
 PARAM_DEFINE_FLOAT(SENS_ACC_CTEMP, -278.15f);
 
+/**
+ * Maximum needed acceleration in g
+ *
+ * @group Sensor Calibration
+ */
+PARAM_DEFINE_INT32(SENS_ACC_RANGE, 8);
 
 /**
  * Differential pressure sensor offset

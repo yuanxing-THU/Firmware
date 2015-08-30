@@ -275,6 +275,7 @@ private:
 		gyro_calibration_s gyro_calibration;
 		mag_calibration_s mag_calibration;
 		accel_calibration_s accel_calibration;
+		uint32_t accel_range; // max range in g
 		float diff_pres_offset_pa;
 		float diff_pres_analog_scale;
 
@@ -381,6 +382,8 @@ private:
 		param_t board_offset[3];
 
 		param_t baro_qnh;
+
+		param_t accel_range;
 
 	}		_parameter_handles;		/**< handles for interesting parameters */
 
@@ -616,6 +619,8 @@ Sensors::Sensors() :
 	/* Barometer QNH */
 	_parameter_handles.baro_qnh = param_find("SENS_BARO_QNH");
 
+	_parameter_handles.accel_range = param_find("SENS_ACC_RANGE");
+
 	/* fetch initial parameter values */
 	parameters_update();
 }
@@ -796,6 +801,7 @@ Sensors::parameters_update()
 
 	/* accel offsets */
 	get_calibration_parameters(&(_parameters.accel_calibration));
+	param_get(_parameter_handles.accel_range, &(_parameters.accel_range));
 
 	/* mag offsets */
 	get_calibration_parameters(&(_parameters.mag_calibration));
@@ -1297,6 +1303,9 @@ Sensors::parameter_update_poll(bool forced)
 
 		if (OK != ioctl(fd, ACCELIOCSSCALE, (long unsigned int)&(_parameters.accel_calibration))) {
 			warn("WARNING: failed to set scale / offsets for accel");
+		}
+		if (OK != ioctl(fd, ACCELIOCSRANGE, _parameters.accel_range)) {
+			warn("WARNING: failed to set range for accel");
 		}
 
 		close(fd);

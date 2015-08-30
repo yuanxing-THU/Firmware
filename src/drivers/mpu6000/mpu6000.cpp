@@ -306,9 +306,9 @@ private:
 	 * Set the MPU6000 measurement range.
 	 *
 	 * @param max_g		The maximum G value the range must support.
-	 * @return		OK if the value can be supported, -ERANGE otherwise.
+	 * @return -EDOM in case required range is unsupported, -ENODEV for revision C that has different register map, OK otherwise
 	 */
-	int			set_range(unsigned max_g);
+	int			accel_set_range(unsigned long max_g);
 
 	/**
 	 * Swap a 16-bit value read from the MPU6000 to native byte order.
@@ -591,6 +591,9 @@ void MPU6000::reset()
 	_gyro_range_scale = (0.0174532 / 16.4);//1.0f / (32768.0f * (2000.0f / 180.0f) * M_PI_F);
 	_gyro_range_rad_s = (2000.0f / 180.0f) * M_PI_F;
 
+	warnx("MPU revision: 0x%02x", _product);
+
+	// TODO! [AK] Consider calling accel_set_range, although REV_C is not supported there
 	// product-specific scaling
 	switch (_product) {
 	case MPU6000ES_REV_C4:
@@ -752,6 +755,7 @@ MPU6000::read(struct file *filp, char *buffer, size_t buflen)
 int
 MPU6000::self_test()
 {
+	// TODO! [AK] MPU has built-in self-test procedure which can be used
 	if (perf_event_count(_sample_perf) == 0) {
 		measure();
 	}
@@ -981,11 +985,7 @@ MPU6000::ioctl(struct file *filp, int cmd, unsigned long arg)
 		return OK;
 
 	case ACCELIOCSRANGE:
-		/* XXX not implemented */
-		// XXX change these two values on set:
-		// _accel_range_scale = (9.81f / 4096.0f);
-		// _accel_range_m_s2 = 8.0f * 9.81f;
-		return -EINVAL;
+		return accel_set_range(arg);
 	case ACCELIOCGRANGE:
 		return (unsigned long)((_accel_range_m_s2)/MPU6000_ONE_G + 0.5f);
 
@@ -1074,6 +1074,70 @@ MPU6000::gyro_ioctl(struct file *filp, int cmd, unsigned long arg)
 	}
 }
 
+int
+MPU6000::accel_set_range(unsigned long range) {
+
+	uint8_t range_bits;
+
+	if (range == 0) {
+		// Max range - 16g
+		range_bits = 3;
+	}
+	else if (range <= 2) {
+		range_bits = 0;
+	}
+	else if (range <= 4) {
+		range_bits = 1;
+	}
+	else if (range <= 8) {
+		range_bits = 2;
+	}
+	else if (range <= 16){
+		range_bits = 3;
+	}
+	else {
+		// Out of domain
+		return -EDOM;
+	}
+	range = 1 << (range_bits+1);
+
+	// product-specific scaling
+	switch (_product) {
+	case MPU6000ES_REV_C4:
+	case MPU6000ES_REV_C5:
+	case MPU6000_REV_C4:
+	case MPU6000_REV_C5:
+		// Rev C has different scaling than rev D
+		// Tests needed to support custom scaling
+		warnx("MPU revision 0x%02x is incompatible with custom range!");
+		// Return early to avoid scale factor change
+		return -ENODEV;
+
+	case MPU6000ES_REV_D6:
+	case MPU6000ES_REV_D7:
+	case MPU6000ES_REV_D8:
+	case MPU6000_REV_D6:
+	case MPU6000_REV_D7:
+	case MPU6000_REV_D8:
+	case MPU6000_REV_D9:
+	case MPU6000_REV_D10:
+	// default case to cope with new chip revisions, which
+	// presumably won't have the accel scaling bug
+	default:
+		// 3 LSB are reserved, 3 MSB are for self test
+		write_reg(MPUREG_ACCEL_CONFIG, range_bits << 3);
+		break;
+	}
+
+	// Correct accel scale factors (1 bit is x m/s^2)
+	// We have 16 bits for 2^(range_bits+1)g, so 2^(15-range_bits-1) bits for 1 g
+	_accel_range_scale = (MPU6000_ONE_G / (float) (1 << (15 - range_bits - 1)));
+	// Current precise range is 2^(range_bits+1)g
+	_accel_range_m_s2 = MPU6000_ONE_G * (float) range;
+
+	return OK;
+}
+
 uint8_t
 MPU6000::read_reg(unsigned reg)
 {
@@ -1123,48 +1187,6 @@ MPU6000::modify_reg(unsigned reg, uint8_t clearbits, uint8_t setbits)
 	val &= ~clearbits;
 	val |= setbits;
 	write_reg(reg, val);
-}
-
-int
-MPU6000::set_range(unsigned max_g)
-{
-#if 0
-	uint8_t rangebits;
-	float rangescale;
-
-	if (max_g > 16) {
-		return -ERANGE;
-
-	} else if (max_g > 8) {		/* 16G */
-		rangebits = OFFSET_LSB1_RANGE_16G;
-		rangescale = 1.98;
-
-	} else if (max_g > 4) {		/* 8G */
-		rangebits = OFFSET_LSB1_RANGE_8G;
-		rangescale = 0.99;
-
-	} else if (max_g > 3) {		/* 4G */
-		rangebits = OFFSET_LSB1_RANGE_4G;
-		rangescale = 0.5;
-
-	} else if (max_g > 2) {		/* 3G */
-		rangebits = OFFSET_LSB1_RANGE_3G;
-		rangescale = 0.38;
-
-	} else if (max_g > 1) {		/* 2G */
-		rangebits = OFFSET_LSB1_RANGE_2G;
-		rangescale = 0.25;
-
-	} else {			/* 1G */
-		rangebits = OFFSET_LSB1_RANGE_1G;
-		rangescale = 0.13;
-	}
-
-	/* adjust sensor configuration */
-	modify_reg(ADDR_OFFSET_LSB1, OFFSET_LSB1_RANGE_MASK, rangebits);
-	_range_scale = rangescale;
-#endif
-	return OK;
 }
 
 void
