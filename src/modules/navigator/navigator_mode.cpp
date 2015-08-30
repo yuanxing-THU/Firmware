@@ -497,7 +497,7 @@ NavigatorMode::takeoff()
 void
 NavigatorMode::disarm()
 {
-	_navigator->invalidate_setpoint_triplet();
+	// _navigator->invalidate_setpoint_triplet(); - do not do this, this almost killed Armands and / or Edgars.
 	commander_request_s *commander_request = _navigator->get_commander_request();
 	commander_request->request_type = V_DISARM;
 	_navigator->set_commander_request_updated();
