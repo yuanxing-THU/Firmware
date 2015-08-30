@@ -74,7 +74,7 @@ main(int argc, const char * const * const argv)
 {
 	if (argc < 3)
 	{
-		usage(argv[1]);
+		usage(argv[0]);
 		return 1;
 	}
 
@@ -132,7 +132,7 @@ main(int argc, const char * const * const argv)
 		}
 	}
 	else {
-		usage(argv[1]);
+		usage(argv[0]);
 		return 1;
 	}
 
