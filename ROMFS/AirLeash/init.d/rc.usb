@@ -3,6 +3,10 @@
 # USB MAVLink start
 #
 
+# Disable external mavlink to free some memory
+mavlink stop-all
+usleep 100000
+
 mavlink start -r 20000 -d /dev/ttyACM0 -x
 
 # Enable a number of interesting streams we want via USB
