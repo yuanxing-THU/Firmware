@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include <mavlink/mavlink_bridge_header.h>
+
 #include "defs.hpp"
 
 namespace BT
@@ -17,7 +19,7 @@ frame_size< LairdProtocol >() { return 2; }
 
 template <>
 constexpr size_t
-packet_capacity< LairdProtocol >() { return 118; }
+packet_capacity< LairdProtocol >() { return (MAVLINK_NUM_NON_PAYLOAD_BYTES + MAVLINK_MSG_ID_HRT_GPOS_TRAJ_COMMAND_LEN); }
 
 template <>
 struct DataFrame< LairdProtocol >
