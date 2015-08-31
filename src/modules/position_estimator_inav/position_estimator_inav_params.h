@@ -68,6 +68,11 @@ struct position_estimator_inav_params {
 	float land_thr;
 	int32_t no_vision;
 	float delay_gps;
+	float gps_init_eph;
+	float gps_init_epv;
+	float gps_ok_eph;
+	float gps_ok_epv;
+	int32_t gps_init_wait;
 };
 
 struct position_estimator_inav_param_handles {
@@ -97,6 +102,11 @@ struct position_estimator_inav_param_handles {
 	param_t land_thr;
 	param_t no_vision;
 	param_t delay_gps;
+	param_t gps_init_eph;
+	param_t gps_init_epv;
+	param_t gps_ok_eph;
+	param_t gps_ok_epv;
+	param_t gps_init_wait;
 };
 
 #define CBRK_NO_VISION_KEY	328754

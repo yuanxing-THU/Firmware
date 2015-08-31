@@ -376,6 +376,13 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 
 	/* wait for initial baro value */
 	bool wait_baro = true;
+	/* wait for initial gps (implies more strict checks) */
+	bool wait_gps = false;
+	// enable init checks only with valid parameters
+	if ((params.gps_init_eph > 0.001f || params.gps_init_epv > 0.001f) && params.gps_init_wait > 0) {
+		wait_gps = true;
+	}
+	hrt_abstime gps_stabilized_last = 0;
 
 	thread_running = true;
 
@@ -641,7 +648,7 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 
 				/* hysteresis for GPS quality */
 				if (gps_valid) {
-					if (gps.eph > max_eph_epv || gps.epv > max_eph_epv || gps.fix_type < 3) {
+					if (gps.eph > params.gps_ok_eph || gps.epv > params.gps_ok_epv || gps.fix_type < 3) {
 						gps_valid = false;
 						mavlink_log_info(mavlink_fd, "[inav] GPS signal lost");
 					}
@@ -654,32 +661,48 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 				// 	}
 				// }
                 } else {
-                    if (gps.eph < max_eph_epv * 0.7f && gps.epv < max_eph_epv * 0.7f && gps.fix_type >= 3) {
-                        gps_valid = true;
-                        reset_est = true;
-                        mavlink_log_info(mavlink_fd, "[inav] GPS signal found");
-                        if (!mag_declination_set) {
-                        	mag_declination_set = true;
-                            param_t param = param_find("AIRD_AUTO_MAG");
-                            bool should_set_decl = false;
-                            param_get(param, &should_set_decl);
-                            if (should_set_decl) {
-                            	float lat = gps.lat * 1e-7;
-                                float lon = gps.lon * 1e-7;
-                                float decl = get_mag_declination(lat, lon);
-                                param = param_find("ATT_MAG_DECL");
-                                param_set(param, &decl);
-                                mavlink_log_info(mavlink_fd, "Declination calculated: %4.7f", (double)decl);
+                    if (gps.eph < params.gps_ok_eph * 0.7f && gps.epv < params.gps_ok_epv * 0.7f && gps.fix_type >= 3) {
+                    	// Initial GPS signal - stricter checks
+                    	if (wait_gps) {
+                    		if (gps.eph < params.gps_init_eph && gps.epv < params.gps_init_epv) {
+                    			if (gps_stabilized_last == 0) {
+                    				gps_stabilized_last = hrt_absolute_time();
+                    			}
+                    			else if (hrt_absolute_time() - gps_stabilized_last >= params.gps_init_wait * 1000) {
+                    				wait_gps = false; // will go into usual gps reset next iteration
+                    			}
+                    		}
+                    		else {
+                    			gps_stabilized_last = 0;
+                    		}
+                    	}
+                    	else {
+							gps_valid = true;
+							reset_est = true;
+							mavlink_log_info(mavlink_fd, "[inav] GPS signal found");
+							if (!mag_declination_set) {
+								mag_declination_set = true;
+								param_t param = param_find("AIRD_AUTO_MAG");
+								bool should_set_decl = false;
+								param_get(param, &should_set_decl);
+								if (should_set_decl) {
+									float lat = gps.lat * 1e-7;
+									float lon = gps.lon * 1e-7;
+									float decl = get_mag_declination(lat, lon);
+									param = param_find("ATT_MAG_DECL");
+									param_set(param, &decl);
+									mavlink_log_info(mavlink_fd, "Declination calculated: %4.7f", (double)decl);
 
-                            	//Write parameter to permanent memory only if gps is required to arm and thus is not in air
-                            	param = param_find("A_REQUIRE_GPS");
-                            	param_get(param, &should_set_decl);
-                            	if (should_set_decl) {
-	                                // Params write
-	    							param_save_default();
-                            	}
-                            }
-                        }
+									//Write parameter to permanent memory only if gps is required to arm and thus is not in air
+									param = param_find("A_REQUIRE_GPS");
+									param_get(param, &should_set_decl);
+									if (should_set_decl) {
+										// Params write
+										param_save_default();
+									}
+								}
+							}
+                    	}
                     }
                 }
 

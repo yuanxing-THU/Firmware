@@ -279,6 +279,45 @@ PARAM_DEFINE_FLOAT(INAV_DELAY_GPS, 0.056f);
  */
 PARAM_DEFINE_INT32(CBRK_NO_VISION, 0);
 
+/**
+ * EPH needed to init reference position
+ *
+ * @group Position Estimator INAV
+ */
+PARAM_DEFINE_FLOAT(INAV_INIT_EPH, 2.0f);
+
+/**
+ * EPV needed to init reference position
+ *
+ * @group Position Estimator INAV
+ */
+PARAM_DEFINE_FLOAT(INAV_INIT_EPV, 2.5f);
+
+/**
+ * Minimal time ms needed to init reference position
+ *
+ * @group Position Estimator INAV
+ */
+PARAM_DEFINE_INT32(INAV_INIT_WAIT, 4000);
+
+/**
+ * Flight time EPH when GPS considered valid
+ * Above this value considered inavlid
+ * Bellow this value *0.7 is considered valid
+ *
+ * @group Position Estimator INAV
+ */
+PARAM_DEFINE_FLOAT(INAV_GPS_OK_EPH, 12.0f);
+
+/**
+ * Flight time EPV when GPS considered valid
+ * Above this value considered inavlid
+ * Bellow this value *0.7 is considered valid
+ *
+ * @group Position Estimator INAV
+ */
+PARAM_DEFINE_FLOAT(INAV_GPS_OK_EPV, 15.0f);
+
 int parameters_init(struct position_estimator_inav_param_handles *h)
 {
     h->lid_cut = param_find("SENS_LID_CUT");
@@ -307,6 +346,11 @@ int parameters_init(struct position_estimator_inav_param_handles *h)
 	h->land_thr = param_find("INAV_LAND_THR");
 	h->no_vision = param_find("CBRK_NO_VISION");
 	h->delay_gps = param_find("INAV_DELAY_GPS");
+	h->gps_init_eph = param_find("INAV_INIT_EPH");
+	h->gps_init_epv = param_find("INAV_INIT_EPV");
+	h->gps_init_wait = param_find("INAV_INIT_WAIT");
+	h->gps_ok_eph = param_find("INAV_GPS_OK_EPH");
+	h->gps_ok_epv = param_find("INAV_GPS_OK_EPV");
 
 	return OK;
 }
@@ -339,6 +383,11 @@ int parameters_update(const struct position_estimator_inav_param_handles *h, str
 	param_get(h->land_thr, &(p->land_thr));
 	param_get(h->no_vision, &(p->no_vision));
 	param_get(h->delay_gps, &(p->delay_gps));
+	param_get(h->gps_init_eph, &(p->gps_init_eph));
+	param_get(h->gps_init_epv, &(p->gps_init_epv));
+	param_get(h->gps_init_wait, &(p->gps_init_wait));
+	param_get(h->gps_ok_eph, &(p->gps_ok_eph));
+	param_get(h->gps_ok_epv, &(p->gps_ok_epv));
 
 	return OK;
 }
