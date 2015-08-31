@@ -283,7 +283,7 @@ private:
 	bool _reset_alt_sp;
 	bool _mode_auto;
 	bool _reset_follow_offset;
-    hrt_abstime landed_time = 0;
+    hrt_abstime landed_time;
 
     math::Vector<4> first_ground_correction;
 	math::Vector<3> _pos;
@@ -518,6 +518,7 @@ MulticopterPositionControl::MulticopterPositionControl() :
 	_reset_alt_sp(true),
 	_mode_auto(false),
 	_reset_follow_offset(true),
+    landed_time(0),
 	_loop_perf(perf_alloc(PC_ELAPSED, "mc_pos_control")),
 	_pitchLPF ()
 {
@@ -2045,10 +2046,13 @@ MulticopterPositionControl::task_main()
                 }
 
 				/* use constant descend rate when landing, ignore altitude setpoint */
-				if (!_control_mode.flag_control_manual_enabled && _pos_sp_triplet.current.valid && _pos_sp_triplet.current.type == SETPOINT_TYPE_LAND) {
+				if (!_control_mode.flag_control_manual_enabled &&
+                        _pos_sp_triplet.current.valid &&
+                        _pos_sp_triplet.current.type == SETPOINT_TYPE_LAND) {
                     /* In case we have sonar correction - use it */
                     if(_params.land_correction_on) {
-                        _vel_sp(2) = _params.land_speed_min * landing_speed_correction();
+                        float speed_corretion =  landing_speed_correction();
+                        _vel_sp(2) = _params.land_speed_min * speed_corretion;
                     }
                     else {
                         /* No range finder correction applied */
@@ -2475,6 +2479,7 @@ MulticopterPositionControl::start()
  * @out:    (float) multiplying coefficient
  */
 float MulticopterPositionControl::landing_speed_correction() {
+
     float landing_coeff = _params.regular_land_speed/_params.land_speed_min;
     if(_local_pos.dist_bottom_valid) {
         /* -- MATH MAGIC --
@@ -2505,13 +2510,14 @@ float MulticopterPositionControl::landing_speed_correction() {
             landing_coeff = 1.0f;
         }
 
-        if (landing_coeff == 1.0f) {
+        if (landing_coeff < 1.1f) {
             /*
              * This section waits 1 second after sonar lowered speed to minimal
              * and then triggers max landing speed back to stop motors faster
              */
-            if (landed_time == 0)
+            if (landed_time == 0) {
                 landed_time = hrt_absolute_time();
+            }
             else if (hrt_absolute_time() - landed_time > 1000000) {
                 landing_coeff = _params.land_speed_max/_params.land_speed_min;
             }
@@ -2525,10 +2531,11 @@ float MulticopterPositionControl::landing_speed_correction() {
         * and regular_land_speed is close to land_speed_max
         */
         // 1.3 is accepted error for sonar invalidation
-        if (landing_coeff < 1.3f && landing_coeff != _params.regular_land_speed/_params.land_speed_min) {
-            if (landed_time == 0)
+        if (landing_coeff < 1.3f) {
+            if (landed_time == 0) {
                 landed_time = hrt_absolute_time();
-            else if (hrt_absolute_time() - landed_time > 1000000) {
+            }
+            else if ( (hrt_absolute_time() - landed_time) > 1000000) {
                 landing_coeff = _params.land_speed_max/_params.land_speed_min;
             }
         }
