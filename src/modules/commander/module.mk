@@ -55,6 +55,9 @@ SRCS		 	= commander.cpp \
 			battery_safety_check_params.c \
 			commander_shared.cpp
 
+# Required by mavlink_bridge_header
+INCLUDE_DIRS	 += $(MAVLINK_SRC)
+
 MODULE_STACKSIZE = 3000
 
 MAXOPTIMIZATION	 = -Os

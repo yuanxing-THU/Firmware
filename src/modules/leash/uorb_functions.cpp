@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstring>
 
+#include <mavlink/mavlink_bridge_header.h>
 #include <uORB/uORB.h>
 #include <uORB/topics/leash_status.h>
 #include <uORB/topics/vehicle_status.h>
@@ -9,21 +10,6 @@
 #include "debug.hpp"
 #include "settings.hpp"
 #include "uorb_functions.hpp"
-
-enum MAV_MODE_FLAG {
-	/*
-	 * enum MAV_MODE_FLAG lives in mavlink/custom/headers/common/common.h,
-	 * but it bloodily could not be included.
-	 */
-	MAV_MODE_FLAG_CUSTOM_MODE_ENABLED = 1,
-	MAV_MODE_FLAG_TEST_ENABLED = 2,
-	MAV_MODE_FLAG_AUTO_ENABLED = 4,
-	MAV_MODE_FLAG_GUIDED_ENABLED = 8,
-	MAV_MODE_FLAG_STABILIZE_ENABLED = 16,
-	MAV_MODE_FLAG_HIL_ENABLED = 32,
-	MAV_MODE_FLAG_MANUAL_INPUT_ENABLED = 64,
-	MAV_MODE_FLAG_SAFETY_ARMED = 128,
-};
 
 namespace kbd_handler
 {

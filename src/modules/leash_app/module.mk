@@ -17,6 +17,8 @@ SRCS			= \
     displayhelper.cpp \
     button_handler.cpp \
 
+# Required by mavlink_bridge_header
+INCLUDE_DIRS	 += $(MAVLINK_SRC)
 
 DEFAULT_VISIBILITY = protected
 CXXFLAGS		+= -std=c++11 -Dmain=${MODULE_COMMAND}_main

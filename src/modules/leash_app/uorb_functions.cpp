@@ -1,23 +1,9 @@
 #include "uorb_functions.h"
 
 #include <commander/px4_custom_mode.h>
+#include <mavlink/mavlink_bridge_header.h>
 
 #include <stdio.h>
-
-enum MAV_MODE_FLAG {
-	/*
-	 * enum MAV_MODE_FLAG lives in mavlink/custom/headers/common/common.h,
-	 * but it bloodily could not be included.
-	 */
-	MAV_MODE_FLAG_CUSTOM_MODE_ENABLED = 1,
-	MAV_MODE_FLAG_TEST_ENABLED = 2,
-	MAV_MODE_FLAG_AUTO_ENABLED = 4,
-	MAV_MODE_FLAG_GUIDED_ENABLED = 8,
-	MAV_MODE_FLAG_STABILIZE_ENABLED = 16,
-	MAV_MODE_FLAG_HIL_ENABLED = 32,
-	MAV_MODE_FLAG_MANUAL_INPUT_ENABLED = 64,
-	MAV_MODE_FLAG_SAFETY_ARMED = 128,
-};
 
 void sendAirDogCommnad(enum VEHICLE_CMD command,
                       float param1,

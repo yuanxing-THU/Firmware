@@ -38,6 +38,11 @@
  * @author Lorenz Meier <lm@inf.ethz.ch>
  */
 
+/**
+ *  ATTENTION!!! ACHTUNG!!! If one wants to use mavlink defines directly,
+ *  Include this file and add `INCLUDE_DIRS += $(MAVLINK_SRC)` to module.mk!
+ */
+
 /* MAVLink adapter header */
 #ifndef MAVLINK_BRIDGE_HEADER_H
 #define MAVLINK_BRIDGE_HEADER_H
