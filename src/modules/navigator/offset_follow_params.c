@@ -47,3 +47,15 @@ PARAM_DEFINE_FLOAT(OFF_ROT_SPD_STP, 2.0f);
  * Aditional angle in front follow
  */
 PARAM_DEFINE_FLOAT(OFF_FR_ADD_ANG, 0.0f);
+
+/**
+ * Maximum delta between actual target to drone angle and sp angle
+ * @unit rad
+ */
+PARAM_DEFINE_FLOAT(OFF_MAX_SP_ANG_D, 0.5f);
+
+/**
+ * Initial distance for offset follow modes
+ * @unit m
+ */
+PARAM_DEFINE_FLOAT(OFF_INTL_DST, 10.0f);

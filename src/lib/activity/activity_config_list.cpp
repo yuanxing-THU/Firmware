@@ -182,7 +182,7 @@ init_activity_config_list(){
             ParamConfig("A_ACTIVITY",         INVISIBLE,    ALL,    0,      -1,    -1,   -1,   {}                 ),
             ParamConfig("NAV_AFOL_MODE",      VALUES_STR,   DOG,    1,      -1,    -1,   -1,   {0,1,2,3,4}        ),
             ParamConfig("A_BSC_SAF_ACT",      VALUES_STR,   DOG,    1,      -1,    -1,   -1,   {1,2}              ),
-            ParamConfig("RET_RTL_ALT",        INTERVAL,     DOG,    20.0f,  10,   100,    5,   {}                 ),
+            ParamConfig("RTL_RET_ALT",        INTERVAL,     DOG,    20.0f,  10,   100,    5,   {}                 ),
             ParamConfig("NAV_TAKEOFF_ALT",    INTERVAL,     DOG,    8.0f,    5,    50,    1,   {}                 ),
             ParamConfig("A_INIT_POS_U",       VALUES_STR,   DOG,    0,      -1,    -1,   -1,   {0,1}              ),
             ParamConfig("A_INIT_POS_D",       INTERVAL,     DOG,    8.0f,    5,   100,    1,   {}                 ),
@@ -225,7 +225,7 @@ init_activity_config_list(){
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values  
                 ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                 ),
-                ParamConfig("RET_RTL_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
+                ParamConfig("RTL_RET_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}               ),
                 ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                 ),
                 ParamConfig("SENS_SON_MIN",       INTERVAL,    DOG,    7.0f,    3,    20, 0.5f,   {}                  ),
@@ -250,7 +250,7 @@ init_activity_config_list(){
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values  
                 ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    1,       -1,    -1,   -1,   {1}                ),
-                ParamConfig("RET_RTL_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
+                ParamConfig("RTL_RET_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,       -1,    -1,   -1,   {0,1}              ),
                 ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    1,       -1,    -1,   -1,   {1}                ),
                 ParamConfig("SENS_SON_MIN",       INTERVAL,    DOG,    7.0f,     3,    20, 0.5f,   {}                 ),
@@ -275,7 +275,7 @@ init_activity_config_list(){
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values  
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}              ),
-                ParamConfig("RET_RTL_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
+                ParamConfig("RTL_RET_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
                 ParamConfig("SENS_SON_MIN",       INTERVAL,    DOG,    7.0f,    3,    20, 0.5f,   {}                 ),
                 ParamConfig("PAFOL_OPT_D",        INTERVAL,    DOG,    10.0f,   5,    40,    1,   {}                 ),
                 ParamConfig("AIRD_TRAJ_RAD",      INVISIBLE,   ALL,    6.0f,    3,    20,    1,   {}                 ), 
@@ -287,7 +287,7 @@ init_activity_config_list(){
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values  
                 ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                 ),
-                ParamConfig("RET_RTL_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
+                ParamConfig("RTL_RET_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}               ),
                 ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                 ),
                 ParamConfig("SENS_SON_MIN",       INTERVAL,    DOG,    7.0f,    3,    20, 0.5f,   {}                  ),
@@ -309,7 +309,7 @@ init_activity_config_list(){
                 ParamConfig("A_ACTIVITY",         INVISIBLE,    ALL,    0,      -1,    -1,   -1,   {}                 ),
                 ParamConfig("NAV_AFOL_MODE",      VALUES_STR,   DOG,    1,      -1,    -1,   -1,   {0,1,2,3,4}        ),
                 ParamConfig("A_BSC_SAF_ACT",      VALUES_STR,   DOG,    1,      -1,    -1,   -1,   {1,2}              ),
-                ParamConfig("RET_RTL_ALT",        INTERVAL,     DOG,    20.0f,  10,   100,    5,   {}                 ),
+                ParamConfig("RTL_RET_ALT",        INTERVAL,     DOG,    20.0f,  10,   100,    5,   {}                 ),
                 ParamConfig("NAV_TAKEOFF_ALT",    INTERVAL,     DOG,    8.0f,    5,    50,    1,   {}                 ),
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,   DOG,    0,      -1,    -1,   -1,   {0,1}              ),
                 ParamConfig("A_INIT_POS_D",       INTERVAL,     DOG,    8.0f,    5,   100,    1,   {}                 ),

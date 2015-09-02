@@ -163,6 +163,11 @@ NavigatorMode::updateParamHandles() {
     _parameter_handles.offset_rot_speed_ratio = param_find("OFF_ROT_SPD_R");
     
     _parameter_handles.front_follow_additional_angle = param_find("OFF_FR_ADD_ANG");
+
+    _parameter_handles.max_offset_sp_angle_err = param_find("OFF_MAX_SP_ANG_D");
+
+    _parameter_handles.offset_initial_distance = param_find("OFF_INTL_DST");
+
 }
 
 void
@@ -232,6 +237,9 @@ NavigatorMode::updateParamValues() {
 
     param_get(_parameter_handles.front_follow_additional_angle, &(_parameters.front_follow_additional_angle));
 
+    param_get(_parameter_handles.max_offset_sp_angle_err, &(_parameters.max_offset_sp_angle_err));
+
+    param_get(_parameter_handles.offset_initial_distance, &(_parameters.offset_initial_distance));
 }
 
 

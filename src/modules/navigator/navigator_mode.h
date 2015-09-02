@@ -176,6 +176,10 @@ public:
         float offset_rot_speed_ratio;
 
         float front_follow_additional_angle;
+    
+        float max_offset_sp_angle_err;
+        
+        float offset_initial_distance;
 
 	} _parameters;
 
@@ -249,9 +253,12 @@ public:
         param_t offset_rot_speed_ratio;
 
         param_t front_follow_additional_angle;
+         
+        param_t max_offset_sp_angle_err;
+
+        param_t offset_initial_distance;
 
 	} _parameter_handles;
-
 
 
 protected:

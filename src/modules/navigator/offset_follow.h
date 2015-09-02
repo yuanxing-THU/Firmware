@@ -48,6 +48,7 @@
 class OffsetFollow : public MissionBlock
 {
 public:
+
 	OffsetFollow(Navigator *navigator, const char *name);
 
 	~OffsetFollow();
@@ -67,39 +68,49 @@ private:
     void execute_vehicle_command_abs_follow();
     void execute_vehicle_command_front_follow();
 
-    void init_follow_offset_vector();
-    void calculate_base_offset();
+    void init_base_offset();
 
-    void update_rotation_angle();
+    void update_offset_sp_angle();
     void update_follow_offset();
 
     void offset_height_step(int);
     void offset_distance_step(int);
     void offset_rotation_step(int);
 
+    void calc_actual_angle();
+    void normalize_angle(float &angle);
+
+    bool shortest_arc(float angle_from, float angle_to, float &angle, float &direction);
+
     math::Matrix<3, 3> R_phi;
     math::Vector<3> _follow_offset_vect;
     math::Vector<3> _base_offset;
+    math::Vector<2> delta_pos;
 
 	hrt_abstime _t_prev;
     hrt_abstime _t_cur;
+
     float dt;
 
     float _radius;
 
-    float _rotation_angle_sp;
+    float _offset_goal_angle;
+    float _actual_angle;
+    float _offset_sp_angle;
 
-    float _rotation_angle;
     float _rotation_speed;
     float _rotation_speed_ms;
     float _offset_len;
 
     float _angle_err;
 
-    float _pi = (float)M_PI;
-    float _2pi = _pi * 2.0f;
+    float _target_speed;
 
-    struct vehicle_status_s* _vstatus;
+    const float _pi = (float)M_PI;
+    const float _2pi = _pi * 2.0f;
+
+    struct vehicle_status_s * _vstatus;
+
 };
 
 #endif
