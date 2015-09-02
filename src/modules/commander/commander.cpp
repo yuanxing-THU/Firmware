@@ -884,7 +884,9 @@ int commander_thread_main(int argc, char *argv[])
 	param_t _param_ef_current2throttle_thres = param_find("COM_EF_C2T");
 	param_t _param_ef_time_thres = param_find("COM_EF_TIME");
 	param_t _param_activity = param_find("A_ACTIVITY");
+	param_t _param_activity_on = param_find("A_ACTIVITY_ON");
 
+    int32_t activity_on;
 
 	float battery_fake_level = -1.0f;
 
@@ -1346,6 +1348,7 @@ int commander_thread_main(int argc, char *argv[])
 			}
 
             param_get(_param_activity, &status.activity);
+            param_get(_param_activity_on, &activity_on);
 
 			/* navigation parameters */
 			param_get(_param_takeoff_alt, &takeoff_alt);
@@ -1372,7 +1375,7 @@ int commander_thread_main(int argc, char *argv[])
 		}
 
         // If is drone
-        if (status.system_type == 2 && activity_manager == nullptr) {
+        if (activity_on && status.system_type == 2 && activity_manager == nullptr) {
             activity_manager = new Activity::DogActivityManager;
         }
 

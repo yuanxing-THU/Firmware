@@ -290,3 +290,11 @@ PARAM_DEFINE_INT32(A_CALIB_GYRO_ARM, 0);
  * @group airdog
  */
 PARAM_DEFINE_INT32(A_ACTIVITY, 0);
+
+
+/**
+ * Activity manager is turned on
+ * @group airdog
+ */
+PARAM_DEFINE_INT32(A_ACTIVITY_ON, 1);
+
