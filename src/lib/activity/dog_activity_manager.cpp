@@ -162,7 +162,7 @@ DogActivityManager::process_received_params(){
 bool
 DogActivityManager::send_params_to_leash(){
 
-    _activity_params_sndr.type = ACTIVITY_PARAMS_MSG_VALUES;
+    _activity_params_sndr.type = ACTIVITY_PARAMS_SNDR_VALUES;
 
     if (_activity_params_sndr_pub >  0) {
         orb_publish(ORB_ID(activity_params_sndr), _activity_params_sndr_pub, &_activity_params_sndr);

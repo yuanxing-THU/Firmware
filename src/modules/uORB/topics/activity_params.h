@@ -29,12 +29,13 @@ ORB_DECLARE(activity_params);
 
 
 typedef enum {
-    ACTIVITY_PARAMS_MSG_VALUES = 0,
-    ACTIVITY_PARAMS_MSG_FAILED,
-} activity_params_msg_type;
+    ACTIVITY_PARAMS_SNDR_VALUES = 0,
+    ACTIVITY_PARAMS_SNDR_STOP,
+    ACTIVITY_PARAMS_SNDR_FAILED,
+} activity_params_sndr_type;
 
 struct activity_params_sndr_s {
-    activity_params_msg_type type;
+    activity_params_sndr_type type;
 };
 
 ORB_DECLARE(activity_params_sndr);

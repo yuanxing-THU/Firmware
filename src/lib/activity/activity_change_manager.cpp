@@ -405,7 +405,7 @@ bool
 ActivityChangeManager::send_params_to_dog(){
 
     activity_params_sndr_s activity_params_sndr;
-    activity_params_sndr.type = ACTIVITY_PARAMS_MSG_VALUES;
+    activity_params_sndr.type = ACTIVITY_PARAMS_SNDR_VALUES;
 
     int activity_params_sndr_pub = orb_advertise(ORB_ID(activity_params_sndr), &activity_params_sndr);
 

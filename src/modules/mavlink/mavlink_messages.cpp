@@ -2422,16 +2422,21 @@ protected:
         // Timestamp in msg will be updated only when sndr will be published
 		_activity_params_sndr_sub->update(&_activity_sndr_time, &activity_params_sndr);
 
-        _activity_params_sub->update(&activity_params);
+        if (activity_params_sndr.type != ACTIVITY_PARAMS_SNDR_STOP) {
 
-        mavlink_activity_params_t msg;
-        msg.timestamp = _activity_sndr_time;
+            _activity_params_sub->update(&activity_params);
 
-        for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++) {
-            msg.values[i] = activity_params.values[i];
+            mavlink_activity_params_t msg;
+            msg.timestamp = _activity_sndr_time;
+
+            for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++) {
+                msg.values[i] = activity_params.values[i];
+            }
+
+            _mavlink->send_message(MAVLINK_MSG_ID_ACTIVITY_PARAMS, &msg);
+            fprintf(stderr, "Sending params!");
         }
-
-        _mavlink->send_message(MAVLINK_MSG_ID_ACTIVITY_PARAMS, &msg);
+            fprintf(stderr, "NOT sending params!");
 
 	}
 };

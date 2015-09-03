@@ -86,6 +86,7 @@
 #include <uORB/topics/commander_request.h>
 #include <uORB/topics/position_restriction.h>
 #include <uORB/topics/user_camera_offsets.h>
+#include <uORB/topics/activity_params.h>
 
 
 #include <drivers/drv_led.h>
@@ -201,6 +202,7 @@ typedef enum {
 static low_prio_task_t low_prio_task = LOW_PRIO_TASK_NONE;
 
 Activity::DogActivityManager * activity_manager = nullptr;
+bool activity_params_sndr_state = false;
 
 /**
  * The daemon app only briefly exists to start
@@ -2504,9 +2506,16 @@ int commander_thread_main(int argc, char *argv[])
 
 		status_changed = false;
 
-
-        // TODO: If failed to init - don't allow to takeoff ? 
         if (status.airdog_state == AIRD_STATE_STANDBY) {
+
+            if (activity_params_sndr_state == false) {
+
+                activity_params_sndr_s sndr;
+                sndr.type = ACTIVITY_PARAMS_SNDR_VALUES;
+                orb_advertise(ORB_ID(activity_params_sndr), &sndr);
+
+                activity_params_sndr_state = true;
+            }
 
             if (activity_manager != nullptr) {
                 if (activity_manager->is_inited()) 
@@ -2514,6 +2523,19 @@ int commander_thread_main(int argc, char *argv[])
                 else
                     activity_manager->init();
             }
+
+        } else {
+
+            if (activity_params_sndr_state == true) {
+
+                activity_params_sndr_s sndr;
+                sndr.type = ACTIVITY_PARAMS_SNDR_STOP;
+                orb_advertise(ORB_ID(activity_params_sndr), &sndr);
+
+                activity_params_sndr_state = false;
+            
+            }
+
         }
 
 
