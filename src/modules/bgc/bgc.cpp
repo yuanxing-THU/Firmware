@@ -22,18 +22,18 @@ bool BGC::Start_thread() {
         QLOG_literal("[BGC] thread already running");
         return true;
     }
-    
+
     s_thread_should_exit = false;
     if ( task_spawn_cmd("bgc", SCHED_DEFAULT, SCHED_PRIORITY_DEFAULT, 2000, Thread_main, (const char **)NULL) < 0 ) {
         QLOG_sprintf("[BGC] task_spawn_cmd fail: %d", errno);
         return false;
     }
-    
+
     while ( !s_thread_running && !s_thread_should_exit ) {
         usleep(200);
     }
     printf("[BGC] thread started\n");
-    
+
     return true;
 }
 
@@ -42,14 +42,14 @@ bool BGC::Stop_thread() {
         QLOG_literal("[BGC] thread not running");
         return false;
     }
-    
+
     s_thread_should_exit = true;
     while ( s_thread_running ) {
         usleep(200000);
         printf(".");
     }
     printf("[BGC] thread stopped\n");
-    
+
     return true;
 }
 
@@ -83,23 +83,23 @@ BGC::~BGC() { }
 
 bool BGC::Initial_setup() {
     if ( !arm_bgc_motors_param.Is_open() ) return false;
-    
+
     if ( !frame_button_subscriber.Open() ) return false;
     printf("[BGC] subscribed to frame button\n");
-    
+
     if ( !vehicle_status_subscriber.Open() ) return false;
     if ( !vehicle_status_subscriber.Set_interval(1000) ) return false;
     printf("[BGC] subscribed to vehicle status\n");
-    
+
     if ( !bgc_uart.Open() ) return false;
     printf("[BGC] opened BGC_uart\n");
-    
+
     return true;
 }
 
 bool BGC::Run() {
     if ( !Run_setup() ) return !s_thread_should_exit;
-    
+
     BGC_uart_msg in_msg;
     while ( !s_thread_should_exit ) {
         const Poll_result poll_result = Poll();
@@ -131,7 +131,7 @@ bool BGC::Run() {
             }
         }
     }
-    
+
     return !s_thread_should_exit;
 }
 
@@ -155,7 +155,7 @@ bool BGC::Run_setup() {
             if ( !Discover_attributes() ) return false;
         }
     }
-    
+
 #if BOARD_REVISION >= 006
     /** On newer revisions that don't have BGC Video Tx Power enabled by default through a hardware jumper,
      *  we need to send a message to the BGC chip to enable Video Tx Power by setting a pin to 1.
@@ -166,7 +166,7 @@ bool BGC::Run_setup() {
         if ( !Enable_video_tx_power_pin() ) return false;
     }
 #endif
-    
+
     return true;
 }
 
@@ -193,7 +193,7 @@ bool BGC::Discover_attributes() {
 
 bool BGC::Process_frame_button_event() {
     if ( !frame_button_subscriber.Read() ) return false;
-    
+
 /** TODO! Implement detection of the DIP-switch that enables button pass-trough. Refer to
  *  https://docs.google.com/document/d/1m2cnf1UrndAgbCF8fEZWD3Evr-s2qAcHdLWIV6tyzqg/edit?usp=sharing
  *  section "Main processor LED and buttons" for more info.
@@ -205,7 +205,7 @@ bool BGC::Process_frame_button_event() {
     printf("[BGC] Process_frame_button_event - skipping event\n");
     return true;
 #endif
-    
+
     BGC_uart_msg out_msg;
     switch ( frame_button_subscriber.Data().state ) {
         case SINGLE_CLICK: {
@@ -241,7 +241,7 @@ bool BGC::Process_frame_button_event() {
 
 bool BGC::Update_bgc_motor_status() {
     if ( !vehicle_status_subscriber.Read() ) return false;
-    
+
     // DOG_PRINT("[BGC] Update_bgc_motor_status - change: %d -> %d\n", prev_arming_state, raw_vehicle_status.arming_state);
     BGC_uart_msg out_msg;
     if ( prev_arming_state != ARMING_STATE_ARMED && vehicle_status_subscriber.Data().arming_state == ARMING_STATE_ARMED ) {
