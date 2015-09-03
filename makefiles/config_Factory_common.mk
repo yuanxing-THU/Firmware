@@ -18,6 +18,11 @@ MODULES += systemcmds/flash
 MODULES += systemcmds/mem
 
 #
+# FRAM
+#
+MODULES += systemcmds/mtd
+
+#
 # Minimal required module set
 #
 MODULES += drivers/device

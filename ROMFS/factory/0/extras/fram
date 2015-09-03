@@ -1,0 +1,21 @@
+set R FAIL
+
+echo ---
+
+echo mtd start
+if mtd start
+then
+	echo mtd erase
+	if mtd erase
+	then
+		echo mtd status
+		if mtd status
+		then
+			set R OK
+		fi
+	fi
+fi
+
+echo ===
+
+echo $R
