@@ -6,6 +6,7 @@ import tkFileDialog as tkFile
 import re
 import subprocess
 import os as os
+from pipes import quote
 from nsh import NSH
 from sys import argv, exit
 from datetime import datetime
@@ -113,17 +114,31 @@ class Application(tk.Frame):
         for i in selected:
             cur = self.logs_dir + self.loglist.get(i)
             if self.nsh.file_exists(cur):
-                            data = self.nsh.download_file(cur)
+                data = self.nsh.download_file(cur)
 
-                            sl = [-1] +  [m.start() for m in re.finditer('/', cur)]
+                sl = [-1] +  [m.start() for m in re.finditer('/', cur)]
 
-                            new_filename = cur[sl[-1]+1:]
-                            if (len(sl)>1):
-                                new_filename = cur[sl[-2]+1:sl[-1]] + "_" + new_filename
-                            
-                            with open(self.dir_to_save+'/'+new_filename, "wb") as f:
-                                f.write(data)
-                            print("Success.")
+                new_filename = cur[sl[-1]+1:]
+                if (len(sl)>1):
+                    new_filename = cur[sl[-2]+1:sl[-1]] + "_" + new_filename
+
+                with open(self.dir_to_save+'/'+new_filename, "wb") as f:
+                    f.write(data)
+                f.close()
+
+                replace_pos = new_filename.find("log001.bin")
+                if (replace_pos >= 0) :
+                    print("Getting last GPS date of the log file")
+                    # Python interface of sdlog2_dump sux, so use system call
+                    lastGPS = os.popen("%s/sdlog2_dump.py %s -m GPS_GPSTime" % (quote(os.path.dirname(__file__)), quote(self.dir_to_save+'/'+new_filename))).readlines()
+                    try:
+                        replace_string = datetime.utcfromtimestamp(long(lastGPS[-1]) / 1000000).strftime("%y%m%d-%H%M")
+                        filename_with_timestamp = new_filename.replace("log001", replace_string)
+                        os.rename(self.dir_to_save+'/'+new_filename, self.dir_to_save+'/'+filename_with_timestamp)
+                    except ValueError as err:
+                        print(err)
+
+                print("Success.")
             else:
                 print("File not found")
 
