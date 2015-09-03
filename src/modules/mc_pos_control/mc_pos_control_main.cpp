@@ -1669,6 +1669,9 @@ void MulticopterPositionControl::set_camera_pitch(float pitch){
 			last_pitch -= (-pitch_delta_20th > pitch_change_speed ? pitch_change_speed : -pitch_delta_20th);
 		}
 	}
+	else {
+		last_pitch = pitch;
+	}
 	if (_params.pitch_lpf_cut < -FLT_EPSILON) {
 		last_pitch = _pitchLPF.apply(hrt_absolute_time(), pitch);
 	}
