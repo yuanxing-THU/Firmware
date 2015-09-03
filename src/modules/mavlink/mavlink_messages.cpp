@@ -2436,9 +2436,7 @@ protected:
             }
 
             _mavlink->send_message(MAVLINK_MSG_ID_ACTIVITY_PARAMS, &msg);
-            fprintf(stderr, "Sending params!");
         }
-            fprintf(stderr, "NOT sending params!");
 
 	}
 };
