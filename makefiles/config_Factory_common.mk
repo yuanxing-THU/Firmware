@@ -6,6 +6,13 @@ ROMFS_ROOT ?= $(PX4_BASE)/ROMFS/factory/0/
 MODULES += modules/i2c_exchange
 
 #
+# OTP write modules
+#
+MODULES += lib/airdog/hwinfo
+MODULES += lib/stm32f4
+MODULES += systemcmds/flash
+
+#
 # Minimal required module set
 #
 MODULES += drivers/device
