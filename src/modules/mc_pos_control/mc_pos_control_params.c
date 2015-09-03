@@ -42,6 +42,13 @@
 #include <systemlib/param/param.h>
 
 /**
+ * cable park maximal initial position taking speed
+ *
+ * @group cable park
+ * */
+PARAM_DEFINE_FLOAT(CBP_MAX_INIT_SPD, 5.0f);
+
+/**
  * Camera pitch correction step
  *
  * @min 0.0

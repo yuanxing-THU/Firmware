@@ -162,6 +162,7 @@ private:
     struct follow_offset_s              _orb_follow_offset; /** < follow offset for offset follow modes > */
 
 	struct {
+        param_t cbp_max_init_speed;
         param_t cam_pitch_step;
         param_t cam_yaw_step;
 		param_t thr_min;
@@ -219,6 +220,7 @@ private:
 	}		_params_handles;		/**< handles for interesting parameters */
 
 	struct {
+        float cbp_max_init_speed;
         float cam_pitch_step;
         float cam_yaw_step;
 		float thr_min;
@@ -324,6 +326,7 @@ private:
     float _ref_vector_module = 1.0f;	/**< cable park vector module (before normalization) */
     float _current_allowed_velocity;    /**< cable park maximum speed (taking last and first point into account) */
     bool _valid_vel_correction = false; /**< cable park thing to use velocity correcion */
+    bool _cbp_flight_to_possition = true;
 
 	LocalPositionPredictor	_tpos_predictor;
 
@@ -569,6 +572,7 @@ MulticopterPositionControl::MulticopterPositionControl() :
 	_tpos_predictor.set_min_latency(20000);
 	_tpos_predictor.set_max_latency(1000000);
 
+    _params_handles.cbp_max_init_speed = param_find("CBP_MAX_INIT_SPD");
     _params_handles.cam_pitch_step = param_find("CAM_PITCH_STEP");
     _params_handles.cam_yaw_step = param_find("CAM_YAW_STEP");
 	_params_handles.thr_min		= param_find("MPC_THR_MIN");
@@ -670,6 +674,7 @@ MulticopterPositionControl::parameters_update(bool force)
 	}
 
 	if (updated || force) {
+		param_get(_params_handles.cbp_max_init_speed, &_params.cbp_max_init_speed);
 		param_get(_params_handles.cam_pitch_step, &_params.cam_pitch_step);
 		param_get(_params_handles.cam_yaw_step, &_params.cam_yaw_step);
 		param_get(_params_handles.thr_min, &_params.thr_min);
@@ -1244,9 +1249,10 @@ MulticopterPositionControl::control_cablepark()
     _valid_vel_correction = false;
 
     /* --- if we are outside of path - return to it first -- */
-	if ( from_vehicle_to_path > _params.accept_radius * _params.accept_radius
+	if ( (from_vehicle_to_path > _params.accept_radius * _params.accept_radius
          || vehicle_dot_product >= _ref_vector_module + _params.accept_radius
-         || vehicle_dot_product < -_params.accept_radius
+         || vehicle_dot_product < -_params.accept_radius)
+         && _cbp_flight_to_possition 
        ) {
 
         // Changing projection if vehicle outside of last/first points
@@ -1260,6 +1266,7 @@ MulticopterPositionControl::control_cablepark()
 
         // ===== Resulting vector =====
         //final_vector -= vehicle_pos;
+        _cbp_flight_to_possition = false;
 
     } else {
     /* -- We are on path and could follow target now -- */
@@ -2016,12 +2023,47 @@ MulticopterPositionControl::task_main()
                     math::Vector<3> pos_err = _pos_sp - _pos;
 
                     _vel_sp = pos_err.emult(_params.pos_p) + _vel_ff;
-                    if (_control_mode.flag_control_follow_restricted && _valid_vel_correction) {
-                        // Limit speed if we are coming to first/last points in cable park mode
-                        float cur_vel_module = fabsf(_vel_sp.length()) ;
-                        float allowed_vel_mod = fabsf(_current_allowed_velocity);
-                        if ( cur_vel_module > allowed_vel_mod ) {
-                            _vel_sp *= allowed_vel_mod/cur_vel_module;
+                    for (int i=0;i<3;i++)
+                    {
+                        if ( fabsf(_vel_sp(i)) > _params.vel_max(i) )
+                        {
+                            if (_vel_sp(i) > 0.0f)
+                            {
+                                _vel_sp(i) = _params.vel_max(i);
+                            }
+                            else
+                            {
+                                _vel_sp(i) = - _params.vel_max(i);
+                            }
+                        }
+                    }
+
+                    if (_control_mode.flag_control_follow_restricted) {
+                        if (_valid_vel_correction)
+                        {
+                            // Limit speed if we are coming to first/last points in cable park mode
+                            float cur_vel_module = fabsf(_vel_sp.length()) ;
+                            float allowed_vel_mod = fabsf(_current_allowed_velocity);
+                            if ( cur_vel_module > allowed_vel_mod ) {
+                                _vel_sp *= allowed_vel_mod/cur_vel_module;
+                            }
+                        }
+                        else  // If we are flying to points in cable park
+                        {
+                            for (int i=0;i<2;i++)
+                            {
+                                if ( fabsf(_vel_sp(i)) > _params.cbp_max_init_speed )
+                                {
+                                    if (_vel_sp(i) > 0.0f)
+                                    {
+                                        _vel_sp(i) = _params.cbp_max_init_speed;
+                                    }
+                                    else
+                                    {
+                                        _vel_sp(i) = - _params.cbp_max_init_speed;
+                                    }
+                                }
+                            }
                         }
                     }
 
