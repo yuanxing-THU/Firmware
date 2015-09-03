@@ -98,11 +98,11 @@ endif
 # This defines a default setting for the A_TELEMETRY_FLOW parameter.
 ifeq ($(CONFIG_BOARD),AIRDOG_FMU)
 EXTRACFLAGS += -DCONFIG_TELEMETRY_HAS_CTSRTS=$(shell            \
-	sh -c "[ 0$(CONFIG_BOARD_REVISION) -le 5 ] ; echo $$?"  \
+	[ 0$(CONFIG_BOARD_REVISION) -le 5 ] ; echo $$?              \
 )
 else ifeq ($(CONFIG_BOARD),AIRLEASH)
 EXTRACFLAGS += -DCONFIG_TELEMETRY_HAS_CTSRTS=$(shell            \
-	sh -c "[ 0$(CONFIG_BOARD_REVISION) -le 4 ] ; echo $$?"  \
+	[ 0$(CONFIG_BOARD_REVISION) -le 4 ] ; echo $$?              \
 )
 else ifeq ($(CONFIG_BOARD),PX4FMU_V2)
 EXTRACFLAGS += -DCONFIG_TELEMETRY_HAS_CTSRTS=1
