@@ -87,7 +87,7 @@ class Application(tk.Frame):
 
     def listlog(self):
         self.loglist.delete(0,END)
-        for file in self.nsh.get_all_files(self.logs_dir):
+        for file in sorted(self.nsh.get_all_files(self.logs_dir)):
             self.loglist.insert(END, file)
             self.loglist.see(END)
             self.loglist.select_anchor(END)
