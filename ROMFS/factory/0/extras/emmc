@@ -1,0 +1,20 @@
+set R FAIL
+
+echo ---
+
+echo umount /fs/microsd
+umount /fs/microsd
+
+echo mkfatfs /dev/mmcsd0
+if mkfatfs /dev/mmcsd0
+then
+	echo mount -t vfat /dev/mmcsd0 /fs/microsd
+	if mount -t vfat /dev/mmcsd0 /fs/microsd
+	then
+		set R OK
+	fi
+fi
+
+echo ===
+
+echo $R
