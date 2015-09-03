@@ -13,6 +13,11 @@ MODULES += lib/stm32f4
 MODULES += systemcmds/flash
 
 #
+# Debug / Security dangerous modules
+#
+MODULES += systemcmds/mem
+
+#
 # Minimal required module set
 #
 MODULES += drivers/device
