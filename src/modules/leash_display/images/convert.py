@@ -1,4 +1,3 @@
-import png
 import numpy
 import textwrap
 import glob
