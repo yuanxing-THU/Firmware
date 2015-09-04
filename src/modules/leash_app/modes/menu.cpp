@@ -27,6 +27,8 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     nullptr,
     Menu::MENUENTRY_CUSTOMIZE,
     Menu::MENUENTRY_SETTINGS,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_CUR_ACTIVITY,
     Menu::MENUENTRY_EXIT,
 },
@@ -38,6 +40,8 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     nullptr, // use previous preset name
     Menu::MENUENTRY_SETTINGS,
     Menu::MENUENTRY_ACTIVITIES,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_ACTION,
     Menu::MENUENTRY_EXIT,
 },
@@ -49,6 +53,8 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     nullptr,
     Menu::MENUENTRY_ACTIVITIES,
     Menu::MENUENTRY_CUSTOMIZE,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_PAIRING,
     Menu::MENUENTRY_EXIT,
 },
@@ -60,8 +66,10 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     0,
     MENUBUTTON_LEFT | MENUBUTTON_RIGHT,
     nullptr,
-    Menu::MENUENTRY_IGNORE,
-    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_ACTION,
+    Menu::MENUENTRY_ACTION,
+    Menu::MENUENTRY_ACTION,
+    Menu::MENUENTRY_ACTION,
     Menu::MENUENTRY_SELECT,
     Menu::MENUENTRY_ACTIVITIES,
 },
@@ -73,6 +81,8 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     0,
     0,
     nullptr, // use previous preset name
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_ACTION,
@@ -88,6 +98,8 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     nullptr, // use previous preset name
     Menu::MENUENTRY_CALIBRATION,
     Menu::MENUENTRY_AIRDOG_CALIBRATION,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_ACTION,
     Menu::MENUENTRY_SETTINGS,
 },
@@ -99,6 +111,8 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     nullptr, // use previous preset name
     Menu::MENUENTRY_AIRDOG_CALIBRATION,
     Menu::MENUENTRY_PAIRING,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_ACTION,
     Menu::MENUENTRY_SETTINGS,
 },
@@ -110,6 +124,8 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     nullptr, // use previous preset name
     Menu::MENUENTRY_PAIRING,
     Menu::MENUENTRY_CALIBRATION,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_ACTION,
     Menu::MENUENTRY_SETTINGS,
 },
@@ -123,6 +139,8 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     nullptr, // use previous preset name
     Menu::MENUENTRY_ACCELS,
     Menu::MENUENTRY_GYRO,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_ACTION,
     Menu::MENUENTRY_PREVIOUS,
 },
@@ -134,6 +152,8 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     nullptr, // use previous preset name
     Menu::MENUENTRY_GYRO,
     Menu::MENUENTRY_COMPASS,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_ACTION,
     Menu::MENUENTRY_PREVIOUS,
 },
@@ -145,6 +165,8 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     nullptr, // use previous preset name
     Menu::MENUENTRY_COMPASS,
     Menu::MENUENTRY_ACCELS,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_ACTION,
     Menu::MENUENTRY_PREVIOUS,
 },
@@ -156,8 +178,10 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     0,
     MENUBUTTON_LEFT | MENUBUTTON_RIGHT,
     nullptr, // use previous preset name
-    Menu::MENUENTRY_IGNORE,
-    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_ACTION,
+    Menu::MENUENTRY_ACTION, 
+    Menu::MENUENTRY_ACTION,
+    Menu::MENUENTRY_ACTION, 
     Menu::MENUENTRY_ACTION,
     Menu::MENUENTRY_CUSTOMIZE,
 },
@@ -170,6 +194,8 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     Menu::MENUENTRY_LAND,
     Menu::MENUENTRY_GENERATED,
     Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_CUSTOMIZE,
 },
 {
@@ -181,6 +207,8 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     Menu::MENUENTRY_SAVE,
     Menu::MENUENTRY_FOLLOW,
     Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_CUSTOMIZE,
 },
 {
@@ -191,6 +219,8 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     nullptr, // use previous preset name
     Menu::MENUENTRY_CANCEL,
     Menu::MENUENTRY_CANCEL,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_ACTION,
     Menu::MENUENTRY_GENERATED,
 },
@@ -202,6 +232,8 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     nullptr, // use previous preset name
     Menu::MENUENTRY_SAVE,
     Menu::MENUENTRY_SAVE,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_ACTION,
     Menu::MENUENTRY_GENERATED,
 },
@@ -345,27 +377,47 @@ Base* Menu::doEvent(int orbId)
     }
     else if (key_pressed(BTN_RIGHT))
     {
-        if (currentEntry != MENUENTRY_GENERATED &&
-            currentEntry != MENUENTRY_CUR_ACTIVITY)
-            nextMode = switchEntry(entries[currentEntry].next);
-        else
+        if (entries[currentEntry].next == MENUENTRY_ACTION)
+        {
             nextMode = makeAction();
+        }
+        else
+        {
+            nextMode = switchEntry(entries[currentEntry].next);
+        }
     }
     else if (key_pressed(BTN_LEFT))
     {
-        if (currentEntry != MENUENTRY_GENERATED &&
-            currentEntry != MENUENTRY_CUR_ACTIVITY)
-            nextMode = switchEntry(entries[currentEntry].prev);
-        else
+        if (entries[currentEntry].prev == MENUENTRY_ACTION)
+        {
             nextMode = makeAction();
+        }
+        else
+        {
+            nextMode = switchEntry(entries[currentEntry].next);
+        }
     }
     else if (key_pressed(BTN_UP))
     {
-        nextMode = makeAction();
+        if (entries[currentEntry].up == MENUENTRY_ACTION)
+        {
+            nextMode = makeAction();
+        }
+        else
+        {
+            nextMode = switchEntry(entries[currentEntry].up);
+        }
     }
     else if (key_pressed(BTN_DOWN))
     {
-        nextMode = makeAction();
+        if (entries[currentEntry].down == MENUENTRY_ACTION)
+        {
+            nextMode = makeAction();
+        }
+        else
+        {
+            nextMode = switchEntry(entries[currentEntry].down);
+        }
     }
 
     return nextMode;

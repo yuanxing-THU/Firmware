@@ -67,6 +67,8 @@ protected:
         const char *text;
         int next;
         int prev;
+        int up;
+        int down;
         int ok;
         int back;
     };
