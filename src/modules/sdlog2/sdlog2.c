@@ -178,7 +178,7 @@ PARAM_DEFINE_INT32(SDLOG_M_BT_S_OUT, 0);
 PARAM_DEFINE_INT32(SDLOG_M_BT_EVTS, 0);
 PARAM_DEFINE_INT32(SDLOG_M_BT_LINK, 0);
 //PARAM_DEFINE_INT32(SDLOG_M_BT_ST, 5);
-PARAM_DEFINE_INT32(SDLOG_M_FOLPATH, 0);
+PARAM_DEFINE_INT32(SDLOG_M_FOLP, 0);
 //PARAM_DEFINE_INT32(SDLOG_M_ESC, 0);
 PARAM_DEFINE_INT32(SDLOG_M_EXTRAJ, 0);
 PARAM_DEFINE_INT32(SDLOG_M_GPOS, 0);
@@ -1052,7 +1052,7 @@ int sdlog2_thread_main(int argc, char *argv[])
 			// TODO! Consider merging two trajectory messages
 			struct log_EXTJ_s log_EXTJ;
 			struct log_LOTJ_s log_LOTJ;
-            struct log_FOLPATH_s log_FOLPATH;
+            struct log_FOLP_s log_FOLP;
 			struct log_GPRE_s log_GPRE;
 			struct log_GNEX_s log_GNEX;
 			struct log_MVRX_s log_MVRX;
@@ -1158,7 +1158,7 @@ int sdlog2_thread_main(int argc, char *argv[])
 	// External reported trajectory, that was received trough Mavlink
 	LOG_ORB_PARAM_SUBSCRIBE(subs.external_trajectory_sub, ORB_ID(external_trajectory), "SDLOG_M_EXTRAJ", sub_freq)
 
-	LOG_ORB_PARAM_SUBSCRIBE(subs.follow_path_data_sub, ORB_ID(follow_path_data), "SDLOG_M_FOLPATH", sub_freq)
+	LOG_ORB_PARAM_SUBSCRIBE(subs.follow_path_data_sub, ORB_ID(follow_path_data), "SDLOG_M_FOLP", sub_freq)
 	LOG_ORB_PARAM_SUBSCRIBE(subs.mav_rx_sub, ORB_ID(mavlink_receive_stats), "SDLOG_M_MAVRX", sub_freq)
 	LOG_ORB_PARAM_SUBSCRIBE(subs.mav_tx_sub, ORB_ID(mavlink_transmit_stats), "SDLOG_M_MAVTX", sub_freq)
 
@@ -1885,27 +1885,27 @@ int sdlog2_thread_main(int argc, char *argv[])
 
 		if (copy_if_updated(ORB_ID(follow_path_data), subs.follow_path_data_sub, &buf.follow_path_data)) {
 
-			log_msg.msg_type = LOG_FOLPATH_MSG;
+			log_msg.msg_type = LOG_FOLP_MSG;
 
-            log_msg.body.log_FOLPATH.dst_i = buf.follow_path_data.dst_i;
-            log_msg.body.log_FOLPATH.dst_p = buf.follow_path_data.dst_p;
-            log_msg.body.log_FOLPATH.dst_d = buf.follow_path_data.dst_d;
+            log_msg.body.log_FOLP.dst_i = buf.follow_path_data.dst_i;
+            log_msg.body.log_FOLP.dst_p = buf.follow_path_data.dst_p;
+            log_msg.body.log_FOLP.dst_d = buf.follow_path_data.dst_d;
 
-            log_msg.body.log_FOLPATH.vel = buf.follow_path_data.vel;
-            log_msg.body.log_FOLPATH.point_count = buf.follow_path_data.point_count;
+            log_msg.body.log_FOLP.vel = buf.follow_path_data.vel;
+            log_msg.body.log_FOLP.point_count = buf.follow_path_data.point_count;
 
-            log_msg.body.log_FOLPATH.dst_to_gate = buf.follow_path_data.dst_to_gate;
-            log_msg.body.log_FOLPATH.dst_to_tunnel_middle = buf.follow_path_data.dst_to_tunnel_middle;
+            log_msg.body.log_FOLP.dst_to_gate = buf.follow_path_data.dst_to_gate;
+            log_msg.body.log_FOLP.dst_to_tunnel_middle = buf.follow_path_data.dst_to_tunnel_middle;
 
-            log_msg.body.log_FOLPATH.fx = buf.follow_path_data.fx;
-            log_msg.body.log_FOLPATH.fy = buf.follow_path_data.fy;
-            log_msg.body.log_FOLPATH.fz = buf.follow_path_data.fz;
+            log_msg.body.log_FOLP.fx = buf.follow_path_data.fx;
+            log_msg.body.log_FOLP.fy = buf.follow_path_data.fy;
+            log_msg.body.log_FOLP.fz = buf.follow_path_data.fz;
 
-            log_msg.body.log_FOLPATH.sx = buf.follow_path_data.sx;
-            log_msg.body.log_FOLPATH.sy = buf.follow_path_data.sy;
-            log_msg.body.log_FOLPATH.sz = buf.follow_path_data.sz;
+            log_msg.body.log_FOLP.sx = buf.follow_path_data.sx;
+            log_msg.body.log_FOLP.sy = buf.follow_path_data.sy;
+            log_msg.body.log_FOLP.sz = buf.follow_path_data.sz;
 
-            LOGBUFFER_WRITE_AND_COUNT(FOLPATH);
+            LOGBUFFER_WRITE_AND_COUNT(FOLP);
 
 		}
 

@@ -38,6 +38,10 @@ class __EXPORT ActivityChangeManager {
 
     public:
 
+        ActivityChangeManager();
+        ActivityChangeManager(int _activity);
+        ~ActivityChangeManager();
+
         bool get_display_name(char* buffer, int buffer_len);
         int get_current_activity();
 
@@ -54,9 +58,9 @@ class __EXPORT ActivityChangeManager {
 
         bool request_dog_params();
 
-        ActivityChangeManager();
-        ActivityChangeManager(int _activity);
-        ~ActivityChangeManager();
+        bool start_activity_param_messasges();
+        bool stop_activity_param_messasges();
+
         void init(int _activity);
        
     private:

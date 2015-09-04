@@ -31,8 +31,7 @@ ActivityChangeManager::ActivityChangeManager(int _activity) :
         init_activity_config();
         
         activity_params_sub = orb_subscribe(ORB_ID(activity_params));
-
-        // request_dog_params();
+        start_activity_param_messasges();
 
 }
 
@@ -447,19 +446,26 @@ ActivityChangeManager::params_received() {
     return params_up_to_date;
 }
 
-// bool 
-// ActivityChangeManager::request_dog_params() {
-//
-//     activity_request_sndr_s activity_request_sndr;
-//     activity_request_sndr.type = ACTIVITY_REQUEST_PARAMS; 
-//
-//     int activity_request_sndr_pub = orb_advertise(ORB_ID(activity_request_sndr), &activity_request_sndr);
-//
-//     if (activity_request_sndr_pub <= 0) {
-//         printf("Error: failed to publish to activity request sender orb! ");
-//     }
-//
-// }
+bool 
+ActivityChangeManager::stop_activity_param_messasges() {
+
+    activity_params_sndr_s sndr;
+    sndr.type = ACTIVITY_PARAMS_SNDR_STOP;
+    orb_advertise(ORB_ID(activity_params_sndr), &sndr);
+
+    return true;
+}
+
+
+bool 
+ActivityChangeManager::start_activity_param_messasges() {
+
+    activity_params_sndr_s sndr;
+    sndr.type = ACTIVITY_PARAMS_SNDR_VALUES;
+    orb_advertise(ORB_ID(activity_params_sndr), &sndr);
+
+    return true;
+}
 
 bool
 float_eq(float a, float b) {

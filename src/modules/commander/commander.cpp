@@ -1377,8 +1377,8 @@ int commander_thread_main(int argc, char *argv[])
 		}
 
         // If is drone
-        if (activity_on && status.system_type == 2 && activity_manager == nullptr) {
-            activity_manager = new Activity::DogActivityManager;
+        if (status.system_type == 2 && activity_manager == nullptr) {
+            activity_manager = new Activity::DogActivityManager(status.activity);
         }
 
 
@@ -2508,36 +2508,18 @@ int commander_thread_main(int argc, char *argv[])
 
         if (status.airdog_state == AIRD_STATE_STANDBY) {
 
-            if (activity_params_sndr_state == false) {
-
-                activity_params_sndr_s sndr;
-                sndr.type = ACTIVITY_PARAMS_SNDR_VALUES;
-                orb_advertise(ORB_ID(activity_params_sndr), &sndr);
-
-                activity_params_sndr_state = true;
-            }
-
             if (activity_manager != nullptr) {
+
+                if (activity_manager->write_params_on() != activity_on)
+                    activity_manager->set_write_params_on(activity_on);
+
                 if (activity_manager->is_inited()) 
                     activity_manager->check_received_params();
                 else
                     activity_manager->init();
-            }
 
-        } else {
-
-            if (activity_params_sndr_state == true) {
-
-                activity_params_sndr_s sndr;
-                sndr.type = ACTIVITY_PARAMS_SNDR_STOP;
-                orb_advertise(ORB_ID(activity_params_sndr), &sndr);
-
-                activity_params_sndr_state = false;
-            
-            }
-
+            } 
         }
-
 
 		usleep(COMMANDER_MONITORING_INTERVAL);
 	}

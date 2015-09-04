@@ -15,30 +15,27 @@
 
 #include "dog_activity_manager.hpp"
 
-
 namespace Activity {
 
-DogActivityManager::DogActivityManager(){
-
-    _received_activity_params_sub = orb_subscribe(ORB_ID(activity_params));
-
-    _file_state_ok = false;
-    _inited = false;
-    _current_activity = 0;
-    _activity_params_sndr_pub = 0;
-
-    _last_params_received_process = 0;
+DogActivityManager::DogActivityManager(int activity) : 
+    _inited(false),
+    _current_activity(activity),
+    _file_state_ok(false),
+    _last_file_state_check_time(0),
+    _received_activity_params_sub(-1),
+    _last_params_received_process(0),
+    _activity_params_sndr_pub(-1),
+    _write_params_on_flag(true) 
+{
 
     init_allowed_params();
-
     Activity::Files::clear_file_state();
 
-    param_get(param_find("A_ACTIVITY"), &(_current_activity));
+    _received_activity_params_sub = orb_subscribe(ORB_ID(activity_params));
 
 }
 
 DogActivityManager::~DogActivityManager() {
-
     orb_unsubscribe(_received_activity_params_sub);
 }
 
@@ -62,27 +59,24 @@ DogActivityManager::init() {
 bool
 DogActivityManager::check_file_state(){
 
-    if (hrt_absolute_time() - last_file_state_check_time > 1000000) {
+    if (hrt_absolute_time() - _last_file_state_check_time > 1000000) {
 
-        last_file_state_check_time = hrt_absolute_time();
-
-        // printf("Checking files.. \n");
+        _last_file_state_check_time = hrt_absolute_time();
 
         if (Activity::Files::get_file_state()) {
 
-            // printf("Ok file present.\n");
             _file_state_ok = true;
 
         } else {
 
-            printf("No ok file. Rechecking status.\n");
+            printf("Ok flag file is not present. Rechecking activity files.\n");
 
             _file_state_ok = Activity::Files::check_file_state();
 
             if (_file_state_ok) {
-                printf("file state ok!\n");
+                printf("File state ok!\n");
             } else {
-                printf("file state bad!\n");
+                printf("File state bad!\n");
             }
         } 
     }
@@ -113,8 +107,10 @@ DogActivityManager::set_activity(int32_t activity){
     if (!send_params_to_leash())
          return false;
 
-    if (!apply_params())
-        return false;
+    if (_write_params_on_flag) {
+        if (!apply_params())
+            return false;
+    }
 
     return true;
 
@@ -149,8 +145,12 @@ DogActivityManager::process_received_params(){
     if (!Files::activity_orb_to_file())
         return false;
 
-    if (!apply_params())
-        return false;
+    if (_write_params_on_flag) {
+
+        if (!apply_params())
+            return false;
+
+    }
 
     if (!send_params_to_leash())
         return false;
@@ -242,6 +242,16 @@ DogActivityManager::apply_params() {
     param_save_default();
 
     return true;
+}
+
+bool
+DogActivityManager::write_params_on() {
+    return _write_params_on_flag;
+}
+
+bool
+DogActivityManager::set_write_params_on(bool state) {
+    _write_params_on_flag = state;
 }
 
 bool

@@ -9,7 +9,7 @@ class __EXPORT DogActivityManager {
 
     public:
 
-        DogActivityManager();
+        DogActivityManager(int activity);
 
         ~DogActivityManager();
         
@@ -23,6 +23,13 @@ class __EXPORT DogActivityManager {
 
         bool check_file_state();
 
+        // Returns true if activity manager will affect actual parameters
+        bool write_params_on();
+
+        // Changing write params state 
+        bool set_write_params_on(bool state); 
+
+
     private:
 
         bool process_received_params();
@@ -33,23 +40,23 @@ class __EXPORT DogActivityManager {
 
         bool process_virtual_params();
 
-        param_t _param_activity;
-
-        bool _file_state_ok;
+        bool _inited;
 
         int32_t _current_activity;
 
-        bool _inited;
+        bool _file_state_ok;
 
-        uint64_t last_file_state_check_time = 0;
+        uint64_t _last_file_state_check_time = 0;
 
         int _received_activity_params_sub;
 
         int64_t _last_params_received_process;
 
+        int _activity_params_sndr_pub; 
+
+        bool _write_params_on_flag;
+
         activity_params_sndr_s _activity_params_sndr;
-        
-        int _activity_params_sndr_pub;
-    
+
 };
 }

@@ -492,9 +492,9 @@ struct log_GNEX_s {
 };
 
 
-/* ---  FOLPATH --- */
-#define LOG_FOLPATH_MSG 69
-struct log_FOLPATH_s {
+/* ---  FOLP --- */
+#define LOG_FOLP_MSG 69
+struct log_FOLP_s {
 
     float dst_i;
     float dst_p;
@@ -640,7 +640,7 @@ static const struct log_format_s log_formats[] = {
 	LOG_FORMAT(WIND, "ffff",	"X,Y,CovX,CovY"),
 	LOG_FORMAT(TPOS, "BQLLffffff", "SysID,Time,Lat,Lon,Alt,VelN,VelE,VelD,EPH,EPV"),
 	LOG_FORMAT(EXTJ, "BBQLLffffff", "Type,SysID,Time,Lat,Lon,Alt,RAlt,VelN,VelE,VelD,Head"),
-	LOG_FORMAT(FOLPATH, "fffffffffffff", "I,P,D,Vel,PointCo,DstToGate,DstToTraj,fx,fy,fz,sx,sy,sz"),
+	LOG_FORMAT(FOLP, "fffffffffffff", "I,P,D,Vel,PointCo,DstToGate,DstToTraj,fx,fy,fz,sx,sy,sz"),
 	LOG_FORMAT(LOTJ, "BQLLffffff", "Type,Time,Lat,Lon,Alt,RAlt,VelN,VelE,VelD,Head"),
 	LOG_FORMAT(GPRE, "BLLfB",		"NavState,Lat,Lon,Alt,Type"),
 	LOG_FORMAT(GNEX, "BLLfB",		"NavState,Lat,Lon,Alt,Type"),
