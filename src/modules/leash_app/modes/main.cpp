@@ -50,11 +50,12 @@ void Main::listenForEvents(bool awaitMask[])
     Error::listenForEvents(awaitMask);
 
     awaitMask[FD_AirdogStatus] = 1;
-    awaitMask[FD_KbdHandler] = 1;
     awaitMask[FD_BLRHandler] = 1;
-    awaitMask[FD_LeashGlobalPos] = 1;
     awaitMask[FD_DroneLocalPos] = 1;
+    awaitMask[FD_KbdHandler] = 1;
+    awaitMask[FD_LeashGlobalPos] = 1; //For come to me command
     awaitMask[FD_LeashRowGPS] = 1;
+    awaitMask[FD_LocalPos] = 1;
 }
 
 Base* Main::processGround(int orbId)
@@ -192,7 +193,7 @@ Base* Main::doEvent(int orbId)
     }
 
     /* -- check gps state -- */
-    if (orbId == FD_DroneLocalPos || orbId == FD_LeashRowGPS)
+    if (orbId == FD_DroneLocalPos || orbId == FD_LocalPos)
     {
         checkGPS();
     }
@@ -260,7 +261,7 @@ Base* Main::doEvent(int orbId)
 void Main::checkGPS()
 {
     DataManager *dm = DataManager::instance();
-    float leash_eph = dm->leashRawGPS.eph;
+    float leash_eph = dm->localPos.eph;
     float airdog_eph = dm->droneLocalPos.eph;
 
     if (leash_eph == 0.0f)

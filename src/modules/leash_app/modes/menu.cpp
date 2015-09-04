@@ -272,6 +272,7 @@ Menu::Menu() :
     calibrateMode = CALIBRATE_NONE;
     previousEntry = -1;
     switchEntry(newMode);
+    showEntry();
 }
 
 void Menu::buildActivityMenu()
