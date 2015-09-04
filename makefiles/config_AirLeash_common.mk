@@ -10,7 +10,7 @@
 ROMFS_ROOT	 ?= $(PX4_BASE)/ROMFS/AirLeash
 
 # With custom SiK firmware
-#ROMFS_OPTIONAL_FILES += $(wildcard $(PX4_BASE)/ROMFS/FW/*)
+#ROMFS_EXTRA_FILES += $(wildcard $(PX4_BASE)/ROMFS/FW/*)
 
 #
 # Board support modules

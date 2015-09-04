@@ -7,10 +7,10 @@
 # the ROMFS if it's available
 #
 ROMFS_ROOT	 = $(PX4_BASE)/ROMFS/px4fmu_common
-ROMFS_OPTIONAL_FILES = $(PX4_BASE)/Images/px4io-v2_default.bin
+ROMFS_EXTRA_FILES = $(PX4_BASE)/Images/px4io-v2_default.bin
 
 # With custom SiK firmware
-#ROMFS_OPTIONAL_FILES += $(wildcard $(PX4_BASE)/ROMFS/FW/*)
+#ROMFS_EXTRA_FILES += $(wildcard $(PX4_BASE)/ROMFS/FW/*)
 
 #
 # Board support modules

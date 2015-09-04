@@ -524,6 +524,10 @@ upload:	$(PRODUCT_BUNDLE) $(PRODUCT_BIN)
 		BUNDLE=$(PRODUCT_BUNDLE) \
 		BIN=$(PRODUCT_BIN)
 
+iochip_dep:
+	@echo $(filter px4io-v2_default AirDogIO,\
+		$(foreach x,$(ROMFS_EXTRA_FILES),$(notdir $(basename $x))))
+
 .PHONY: clean
 clean:			$(MODULE_CLEANS)
 	@$(ECHO) %% cleaning

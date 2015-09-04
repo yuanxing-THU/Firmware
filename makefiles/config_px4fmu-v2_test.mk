@@ -6,7 +6,7 @@
 # Use the configuration's ROMFS.
 #
 ROMFS_ROOT	 = $(PX4_BASE)/ROMFS/px4fmu_test
-ROMFS_OPTIONAL_FILES = $(PX4_BASE)/Images/px4io-v2_default.bin
+ROMFS_EXTRA_FILES = $(PX4_BASE)/Images/px4io-v2_default.bin
 
 #
 # Board support modules
