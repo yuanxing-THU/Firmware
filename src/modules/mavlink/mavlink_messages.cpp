@@ -2437,7 +2437,6 @@ protected:
 
             _mavlink->send_message(MAVLINK_MSG_ID_ACTIVITY_PARAMS, &msg);
         }
-
 	}
 };
 

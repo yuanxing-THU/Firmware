@@ -95,7 +95,7 @@
 #include <uORB/topics/tecs_status.h>
 #include <uORB/topics/system_power.h>
 #include <uORB/topics/servorail_status.h>
-#include <uORB/topics/debug_data.h>
+#include <uORB/topics/follow_path_data.h>
 #include <uORB/topics/mavlink_stats.h>
 #include <uORB/topics/target_gps_raw.h>
 #include <uORB/topics/bt21_laird.h>
@@ -178,7 +178,7 @@ PARAM_DEFINE_INT32(SDLOG_M_BT_S_OUT, 0);
 PARAM_DEFINE_INT32(SDLOG_M_BT_EVTS, 0);
 PARAM_DEFINE_INT32(SDLOG_M_BT_LINK, 0);
 //PARAM_DEFINE_INT32(SDLOG_M_BT_ST, 5);
-PARAM_DEFINE_INT32(SDLOG_M_DEBUGD, 0);
+PARAM_DEFINE_INT32(SDLOG_M_FOLPATH, 0);
 //PARAM_DEFINE_INT32(SDLOG_M_ESC, 0);
 PARAM_DEFINE_INT32(SDLOG_M_EXTRAJ, 0);
 PARAM_DEFINE_INT32(SDLOG_M_GPOS, 0);
@@ -997,7 +997,7 @@ int sdlog2_thread_main(int argc, char *argv[])
 		struct target_global_position_s target_pos;
 		struct external_trajectory_s ext_traj;
 		struct trajectory_s local_traj;
-        struct debug_data_s debug_data;
+        struct follow_path_data_s follow_path_data;
         struct mavlink_stats_s mav_stats;
         struct target_gps_raw_s target_gps_raw;
         struct bt_svc_in_s bt_svc_in;
@@ -1052,7 +1052,7 @@ int sdlog2_thread_main(int argc, char *argv[])
 			// TODO! Consider merging two trajectory messages
 			struct log_EXTJ_s log_EXTJ;
 			struct log_LOTJ_s log_LOTJ;
-            struct log_DEBUGD_s log_DEBUGD;
+            struct log_FOLPATH_s log_FOLPATH;
 			struct log_GPRE_s log_GPRE;
 			struct log_GNEX_s log_GNEX;
 			struct log_MVRX_s log_MVRX;
@@ -1105,7 +1105,7 @@ int sdlog2_thread_main(int argc, char *argv[])
 		int target_pos_sub;
 		int external_trajectory_sub;
 
-        int debug_data_sub;
+        int follow_path_data_sub;
         int mav_rx_sub;
         int mav_tx_sub;
         int local_trajectory_sub;
@@ -1158,7 +1158,7 @@ int sdlog2_thread_main(int argc, char *argv[])
 	// External reported trajectory, that was received trough Mavlink
 	LOG_ORB_PARAM_SUBSCRIBE(subs.external_trajectory_sub, ORB_ID(external_trajectory), "SDLOG_M_EXTRAJ", sub_freq)
 
-	LOG_ORB_PARAM_SUBSCRIBE(subs.debug_data_sub, ORB_ID(debug_data), "SDLOG_M_DEBUGD", sub_freq)
+	LOG_ORB_PARAM_SUBSCRIBE(subs.follow_path_data_sub, ORB_ID(follow_path_data), "SDLOG_M_FOLPATH", sub_freq)
 	LOG_ORB_PARAM_SUBSCRIBE(subs.mav_rx_sub, ORB_ID(mavlink_receive_stats), "SDLOG_M_MAVRX", sub_freq)
 	LOG_ORB_PARAM_SUBSCRIBE(subs.mav_tx_sub, ORB_ID(mavlink_transmit_stats), "SDLOG_M_MAVTX", sub_freq)
 
@@ -1883,13 +1883,30 @@ int sdlog2_thread_main(int argc, char *argv[])
 		}
 
 
-		if (copy_if_updated(ORB_ID(debug_data), subs.debug_data_sub, &buf.debug_data)) {
+		if (copy_if_updated(ORB_ID(follow_path_data), subs.follow_path_data_sub, &buf.follow_path_data)) {
 
-			log_msg.msg_type = LOG_DEBUGD_MSG;
-            for (int i=0;i<8;i++)
-                log_msg.body.log_DEBUGD.val[i] = buf.debug_data.val[i];
+			log_msg.msg_type = LOG_FOLPATH_MSG;
 
-            LOGBUFFER_WRITE_AND_COUNT(DEBUGD);
+            log_msg.body.log_FOLPATH.dst_i = buf.follow_path_data.dst_i;
+            log_msg.body.log_FOLPATH.dst_p = buf.follow_path_data.dst_p;
+            log_msg.body.log_FOLPATH.dst_d = buf.follow_path_data.dst_d;
+
+            log_msg.body.log_FOLPATH.vel = buf.follow_path_data.vel;
+            log_msg.body.log_FOLPATH.point_count = buf.follow_path_data.point_count;
+
+            log_msg.body.log_FOLPATH.dst_to_gate = buf.follow_path_data.dst_to_gate;
+            log_msg.body.log_FOLPATH.dst_to_tunnel_middle = buf.follow_path_data.dst_to_tunnel_middle;
+
+            log_msg.body.log_FOLPATH.fx = buf.follow_path_data.fx;
+            log_msg.body.log_FOLPATH.fy = buf.follow_path_data.fy;
+            log_msg.body.log_FOLPATH.fz = buf.follow_path_data.fz;
+
+            log_msg.body.log_FOLPATH.sx = buf.follow_path_data.sx;
+            log_msg.body.log_FOLPATH.sy = buf.follow_path_data.sy;
+            log_msg.body.log_FOLPATH.sz = buf.follow_path_data.sz;
+
+            LOGBUFFER_WRITE_AND_COUNT(FOLPATH);
+
 		}
 
 		if (copy_if_updated(ORB_ID(mavlink_receive_stats), subs.mav_rx_sub, &buf.mav_stats)) {

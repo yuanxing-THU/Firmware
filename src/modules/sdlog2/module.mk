@@ -40,7 +40,6 @@ MODULE_COMMAND  = sdlog2
 MODULE_PRIORITY = "SCHED_PRIORITY_MAX-30"
 
 SRCS = sdlog2.c logbuffer.c \
-       debug_data_log.cpp \
        directory.c \
 # END OF SRCS
 

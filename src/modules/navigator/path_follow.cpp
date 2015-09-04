@@ -20,6 +20,7 @@
 #include <sys/ioctl.h>
 #include <systemlib/err.h>
 #include <uORB/topics/external_trajectory.h>
+#include <uORB/topics/follow_path_data.h>
 #include "navigator.h"
 #include "path_follow.hpp"
 
@@ -40,7 +41,8 @@ PathFollow::PathFollow(Navigator *navigator, const char *name):
         _vel_lpf(0.1),
         _fp_p_last(0.0f),
         _last_dpos_t(0.0f),
-        _last_tpos_t(0.0f)
+        _last_tpos_t(0.0f),
+        _follow_path_data_pub(-1)
         {
 }
 PathFollow::~PathFollow() {
@@ -225,6 +227,7 @@ void PathFollow::on_active() {
 
     _navigator->set_position_setpoint_triplet_updated();
 
+    log();
 }
 
 void PathFollow::execute_vehicle_command() {
@@ -393,10 +396,10 @@ float PathFollow::calculate_desired_velocity() {
     if (!_has_been_in_range)
         _fp_i = 0.0;
 
-    float vel_new =_fp_i * fp_i_coif + _fp_p * fp_p_coif + _fp_d * fp_d_coif;
+    _vel_new =_fp_i * fp_i_coif + _fp_p * fp_p_coif + _fp_d * fp_d_coif;
 
     // Let's prevent drone going backwards.
-    if (!_drone_is_going_backwards && vel_new < 0.0f && _drone_speed_d > 0.0f) {
+    if (!_drone_is_going_backwards && _vel_new < 0.0f && _drone_speed_d > 0.0f) {
         _drone_is_going_backwards = true;
 
         going_bckw_st(0) = _drone_local_pos.x;
@@ -404,29 +407,25 @@ float PathFollow::calculate_desired_velocity() {
 
     }
 
-    if (_drone_is_going_backwards && vel_new > 1.0f){
+    if (_drone_is_going_backwards && _vel_new > 1.0f){
         _drone_is_going_backwards = false;
     }
 
     if (_drone_is_going_backwards) {
 
-        if (vel_new < -1.0f)
-            vel_new = -1.0f;
+        if (_vel_new < -1.0f)
+            _vel_new = -1.0f;
 
         if (!(going_bckw_st(0) == _drone_local_pos.x && going_bckw_st(1) == _drone_local_pos.y) &&
                 euclidean_distance(going_bckw_st(0), going_bckw_st(1), _drone_local_pos.x, _drone_local_pos.y)> _parameters.pafol_backward_distance_limit )
         {
-            vel_new = 0.0f;
+            _vel_new = 0.0f;
 
             if (_fp_i < -10.0f)
                 _fp_i = -10.0f;
         }
 
     }
-
-    dd_log.log(0,_fp_i);
-    dd_log.log(1,_fp_p);
-    dd_log.log(2,_fp_d);
 
     // mavlink_log_info(_mavlink_fd, "i:%.3f, p:%.3f d:%.3f", (double)fp_d_coif, (double)fp_p_coif, (double)fp_i_coif);
     // mavlink_log_info(_mavlink_fd, "dst:%.3f, fp_i:%.3f fp_d:%.3f, ad:%.3f", (double)dst_to_optimal, (double)_fp_i, (double)_fp_d);
@@ -435,7 +434,7 @@ float PathFollow::calculate_desired_velocity() {
 
     _calc_vel_pid_t_prev = t;
 
-    return vel_new;
+    return _vel_new;
 }
 
 
@@ -505,10 +504,6 @@ float PathFollow::calculate_current_distance() {
             full_distance = rate_a * distance_a  + rate_b * distance_b +
                             _trajectory_distance +
                             euclidean_distance(_latest_added_tp.x, _latest_added_tp.y, target_lpos(0), target_lpos(1));
-
-            // dd_log.log(5,distance_a);
-            // dd_log.log(6,distance_b);
-            // dd_log.log(7,rate_a);
 
         }
 
@@ -670,7 +665,6 @@ PathFollow::calculate_desired_z() {
             if (rate_done < 0.0f) rate_done = 0.0f;
             ret_z = _z_start + ( _z_goal - _z_start) * rate_done;
 
-            dd_log.log(3,_dst_to_gate);
 
         // Follow target - no trajectory points
         } else {
@@ -683,15 +677,7 @@ PathFollow::calculate_desired_z() {
             if (rate_done < 0.0f) rate_done = 0.0f;
             ret_z = _z_start + (_target_local_pos.z - _z_start) * rate_done;
 
-            dd_log.log(3,2);
         }
-
-        dd_log.log(4,length_full);
-
-        dd_log.log(5,length_left);
-        dd_log.log(6,rate_done);
-        dd_log.log(7,ret_z);
-
 
         //mavlink_log_info(_mavlink_fd, "zs:%.3f, zg:%.3f rz:%.3f, ll:%.3f", (double)_z_start, (double)_z_goal, (double)ret_z, (double)length_left);
 
@@ -724,3 +710,45 @@ PathFollow::calculate_alt_values(bool tp_just_reached){
 
 }
 
+void
+PathFollow::log(){
+
+    follow_path_data_s fpd;
+
+    fpd.dst_i = _fp_i;
+    fpd.dst_p = _fp_p;
+    fpd.dst_d = _fp_d;
+
+    fpd.vel = _vel_new;
+
+    fpd.dst_to_gate = _dst_to_gate;
+    fpd.dst_to_tunnel_middle = _dst_to_tunnel_middle;
+
+    fpd.point_count = int(_traj_point_queue.get_value_count()) + int(_first_tp_flag) + int(_second_tp_flag);
+
+    if (_first_tp_flag) {
+        fpd.fx = _first_tp.x;
+        fpd.fy = _first_tp.y;
+        fpd.fz = _first_tp.z;
+    } else {
+        fpd.fx = 0.0f;
+        fpd.fy = 0.0f;
+        fpd.fz = 0.0f;
+    }
+
+    if (_second_tp_flag) {
+        fpd.sx = _second_tp.x;
+        fpd.sy = _second_tp.y;
+        fpd.sz = _second_tp.z;
+    } else {
+        fpd.sx = 0.0f;
+        fpd.sy = 0.0f;
+        fpd.sz = 0.0f;
+    }
+     
+    if (_follow_path_data_pub == -1)
+        _follow_path_data_pub = orb_advertise(ORB_ID(follow_path_data), &fpd);
+    else
+        orb_publish(ORB_ID(follow_path_data), _follow_path_data_pub, &fpd);
+
+}

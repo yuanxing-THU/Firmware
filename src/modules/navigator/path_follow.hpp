@@ -6,7 +6,6 @@
 // TODO! Consider migrating this class elsewhere
 #include <containers/Queue.hpp>
 #include <mathlib/math/filter/LowPassFilter.hpp>
-#include <sdlog2/debug_data_log.cpp>
 #include <uORB/topics/vehicle_local_position.h>
 
 #include "navigator_mode.h"
@@ -89,8 +88,6 @@ private:
     float _starting_z;
     float _vertical_offset;
 
-    debug_data_log dd_log;
-
 	struct vehicle_global_position_s *_drone_global_pos;
     struct vehicle_local_position_s _drone_local_pos;
 
@@ -147,6 +144,10 @@ private:
 
     bool _tp_just_reached;
 
+    int _follow_path_data_pub;
+
+    float _vel_new;
+
 	// Updates saved trajectory and trajectory distance with a new point
 	void update_traj_point_queue();
 
@@ -177,5 +178,8 @@ private:
     inline void calculate_dst_to_gate();
     // Calculate needed values for calculating altitude in the next trajectory segment
     inline void calculate_alt_values(bool tp_just_reached);
+
+    void log();
+
 
 };

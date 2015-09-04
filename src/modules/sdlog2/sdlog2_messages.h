@@ -492,10 +492,28 @@ struct log_GNEX_s {
 };
 
 
-/* --- DEBUG DATA --- */
-#define LOG_DEBUGD_MSG 69
-struct log_DEBUGD_s {
-    float val[8];
+/* ---  FOLPATH --- */
+#define LOG_FOLPATH_MSG 69
+struct log_FOLPATH_s {
+
+    float dst_i;
+    float dst_p;
+    float dst_d;
+
+    float vel;
+    float point_count;
+    
+    float dst_to_gate;
+    float dst_to_tunnel_middle;
+
+    float fx;
+    float fy;
+    float fz;
+
+    float sx;
+    float sy;
+    float sz;
+
 };
 
 #include <uORB/topics/mavlink_stats.h>
@@ -622,7 +640,7 @@ static const struct log_format_s log_formats[] = {
 	LOG_FORMAT(WIND, "ffff",	"X,Y,CovX,CovY"),
 	LOG_FORMAT(TPOS, "BQLLffffff", "SysID,Time,Lat,Lon,Alt,VelN,VelE,VelD,EPH,EPV"),
 	LOG_FORMAT(EXTJ, "BBQLLffffff", "Type,SysID,Time,Lat,Lon,Alt,RAlt,VelN,VelE,VelD,Head"),
-	LOG_FORMAT(DEBUGD, "ffffffff", "val0,val1,val2,val3,val4,val5,val6,val7"),
+	LOG_FORMAT(FOLPATH, "fffffffffffff", "I,P,D,Vel,PointCo,DstToGate,DstToTraj,fx,fy,fz,sx,sy,sz"),
 	LOG_FORMAT(LOTJ, "BQLLffffff", "Type,Time,Lat,Lon,Alt,RAlt,VelN,VelE,VelD,Head"),
 	LOG_FORMAT(GPRE, "BLLfB",		"NavState,Lat,Lon,Alt,Type"),
 	LOG_FORMAT(GNEX, "BLLfB",		"NavState,Lat,Lon,Alt,Type"),
