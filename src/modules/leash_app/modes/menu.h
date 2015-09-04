@@ -97,7 +97,7 @@ protected:
     int current_activity;
     Activity::ParamChangeManager * activity_param;
 
-    void buildActivityParams(bool switching_from_prev_entry = false);
+    void buildActivityParams();
 
     /*
      * Descr:  processing activity menu from hard-coded enum

@@ -293,7 +293,7 @@ void Menu::buildActivityMenu()
     }
 }
 
-void Menu::buildActivityParams(bool switching_from_prev_entry)
+void Menu::buildActivityParams()
 {
     DataManager *dm = DataManager::instance();
 
@@ -449,12 +449,7 @@ Base* Menu::makeAction()
             break;
 
         case MENUENTRY_GENERATED:
-            buildActivityParams();
-            showEntry();
-            break;
-
         case MENUENTRY_CUR_ACTIVITY:
-            buildActivityMenu();
             showEntry();
             break;
 
@@ -584,8 +579,7 @@ void Menu::showEntry()
     const char *presetName = entries[currentEntry].text;
     if (currentEntry == MENUENTRY_GENERATED)
     {
-        bool switching_from_prev_entry = true;
-        buildActivityParams(switching_from_prev_entry);
+        buildActivityParams();
     }
     else if (currentEntry == MENUENTRY_CUR_ACTIVITY)
     {
