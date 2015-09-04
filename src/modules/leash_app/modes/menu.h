@@ -93,6 +93,7 @@ protected:
     void backToCustomize(bool);
 
     /* === ACTIVITIES === */
+    char customText[LEASHDISPLAY_TEXT_SIZE];
     int current_activity;
     Activity::ParamChangeManager * activity_param;
 

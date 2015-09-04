@@ -39,6 +39,7 @@ class __EXPORT ActivityChangeManager {
     public:
 
         bool get_display_name(char* buffer, int buffer_len);
+        int get_current_activity();
 
         ParamChangeManager * get_next_visible_param();
         ParamChangeManager * get_prev_visible_param();

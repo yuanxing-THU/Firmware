@@ -182,7 +182,7 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     Menu::MENUENTRY_ACTION, 
     Menu::MENUENTRY_ACTION,
     Menu::MENUENTRY_ACTION, 
-    Menu::MENUENTRY_ACTION,
+    Menu::MENUENTRY_CUSTOMIZE,
     Menu::MENUENTRY_CUSTOMIZE,
 },
 {
@@ -253,7 +253,6 @@ Menu::Menu() :
         };
         makeMenu(modes, sizeof(modes)/sizeof(int));
         newMode = modes[0];
-        //current_activity = dm->activityManager.get_current_activity();
     }
     else
     {
@@ -265,6 +264,7 @@ Menu::Menu() :
         makeMenu(modes, sizeof(modes)/sizeof(int));
         newMode = modes[0];
 
+        current_activity = dm->activityManager.get_current_activity();
         activity_param = dm->activityManager.get_current_param();
         dm->activityManager.get_display_name(currentPresetName, sizeof(currentPresetName)/sizeof(char));
         DOG_PRINT("[menu] current activity name %s\n", currentPresetName);
@@ -290,9 +290,6 @@ void Menu::buildActivityMenu()
             current_activity = ACTIVITY_MAX-1;
         }
     }
-    const char *presetName = entries[currentEntry].text;
-    DisplayHelper::showMenu(entries[currentEntry].menuButtons, entries[currentEntry].menuType,
-                            0, presetName, nullptr, current_activity);
 }
 
 void Menu::buildActivityParams(bool switching_from_prev_entry)
@@ -301,7 +298,6 @@ void Menu::buildActivityParams(bool switching_from_prev_entry)
 
     char c_name[19];
     char c_value[10];
-    char result[LEASHDISPLAY_TEXT_SIZE];
 
     activity_param->get_display_name(c_name, sizeof(c_name)/sizeof(char));
     activity_param->get_display_value(c_value, sizeof(c_value)/sizeof(char));
@@ -320,27 +316,20 @@ void Menu::buildActivityParams(bool switching_from_prev_entry)
         activity_param->save_value();
         backToCustomize(false);
     }
-    else if (key_pressed(BTN_RIGHT)) //Don't switch param if comming from prev entry
+    else if (key_pressed(BTN_RIGHT))
     {
         activity_param = dm->activityManager.get_next_visible_param();
         activity_param->get_display_value(c_value, sizeof(c_value)/sizeof(char));
         activity_param->get_display_name(c_name, sizeof(c_name)/sizeof(char));
     }
-    else if (key_pressed(BTN_LEFT)) //Don't switch param if comming from prev entry
+    else if (key_pressed(BTN_LEFT))
     {
         activity_param = dm->activityManager.get_prev_visible_param();
         activity_param->get_display_value(c_value, sizeof(c_value)/sizeof(char));
         activity_param->get_display_name(c_name, sizeof(c_name)/sizeof(char));
     }
 
-    if (currentEntry == MENUENTRY_GENERATED) //If not - we switched entry with Right/Left
-    {
-        const char *presetName = entries[currentEntry].text;
-
-        snprintf(result, sizeof(result), "%s\n%s", c_name, c_value);
-        DisplayHelper::showMenu(entries[currentEntry].menuButtons, entries[currentEntry].menuType,
-                                0, presetName, result);
-    }
+    snprintf(&customText[0], sizeof(customText), "%s\n%s", c_name, c_value);
 
 }
 
@@ -460,10 +449,12 @@ Base* Menu::makeAction()
 
         case MENUENTRY_GENERATED:
             buildActivityParams();
+            showEntry();
             break;
 
         case MENUENTRY_CUR_ACTIVITY:
             buildActivityMenu();
+            showEntry();
             break;
 
         case MENUENTRY_FOLLOW:
@@ -589,6 +580,7 @@ Base* Menu::makeAction()
 
 void Menu::showEntry()
 {
+    const char *presetName = entries[currentEntry].text;
     if (currentEntry == MENUENTRY_GENERATED)
     {
         bool switching_from_prev_entry = true;
@@ -598,19 +590,16 @@ void Menu::showEntry()
     {
         buildActivityMenu();
     }
-    else
+
+    if (presetName == nullptr)
     {
-        const char *presetName = entries[currentEntry].text;
-
-        if (presetName == nullptr)
-        {
-            presetName = currentPresetName;
-        }
-
-        printf("presetName %s\n", presetName);
-        DisplayHelper::showMenu(entries[currentEntry].menuButtons, entries[currentEntry].menuType,
-                                entries[currentEntry].menuValue, presetName);
+        presetName = currentPresetName;
     }
+
+    printf("presetName %s\n", presetName);
+    printf("customText %s currentActivity %d\n", customText, current_activity);
+    DisplayHelper::showMenu(entries[currentEntry].menuButtons, entries[currentEntry].menuType,
+                            entries[currentEntry].menuValue, presetName, customText, current_activity);
 }
 
 Base* Menu::switchEntry(int newEntry)
@@ -644,10 +633,12 @@ void Menu::backToCustomize(bool yes)
     if (yes)
     {
         entries[MENUENTRY_GENERATED].back = MENUENTRY_CUSTOMIZE;
+        entries[MENUENTRY_GENERATED].ok = MENUENTRY_CUSTOMIZE;
     }
     else
     {
         entries[MENUENTRY_GENERATED].back = MENUENTRY_SAVE;
+        entries[MENUENTRY_GENERATED].ok = MENUENTRY_SAVE;
     }
 }
 

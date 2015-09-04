@@ -257,6 +257,11 @@ ActivityChangeManager::get_next_visible_param(){
 }
 
 
+int
+ActivityChangeManager::get_current_activity(){
+    return activity;
+}
+
 ParamChangeManager *
 ActivityChangeManager::get_current_param(){
 

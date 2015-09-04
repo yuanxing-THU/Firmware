@@ -22,6 +22,7 @@ enum DrawMode
     DrawMode_LeftTop,
 };
 
+static void giveActivityParams(int activity, int *imageId, const char **text = nullptr);
 static void drawText(int mode, struct TextInfo *text, int rowCount, int yc, int xc, int *yStart = nullptr)
 {
     int height = 0;
@@ -399,49 +400,7 @@ void Screen::showMenu(int buttons, int type, int value, const char *presetName, 
             break;
 
         case MENUTYPE_SELECTED_ACTIVITY:
-            switch(activity)
-            {
-                case ACTIVITY_SKI:
-                    imageId = IMAGE_SCREENS_ICONS_SKI;
-                    text = "Ski";
-                    break;
-                case ACTIVITY_SNOWBOARD:
-                    imageId = IMAGE_SCREENS_ICONS_SNOW;
-                    text = "Snow";
-                    break;
-                case ACTIVITY_SURF:
-                    imageId = IMAGE_SCREENS_ICONS_SURF;
-                    text = "Surf";
-                    break;
-                case ACTIVITY_CUSTOM:
-                    imageId = IMAGE_SCREENS_ICONS_CUSTOM;
-                    text = "Custom";
-                    break;
-                case ACTIVITY_TEST:
-                    imageId = IMAGE_SCREENS_ICONS_TEST;
-                    text = "Test";
-                    break;
-                case ACTIVITY_WAKE:
-                    imageId = IMAGE_SCREENS_ICONS_WAKE;
-                    text = "Wake";
-                    break;
-                case ACTIVITY_BIKE:
-                    imageId = IMAGE_SCREENS_ICONS_BIKE;
-                    text = "Bike";
-                    break;
-                case ACTIVITY_CYCLE:
-                    imageId = IMAGE_SCREENS_ICONS_CYCLE;
-                    text = "Cycle";
-                    break;
-                case ACTIVITY_SKATE:
-                    imageId = IMAGE_SCREENS_ICONS_SKATE;
-                    text = "Skate";
-                    break;
-                case ACTIVITY_KITE:
-                    imageId = IMAGE_SCREENS_ICONS_KITE;
-                    text = "Kite";
-                    break;
-            }
+            giveActivityParams(activity, &imageId, &text);
             break;
 
         case MENUTYPE_PAIRING:
@@ -456,7 +415,7 @@ void Screen::showMenu(int buttons, int type, int value, const char *presetName, 
 
         case MENUTYPE_CALIBRATION_AIRDOG:
             imageId = IMAGE_SCREENS_ICONS_CALIBRATE_DOG;
-            text = "Airdog calib";
+            text = "AirDog calib";
             break;
 
         case MENUTYPE_COMPASS:
@@ -480,7 +439,7 @@ void Screen::showMenu(int buttons, int type, int value, const char *presetName, 
             break;
 
         case MENUTYPE_CUSTOMIZE:
-            label = presetName;
+            giveActivityParams(activity, &imageId);
             text = "Customize";
             break;
 
@@ -636,7 +595,7 @@ void Screen::showInfo(int info, int error)
             text[0].font = &Font::LucideGrandeMed;
             text[1].text = "Turn on your";
             text[1].font = &Font::LucideGrandeSmall;
-            text[2].text = "airdog";
+            text[2].text = "AirDog";
             text[2].font = &Font::LucideGrandeSmall;
             break;
 
@@ -654,7 +613,7 @@ void Screen::showInfo(int info, int error)
             text[0].font = &Font::LucideGrandeSmall;
             text[1].text = "Move closer to";
             text[1].font = &Font::LucideGrandeTiny;
-            text[2].text = "airdog";
+            text[2].text = "AirDog";
             text[2].font = &Font::LucideGrandeTiny;
             break;
 
@@ -690,7 +649,7 @@ void Screen::showInfo(int info, int error)
         case INFO_CALIBRATING_AIRDOG:
             text[0].text = "Calibrate";
             text[0].font = &Font::LucideGrandeMed;
-            text[1].text = "Airdog";
+            text[1].text = "AirDog";
             text[1].font = &Font::LucideGrandeSmall;
             text[2].text = "Press OK";
             text[2].font = &Font::LucideGrandeSmall;
@@ -701,7 +660,7 @@ void Screen::showInfo(int info, int error)
             text[0].font = &Font::LucideGrandeMed;
             text[1].text = "Long press pairing";
             text[1].font = &Font::LucideGrandeTiny;
-            text[2].text = "button on airdog";
+            text[2].text = "button on AirDog";
             text[2].font = &Font::LucideGrandeTiny;
             break;
 
@@ -718,7 +677,7 @@ void Screen::showInfo(int info, int error)
             break;
 
         case INFO_ACQUIRING_GPS_AIRDOG:
-            text[0].text = "Airdog";
+            text[0].text = "AirDog";
             text[0].font = &Font::LucideGrandeSmall;
             text[1].text = "Acquiring GPS";
             text[1].font = &Font::LucideGrandeSmall;
@@ -844,4 +803,55 @@ void Screen::showList(LeashDisplay_Lines lines, int lineCount)
     }
 
     drawText(DrawMode_LeftTop, text, lineCount, 5, 1);
+}
+
+/*
+ * author:  Max
+ * descr:   modifies imageId and activity text to fit current activity
+ */
+static void giveActivityParams(int activity, int *imageId, const char **text)
+{
+    switch(activity)
+    {
+        case ACTIVITY_SKI:
+            *imageId = IMAGE_SCREENS_ICONS_SKI;
+            *text = "Ski";
+            break;
+        case ACTIVITY_SNOWBOARD:
+            *imageId = IMAGE_SCREENS_ICONS_SNOW;
+            *text = "Snow";
+            break;
+        case ACTIVITY_SURF:
+            *imageId = IMAGE_SCREENS_ICONS_SURF;
+            *text = "Surf";
+            break;
+        case ACTIVITY_CUSTOM:
+            *imageId = IMAGE_SCREENS_ICONS_CUSTOM;
+            *text = "Custom";
+            break;
+        case ACTIVITY_TEST:
+            *imageId = IMAGE_SCREENS_ICONS_TEST;
+            *text = "Test";
+            break;
+        case ACTIVITY_WAKE:
+            *imageId = IMAGE_SCREENS_ICONS_WAKE;
+            *text = "Wake";
+            break;
+        case ACTIVITY_BIKE:
+            *imageId = IMAGE_SCREENS_ICONS_BIKE;
+            *text = "Bike";
+            break;
+        case ACTIVITY_CYCLE:
+            *imageId = IMAGE_SCREENS_ICONS_CYCLE;
+            *text = "Cycle";
+            break;
+        case ACTIVITY_SKATE:
+            *imageId = IMAGE_SCREENS_ICONS_SKATE;
+            *text = "Skate";
+            break;
+        case ACTIVITY_KITE:
+            *imageId = IMAGE_SCREENS_ICONS_KITE;
+            *text = "Kite";
+            break;
+    }
 }
