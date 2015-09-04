@@ -580,11 +580,12 @@ void Screen::showMenu(int buttons, int type, int value, const char *presetName, 
     (void)value;
 }
 
-void Screen::showInfo(int info, int error)
+void Screen::showInfo(int info, int error, int leashBattery)
 {
     const int rowCount = 4;
     struct TextInfo text[rowCount];
     char buffer[60]; // buffer for error message
+
 
     memset(text, 0, sizeof(text));
 
@@ -781,7 +782,32 @@ void Screen::showInfo(int info, int error)
             break;
     }
 
-    drawText(DrawMode_CenterXY, text, rowCount, 32, 0);
+    drawText(DrawMode_CenterXY, text, rowCount, 36, 0);
+
+    BitmapBlock blockBattery(108, 0, IMAGE_SCREENS_BATTERY);
+    blockBattery.draw();
+
+    BitmapBlock blockBatterySegment(110, 2, IMAGE_SCREENS_BATTERY_SEGMENT);
+    if (leashBattery >=20)
+    {
+        blockBatterySegment.draw();
+        blockBatterySegment.x += 4;
+    }
+    if (leashBattery >=40)
+    {
+        blockBatterySegment.draw();
+        blockBatterySegment.x += 4;
+    }
+    if (leashBattery >=60)
+    {
+        blockBatterySegment.draw();
+        blockBatterySegment.x += 4;
+    }
+    if (leashBattery >=80)
+    {
+        blockBatterySegment.draw();
+        blockBatterySegment.x += 4;
+    }
 }
 
 void Screen::showList(LeashDisplay_Lines lines, int lineCount)

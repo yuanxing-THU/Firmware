@@ -137,7 +137,8 @@ static int leash_display_thread_main(int argc, char *argv[])
                     dm.clearAwaitMask();
                     dm.awaitMask[FD_LeashDisplay] = true;
 
-                    Screen::showInfo(dm.leash_display.infoId, dm.leash_display.infoError);
+                    lb = leash_convert_voltage_to_percent(dm.system_power.voltage5V_v);
+                    Screen::showInfo(dm.leash_display.infoId, dm.leash_display.infoError, lb);
                     break;
 
                 case LEASHDISPLAY_LIST:
@@ -179,7 +180,8 @@ static int leash_display_thread_main(int argc, char *argv[])
                     break;
 
                 case LEASHDISPLAY_INFO:
-                    Screen::showInfo(dm.leash_display.infoId, dm.leash_display.infoError);
+                    lb = leash_convert_voltage_to_percent(dm.system_power.voltage5V_v);
+                    Screen::showInfo(dm.leash_display.infoId, dm.leash_display.infoError, lb);
                     break;
 
                 case LEASHDISPLAY_LIST:
