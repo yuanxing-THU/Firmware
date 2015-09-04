@@ -41,3 +41,26 @@ mtd: Flash Geometry:
 OK
 nsh>
 ```
+
+
+#### IO chip
+
+```sh
+nsh> sh /etc/extras/px4io
+---
+test -f /etc/extras/px4io-v2_default.bin
+px4io forceupdate 14662 /etc/extras/px4io-v2_default.bin
+px4io: px4io is not started, still attempting upgrade
+[PX4IO] using firmware from /etc/extras/px4io-v2_default.bin
+[PX4IO] bad sync 0xff,0xff
+[PX4IO] found bootloader revision: 4
+[PX4IO] erase...
+[PX4IO] programming 57372 bytes...
+[PX4IO] verify...
+[PX4IO] update complete
+px4io checkcrc /etc/extras/px4io-v2_default.bin
+CRCs match
+===
+OK
+nsh>
+```

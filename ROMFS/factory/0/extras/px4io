@@ -1,0 +1,25 @@
+set R FAIL
+
+echo ---
+
+set IO_FILE /etc/extras/px4io-v2_default.bin
+
+echo test -f $IO_FILE
+if test -f $IO_FILE
+then
+	echo px4io forceupdate 14662 $IO_FILE
+	if px4io forceupdate 14662 $IO_FILE
+	then
+		sleep 3
+
+		echo px4io checkcrc $IO_FILE
+		if px4io checkcrc $IO_FILE
+		then
+			set R OK
+		fi
+	fi
+fi
+
+echo ===
+
+echo $R
