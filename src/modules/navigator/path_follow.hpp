@@ -66,10 +66,6 @@ private:
 	bool _inited;
 
 
-    bool _first_tp_flag = false;
-    bool _second_tp_flag = false;
-
-    bool _has_been_in_range = false;
 
     buffer_point_s _second_tp;
     buffer_point_s _first_tp;
@@ -147,6 +143,11 @@ private:
     int _follow_path_data_pub;
 
     float _vel_new;
+
+    bool _first_tp_flag;
+    bool _second_tp_flag;
+
+    bool _follow_path_startup;
 
 	// Updates saved trajectory and trajectory distance with a new point
 	void update_traj_point_queue();

@@ -42,7 +42,10 @@ PathFollow::PathFollow(Navigator *navigator, const char *name):
         _fp_p_last(0.0f),
         _last_dpos_t(0.0f),
         _last_tpos_t(0.0f),
-        _follow_path_data_pub(-1)
+        _follow_path_data_pub(-1),
+        _first_tp_flag(false),
+        _second_tp_flag(false),
+        _follow_path_startup(true)
         {
 }
 PathFollow::~PathFollow() {
@@ -78,7 +81,7 @@ void PathFollow::on_activation() {
     update_drone_pos();
     update_target_pos();
 
-    _has_been_in_range = false;
+    _follow_path_startup = true;
 
 	_mavlink_fd = _navigator->get_mavlink_fd();
     _optimal_distance = _parameters.pafol_optimal_dist;
@@ -120,6 +123,18 @@ void PathFollow::on_activation() {
     _trajectory_distance = 0.0f;
     _first_tp_flag = false;
     _second_tp_flag = false;
+
+    _fp_i = 0.0f;
+    _fp_p = 0.0f;
+    _fp_d = 0.0f;
+    _fp_d_lpf.reset(0.0f);
+
+    _fp_p_last = 0.0f;
+
+    _calc_vel_pid_t_prev = 0;
+
+    _last_dpos_t = 0;
+    _last_tpos_t = 0;
 
 	update_traj_point_queue();
 
@@ -213,6 +228,7 @@ void PathFollow::on_active() {
         _second_tp_flag = false;
 
     }
+
 
     pos_sp_triplet->current.type = SETPOINT_TYPE_VELOCITY;
 
@@ -341,14 +357,11 @@ float PathFollow::calculate_desired_velocity() {
 
     float current_distance = calculate_current_distance();
 
-
     float dst_to_optimal = current_distance - _optimal_distance;
 
-    if (!_has_been_in_range && (dst_to_optimal <= 2.0f || _time_passed > 10.0f)) {
-        _has_been_in_range = true; 
+    if (_follow_path_startup && (dst_to_optimal <= 2.0f || _fp_d > 1.0f )) {
+        _follow_path_startup = false; 
     }
-
-    //mavlink_log_info(_mavlink_fd, "_has_been_in_range:%f tp:%.3f", (double)_has_been_in_range, (double)_time_passed);
 
     float fp_i_coif = _parameters.pafol_vel_i;
     float fp_p_coif = _parameters.pafol_vel_p;
@@ -392,11 +405,16 @@ float PathFollow::calculate_desired_velocity() {
     if (_fp_i>_parameters.pafol_vel_i_upper_limit) _fp_i = _parameters.pafol_vel_i_upper_limit;
     if (_fp_i<_parameters.pafol_vel_i_lower_limit) _fp_i = _parameters.pafol_vel_i_lower_limit;
 
-    // Preventing aggresive startup maneuvers
-    if (!_has_been_in_range)
-        _fp_i = 0.0;
-
     _vel_new =_fp_i * fp_i_coif + _fp_p * fp_p_coif + _fp_d * fp_d_coif;
+
+    // Preventing aggresive startup maneuvers
+    if (_follow_path_startup && _vel_new > 5.0f) {
+
+        _vel_new = 5.0f;
+        _fp_i = 0.0f;
+
+    }
+
 
     // Let's prevent drone going backwards.
     if (!_drone_is_going_backwards && _vel_new < 0.0f && _drone_speed_d > 0.0f) {
@@ -678,9 +696,6 @@ PathFollow::calculate_desired_z() {
             ret_z = _z_start + (_target_local_pos.z - _z_start) * rate_done;
 
         }
-
-        //mavlink_log_info(_mavlink_fd, "zs:%.3f, zg:%.3f rz:%.3f, ll:%.3f", (double)_z_start, (double)_z_goal, (double)ret_z, (double)length_left);
-
     }
 
     return ret_z + _vertical_offset;

@@ -75,7 +75,7 @@ private:
 
     void offset_height_step(int);
     void offset_distance_step(int);
-    void offset_rotation_step(int);
+    void offset_rotation_step(int, float&);
 
     void calc_actual_angle();
     void normalize_angle(float &angle);
@@ -110,6 +110,10 @@ private:
     const float _2pi = _pi * 2.0f;
 
     struct vehicle_status_s * _vstatus;
+
+    bool _base_offset_inited;
+
+    float _front_follow_aditional_angle;
 
 };
 

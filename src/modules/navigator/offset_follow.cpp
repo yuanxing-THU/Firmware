@@ -27,7 +27,8 @@ OffsetFollow::OffsetFollow(Navigator *navigator, const char *name) :
     _rotation_speed_ms(0.0f),
     _offset_len(0.0f),
     _angle_err(0.0f),
-    _vstatus(nullptr)
+    _vstatus(nullptr),
+    _base_offset_inited(false)
 {
     updateParameters();
 }
@@ -55,7 +56,9 @@ OffsetFollow::on_activation()
 	target_pos = _navigator->get_target_position();
     _vstatus = _navigator->get_vstatus();
 
-    init_base_offset(); 
+    if (!_base_offset_inited)
+        init_base_offset(); 
+
     calc_actual_angle();
 
     _offset_goal_angle = _offset_sp_angle = _actual_angle;
@@ -110,7 +113,7 @@ OffsetFollow::on_active_front_follow() {
 
     _offset_goal_angle = atan2( target_vel(1), target_vel(0));
 
-    _offset_goal_angle += _parameters.front_follow_additional_angle;
+    _offset_goal_angle += _front_follow_aditional_angle;
 
     normalize_angle(_offset_goal_angle);
     
@@ -205,10 +208,10 @@ OffsetFollow::execute_vehicle_command_abs_follow() {
                 offset_height_step(1);
                 break;
             case REMOTE_CMD_LEFT: 
-                offset_rotation_step(-1);
+                offset_rotation_step(-1, _offset_sp_angle);
                 break;
             case REMOTE_CMD_RIGHT: 
-                offset_rotation_step(1);
+                offset_rotation_step(1, _offset_sp_angle);
                 break;
             case REMOTE_CMD_CLOSER: 
                 offset_distance_step(-1);
@@ -237,10 +240,10 @@ OffsetFollow::execute_vehicle_command_circle_around() {
                 break;
             case REMOTE_CMD_LEFT: 
 
-                _rotation_speed_ms += _parameters.offset_rot_speed_ch_cmd_step;
+                _rotation_speed_ms -= _parameters.offset_rot_speed_ch_cmd_step;
                 break;
             case REMOTE_CMD_RIGHT: 
-                _rotation_speed_ms -= _parameters.offset_rot_speed_ch_cmd_step;
+                _rotation_speed_ms += _parameters.offset_rot_speed_ch_cmd_step;
                 break;
             case REMOTE_CMD_CLOSER: 
                 offset_distance_step(-1);
@@ -268,6 +271,14 @@ OffsetFollow::execute_vehicle_command_front_follow() {
             case REMOTE_CMD_DOWN: 
                 offset_height_step(1);
                 break;
+
+            case REMOTE_CMD_LEFT: 
+                offset_rotation_step(-1, _front_follow_aditional_angle);
+                break;
+            case REMOTE_CMD_RIGHT: 
+                offset_rotation_step(1, _front_follow_aditional_angle);
+                break;
+
             case REMOTE_CMD_CLOSER: 
                 offset_distance_step(-1);
                 break;
@@ -302,12 +313,13 @@ OffsetFollow::offset_distance_step(int direction) {
 }
 
 void
-OffsetFollow::offset_rotation_step(int direction) {
+OffsetFollow::offset_rotation_step(int direction, float &angle) {
 
     printf("Rotation step\n");
+
     float alpha = _parameters.horizon_button_step / _radius;
-    _offset_sp_angle += direction * alpha;
-    normalize_angle(_offset_sp_angle);
+    angle += direction * alpha;
+    normalize_angle(angle);
 
 }
 
@@ -351,6 +363,10 @@ OffsetFollow::init_base_offset() {
     _radius = sqrt(_base_offset(0) * _base_offset(0) + _base_offset(1) * _base_offset(1));
 
     _offset_len = 1.0f;
+
+    _base_offset_inited = true;
+
+    _front_follow_aditional_angle = _parameters.front_follow_additional_angle;
 
 }
 
