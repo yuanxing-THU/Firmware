@@ -50,35 +50,27 @@ write_repr(const Device &dev, const void *buf, std::size_t buf_size)
 	}
 }
 
-template <typename InputIt, typename InputSize, typename Space, typename OuputIt>
+template <typename InputIt, typename Size, typename OuputIt>
 OuputIt
-repr_n(InputIt first, InputSize n, const Space space, OuputIt out)
+repr_n(InputIt first, Size n, OuputIt out)
 {
 	static_assert(sizeof(*first) == 1, "Only one byte types are suported.");
 
 	if (n > 0)
 	{
-		while (n > 1)
+		for (size_t i = 0; i < n; ++i, ++first)
 		{
-			uint8_t x = *first;
-			*out = hex_digit(x >> 4);
-			++out;
-			*out = hex_digit(x);
-			++out;
-			*out = space;
-			++out;
-
-			++first;
-			--n;
+			if ((' ' <= *first and *first < '\x80') or *first == '\t')
+				*out++ = *first;
+			else
+			{
+				*out++ = '\\';
+				*out++ = 'x';
+				*out++ = hex_digit(*first >> 4);
+				*out++ = hex_digit(*first & 0xf);
+			}
 		}
-
-		uint8_t x = *first;
-		*out = hex_digit(x >> 4);
-		++out;
-		*out = hex_digit(x);
-		++out;
 	}
 
 	return out;
 }
-
