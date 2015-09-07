@@ -5,8 +5,8 @@
 #include <poll.h>
 #include <stdio.h>
 #include <systemlib/param/param.h>
-#include <uorb/topics/vehicle_attitude.h>
-#include <uorb/uorb.h>
+#include <uORB/topics/vehicle_attitude.h>
+#include <uORB/uORB.h>
 
 #include "calibration_commons.hpp"
 
