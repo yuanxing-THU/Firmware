@@ -206,6 +206,11 @@ write_otp_stamp(const FactoryStamp & stamp, bool burn)
 	namespace F = stm32f42::flash;
 
 	constexpr size_t START_BLOCK = 0;
+	static_assert(START_BLOCK == 0,
+		"AirDog::HardwareInfo requires stamp to be at the very first block."
+		// Use for debug only with already spotted boards.
+	);
+
 	constexpr size_t SHIFT = START_BLOCK * 32;
 	uint32_t * const stamp_u32 = (uint32_t*)&stamp;
 
