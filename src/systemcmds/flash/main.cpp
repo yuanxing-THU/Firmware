@@ -113,22 +113,9 @@ decode_hex(const char str[], uint8_t buf[], size_t max_len)
 }
 
 void
-compose_board_id(board_id_t & board_id)
+compose(board_id_t & board_id)
 {
-	namespace F = stm32f42::flash;
-
-	static_assert(
-		sizeof board_id.contents.mcu_serial == sizeof F::mcu_udid,
-		"MCU serial size mismatch."
-	);
-
-	/*
-	 * Keep memory byte order despite PX4 reverses it.
-	 */
-	board_id.contents.mcu_serial[0] = F::mcu_udid[0];
-	board_id.contents.mcu_serial[1] = F::mcu_udid[1];
-	board_id.contents.mcu_serial[2] = F::mcu_udid[2];
-
+	fill_mcu_serial(board_id);
 	board_id.contents.version_hw = HELICO_VERSION_HW;
 }
 
@@ -149,7 +136,7 @@ bool
 check_board_id(const char s[])
 {
 	board_id_t board_id;
-	compose_board_id(board_id);
+	compose(board_id);
 
 	char id_str[33];
 	format_board_id(board_id, id_str);
@@ -319,7 +306,7 @@ main(const int argc, const char * const argv[])
 		usage_ok = ok = true;
 
 		board_id_t board_id;
-		compose_board_id(board_id);
+		compose(board_id);
 
 		char id_str[33];
 		format_board_id(board_id, id_str);

@@ -67,11 +67,17 @@ static_assert(offsetof(FactoryStamp, sign) == 32,
  * Functions
  */
 
+__EXPORT void
+fill_mcu_serial(board_id_t & board_id);
+
+__EXPORT void
+fill(board_id_t & board_id);
+
 __EXPORT uint32_t
 signature_key_id();
 
 __EXPORT void
-set_mcu_serial(board_id_t & board_id);
+signature_copy(uint8_t (&)[64]);
 
 }
 // end of namespace HardwareInfo
