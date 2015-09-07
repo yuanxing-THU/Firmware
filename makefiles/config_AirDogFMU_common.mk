@@ -144,6 +144,8 @@ MODULES		+= modules/uORB
 # Libraries
 #
 MODULES		+= lib/activity
+MODULES		+= lib/airdog/hwinfo
+MODULES		+= lib/stm32f4
 MODULES		+= lib/conversion
 MODULES		+= lib/geo
 MODULES		+= lib/geo_lookup

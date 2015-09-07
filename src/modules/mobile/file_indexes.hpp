@@ -15,14 +15,12 @@ enum FileCatalog : uint8_t
 {
 	INVALID,
 	ACTIVITY,
-	AUTHENTICITY,
 	PUBLIC,
 };
 
 FileCatalog
 catalog(file_index_t index)
 {
-	if (index == 0) { return FileCatalog::AUTHENTICITY; }
 	if (index == 1) { return FileCatalog::PUBLIC; }
 	if ((index >> 16) == 0x0001) { return FileCatalog::ACTIVITY; }
 	return FileCatalog::INVALID;

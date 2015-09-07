@@ -119,6 +119,15 @@ process_one_command(
 	case CMD_VERSION_FIRMWARE:
 		handle< CMD_VERSION_FIRMWARE >(f);
 		break;
+	case CMD_VERSION_HARDWARE:
+		handle< CMD_VERSION_HARDWARE >(f);
+		break;
+	case CMD_INFO_SERIAL:
+		handle< CMD_INFO_SERIAL >(f);
+		break;
+	case CMD_INFO_CERT:
+		handle< CMD_INFO_CERT >(f);
+		break;
 	case CMD_STATUS_OVERALL:
 		handle< CMD_STATUS_OVERALL >(f, status);
 		break;

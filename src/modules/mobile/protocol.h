@@ -23,6 +23,9 @@ enum {                                              // Little-endian debug
 	CMD_HANDSHAKE = CMD_AB('H', 'S'),           // 0x5348
 	CMD_BYE = CMD_AB('Y', 'E'),                 // 0x4559
 	CMD_VERSION_FIRMWARE = CMD_AB('V', 'F'),    // 0x4656
+	CMD_VERSION_HARDWARE = CMD_AB('V', 'H'),    // 0x4856
+	CMD_INFO_SERIAL = CMD_AB('I', 'S'),         // 0x5349
+	CMD_INFO_CERT = CMD_AB('I', 'C'),           // 0x4349
 	CMD_STATUS_OVERALL = CMD_AB('S', 'O'),      // 0x4559
 	CMD_ACTIVATION_READ = CMD_AB('A', 'R'),     // 0x5241
 	CMD_ACTIVATION_WRITE = CMD_AB('A', 'W'),    // 0x5741
@@ -30,7 +33,8 @@ enum {                                              // Little-endian debug
 	CMD_READ_BLOCK = CMD_AB('R', 'B'),          // 0x4252
 	CMD_WRITE_START = CMD_AB('W', 'S'),         // 0x5357
 	CMD_WRITE_BLOCK = CMD_AB('W', 'B'),         // 0x4257
-	CMD_WRITE_END = CMD_AB('W', 'E')            // 0x4557
+	CMD_WRITE_END = CMD_AB('W', 'E'),           // 0x4557
+	CMD_LOG_INDEX = CMD_AB('L', 'I'),           // 0x494c
 };
 
 #undef CMD_AB
@@ -50,6 +54,7 @@ enum {                                           // Little-endian debug
 	ERRCODE_FILE_IO_ERROR = 'O',             // 0x4f
 	ERRCODE_FILE_READONLY = 'R',             // 0x52
 	ERRCODE_FILE_WRITE_INACTIVE = 'W',       // 0x57
+	ERRCODE_OTP_ERROR = 'p',                 // 0x70
 };
 
 struct PACKED_STRUCT ReplyHeader {
@@ -66,6 +71,18 @@ struct PACKED_STRUCT HandshakeReply {
 struct PACKED_STRUCT VersionFirmwareReply {
 	uint8_t major;
 	uint8_t minor;
+};
+
+struct PACKED_STRUCT VersionHardwareReply {
+	uint8_t hw;
+	uint8_t major;
+	uint16_t minor;
+};
+
+struct PACKED_STRUCT InfoCertReply {
+	uint8_t doc[16];
+	uint8_t sig[64];
+	uint32_t cert_no;
 };
 
 struct PACKED_STRUCT StatusOverallReply {
