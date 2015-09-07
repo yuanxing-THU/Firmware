@@ -1,0 +1,17 @@
+set R FAIL
+
+echo ---
+
+echo mobile mode at
+if mobile mode at
+then
+	echo mobile firmware-version /dev/ttyS2
+	if mobile firmware-version /dev/ttyS2
+	then
+		set R OK
+	fi
+fi
+
+echo ===
+
+echo $R

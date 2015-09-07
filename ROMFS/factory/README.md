@@ -64,3 +64,22 @@ CRCs match
 OK
 nsh>
 ```
+
+
+#### BL600
+
+```sh
+nsh> sh /etc/extras/bl600
+---
+mobile mode at
+mobile firmware-version /dev/ttyS2
+0# AT I 3
+: 10    3       1.8.88.0
+: 00
+required version: 1 8 88 0
+modile's version: 1 8 88 0
+ready to work.
+===
+OK
+nsh>
+```

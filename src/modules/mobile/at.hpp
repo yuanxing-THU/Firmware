@@ -74,9 +74,9 @@ exec_AT_verbose(Device & dev, FILE * out, const char cmd[], char buffer[], size_
 
 	char repr_buffer[32];
 	constexpr size_t repr_block = sizeof repr_buffer / 4;
-	char * line;
+	char * line, * tail;
 	const char * sep = "\n\r";
-	for (line = strtok(buffer, sep); line; line = strtok(nullptr, sep))
+	for (line = strtok_r(buffer, sep, &tail); line; line = strtok_r(nullptr, sep, &tail))
 	{
 		size_t len = strlen(line);
 		size_t n;

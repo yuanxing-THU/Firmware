@@ -77,7 +77,7 @@ daemon(int argc, char *argv[])
 }
 
 static bool
-exec_all_AT(const char devname[], int argc, const char * const arg[])
+exec_all_AT(const char devname[], int argc, const char * const arg[], char buf[], size_t size)
 {
 	using namespace bl600;
 
@@ -94,18 +94,121 @@ exec_all_AT(const char devname[], int argc, const char * const arg[])
 	//DevLog log (fileno(serial), 2, "at read  ", "at write ");
 	auto & dev = log;
 
-	char buf[32];
-	memset(buf, 0, sizeof buf);
-
 	for (int i = 0; i < argc; ++i )
 	{
 		printf("%i# ", i);
 
-		ssize_t r = exec_AT_verbose(dev, stdout, arg[i], buf, sizeof buf);
+		ssize_t r = exec_AT_verbose(dev, stdout, arg[i], buf, size);
 		if (r == -1) { return false; }
 	}
 
 	return true;
+}
+
+static bool
+exec_all_AT(const char devname[], int argc, const char * const arg[])
+{
+	char buf[32];
+	memset(buf, 0, sizeof buf);
+	return exec_all_AT(devname, argc, arg, buf, sizeof buf);
+}
+
+bool
+parse_uint(const char s[], uint32_t &n, const char * & tail)
+{
+	char *p;
+	n = std::strtoul(s, &p, 0);
+	tail = p;
+	return tail != s;
+}
+
+bool
+parse_uint(const char s[], uint32_t &n)
+{
+	const char * tail = nullptr;
+	bool ok = parse_uint(s, n, tail) and tail and *tail == '\0';
+	if (not ok) { dbg("parse_uint('%s') failed.\n", s); }
+	return ok;
+}
+
+static bool
+version_firmware_parse(char destroyed_s[], unsigned (&v)[4])
+{
+	char * n, * tail;
+	const char * sep = ".\n\r";
+
+	size_t i = 0;
+	n = strtok_r(destroyed_s, sep, &tail);
+	while (n != nullptr)
+	{
+		if (not parse_uint(n, v[i])) { return false; }
+
+		++i;
+		if (i == 4) { return true; }
+
+		n = strtok_r(nullptr, sep, &tail);
+	}
+	return false;
+}
+
+static bool
+version_firmware_compare_le(const uint8_t (&min)[4], const unsigned (&ver)[4])
+{
+	bool ok;
+	ok = min[0] < ver[0]
+	 or (min[0] == ver[0] and (
+		 min[1] < ver[1]
+	     or (min[1] == ver[1] and (
+		     min[2] < ver[2]
+		 or (min[2] == ver[2] and (
+			 min[3] <= ver[3]
+		 ))
+	     ))
+	));
+	return ok;
+}
+
+static bool
+version_firmware_check(const char devname[])
+{
+	const uint8_t BL600_VERSION_FIRMWARE_MIN[] = { 1, 8, 88, 0 };
+	const char * const at_i_3[] = { "AT I 3", nullptr };
+	const char prefix[] = "10\t3\t";
+
+	unsigned v4[4];
+	char * p;
+	char buf[32];
+	memset(buf, 0, sizeof buf);
+
+	bool ok = exec_all_AT(devname, 1, at_i_3, buf, sizeof buf);
+
+	// 10\t3\tx.y.zz.q
+
+	if (ok)
+	{
+		p = strstr(buf, prefix);
+		dbg("version string: %s.\n", p);
+		ok = p != nullptr;
+	}
+
+	if (ok)
+	{
+		p += strlen(prefix);
+		ok = version_firmware_parse(p, v4);
+
+		auto & m = BL600_VERSION_FIRMWARE_MIN;
+		printf("required version: %u %u %u %u\n", m[0], m[1], m[2], m[3]);
+		printf("modile's version: %u %u %u %u\n", v4[0], v4[1], v4[2], v4[3]);
+	}
+
+	if (ok)
+	{
+		ok = version_firmware_compare_le(BL600_VERSION_FIRMWARE_MIN, v4);
+		if (ok) { printf("ready to work.\n"); }
+		else { printf("upgrade required.\n"); }
+	}
+
+	return ok;
 }
 
 static inline bool
@@ -114,15 +217,14 @@ streq(const char a[], const char b[]) { return std::strcmp(a, b) == 0; }
 static void
 usage(const char name[])
 {
-	fprintf(stderr,
-		"Usage: %s start TTY\n"
-		"       %s stop\n"
-		"       %s status\n"
-		"       %s at TTY command [command...]\n"
-		"       %s firmware-version TTY\n"
-		"\n",
-		name, name, name, name, name
-	);
+	fprintf(stderr, "Usage:\n");
+	fprintf(stderr, "\t%s start TTY\n", name);
+	fprintf(stderr, "\t%s stop\n", name);
+	fprintf(stderr, "\t%s status\n", name);
+	fprintf(stderr, "\t%s mode at|default\n", name);
+	fprintf(stderr, "\t%s at TTY command [command...]\n", name);
+	fprintf(stderr, "\t%s firmware-version TTY\n", name);
+	fprintf(stderr, "\n");
 }
 
 } // end of anonymous namespace
@@ -195,9 +297,7 @@ main(int argc, const char *argv[])
 	}
 	else if ((argc == 3 or argc == 4) and streq(argv[1], "firmware-version"))
 	{
-		static const char * const at[] = { "AT I 3", nullptr };
-		bool ok = exec_all_AT(argv[2], 1, at);
-		// 10\t3\tx.y.zz.q
+		bool ok = version_firmware_check(argv[2]);
 		if (not ok) { return 1; }
 	}
 	else
