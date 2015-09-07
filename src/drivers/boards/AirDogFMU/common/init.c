@@ -373,12 +373,18 @@ void
 bl600_init()
 {
 	stm32_configgpio(GPIO_BL600_RESET);
+#ifdef GPIO_BL600_SWDCLK
 	stm32_configgpio(GPIO_BL600_SWDCLK);
+#endif
+#ifdef GPIO_BL600_SIO_06
 	stm32_configgpio(GPIO_BL600_SIO_06);
+#endif
 	stm32_configgpio(GPIO_BL600_SIO_07);
 #ifdef GPIO_BL600_SIO_25
 	stm32_configgpio(GPIO_BL600_SIO_25);
 #endif
 	stm32_configgpio(GPIO_BL600_SIO_28);
+#ifdef GPIO_BL600_SIO_29
 	stm32_configgpio(GPIO_BL600_SIO_29);
+#endif
 }
