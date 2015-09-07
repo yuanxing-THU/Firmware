@@ -3,9 +3,8 @@
 #include "allowed_params.hpp"
 #include <initializer_list>
 #include "activity_lib_constants.h"
-#include "activity_config_list.hpp"
 
-// hose activities are predefined and should be referenced in all corresponding lists
+// These activities are predefined and should be referenced in all corresponding lists
 enum
 {
     ACTIVITY_TEST,
@@ -20,6 +19,9 @@ enum
     ACTIVITY_CUSTOM,
     ACTIVITY_MAX
 };
+
+extern const char* activityNames[];
+
 
 namespace Activity {
 

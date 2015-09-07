@@ -3,6 +3,21 @@
 
 #include "activity_config_list.hpp"
 
+const char* activityNames[] =
+{
+    "Demo",      // ACTIVITY_TEST
+    "Surf",      // ACTIVITY_SURF
+    "Ski",       // ACTIVITY_SKI
+    "Skatepark", // ACTIVITY_SKATE
+    "MTB",       // ACTIVITY_CYCLE
+    "Wakeboard", // ACTIVITY_WAKE
+    "Motocross", // ACTIVITY_BIKE
+    "Snow",      // ACTIVITY_SNOWBOARD
+    "Kiteboard", // ACTIVITY_KITE
+    "Custom",    // ACTIVITY_CUSTOM
+    nullptr      // ACTIVITY_MAX
+};
+
 namespace Activity {
 
 bool activity_config_list_inited = false;
@@ -26,8 +41,8 @@ ParamConfig::ParamConfig(const char * _name, int _limit_kind, int _target_device
 
     if (p_id == -1) {
 
-        // TODO: change to proper debug output function 
-        printf("Parameter: %s with target device type %d not allowed.\n", _name, _target_device); 
+        // TODO: change to proper debug output function
+        printf("Parameter: %s with target device type %d not allowed.\n", _name, _target_device);
         fflush(stdout);
     }
 
@@ -53,7 +68,7 @@ ParamConfig::~ParamConfig(){
     delete [] values;
 };
 
-ParamConfig& 
+ParamConfig&
 ParamConfig::operator = (const ParamConfig &a) {
 
     p_id = a.p_id;
@@ -66,7 +81,7 @@ ParamConfig::operator = (const ParamConfig &a) {
     value_num = a.value_num;
 
     default_value = a.default_value;
-    
+
     delete [] values;
     values = new float[value_num];
 
@@ -81,22 +96,22 @@ ParamConfig::ParamConfig(const ParamConfig &a) {
     *this = a;
 }
 
-const char * 
+const char *
 ParamConfig::get_name(){
     return ALLOWED_PARAMS[p_id].name;
 };
 
-param_target_device 
+param_target_device
 ParamConfig::get_target_device(){
     return ALLOWED_PARAMS[p_id].target_device;
 }
 
-const char * 
+const char *
 ParamConfig::get_param_name(){
     return ALLOWED_PARAMS[p_id].name;
 }
 
-const char * 
+const char *
 ParamConfig::get_display_name(){
     return ALLOWED_PARAMS[p_id].display_name;
 }
@@ -119,7 +134,7 @@ ActivityConfig::ActivityConfig(int _id, const char * _name, std::initializer_lis
 
     id = _id;
     name = _name;
- 
+
     param_count = _params.size();
     params = new ParamConfig[param_count];
 
@@ -135,7 +150,7 @@ ActivityConfig::~ActivityConfig() {
 }
 
 
-ActivityConfig& 
+ActivityConfig&
 ActivityConfig::operator=(ActivityConfig &&a) {
 
     id = a.id;
@@ -161,24 +176,24 @@ get_activity_param_config(int activity, int param) {
 
     for (int j=0;j<ACTIVITY_CONFIG_LIST[activity].param_count;j++){
 
-        if (param == ACTIVITY_CONFIG_LIST[activity].params[j].p_id) { 
+        if (param == ACTIVITY_CONFIG_LIST[activity].params[j].p_id) {
             return &ACTIVITY_CONFIG_LIST[activity].params[j];
-        } 
+        }
     }
-        
+
     return &ACTIVITY_CONFIG_BASE.params[param];
 }
 
-int 
+int
 init_activity_config_list(){
 
     if (activity_config_list_inited) return true;
 
     ACTIVITY_CONFIG_BASE = ActivityConfig(
-        999, 
-        "Base", 
+        999,
+        "Base",
         {
-            //           Param name           Type         Device  Default Istart Iend  Step  Values  
+            //           Param name           Type         Device  Default Istart Iend  Step  Values
             ParamConfig("A_ACTIVITY",         INVISIBLE,    ALL,    0,      -1,    -1,   -1,   {}                 ),
             ParamConfig("NAV_AFOL_MODE",      VALUES_STR,   DOG,    1,      -1,    -1,   -1,   {0,1,2,3,4}        ),
             ParamConfig("A_BSC_SAF_ACT",      VALUES_STR,   DOG,    1,      -1,    -1,   -1,   {1,2}              ),
@@ -200,19 +215,19 @@ init_activity_config_list(){
         });
 
     ACTIVITY_CONFIG_LIST[0] = ActivityConfig(
-            ACTIVITY_TEST, 
-            "Demo", 
+            ACTIVITY_TEST,
+            activityNames[ACTIVITY_TEST],
             {
-                //           Param name           Type         Device  Default Istart Iend  Step  Values  
+                //           Param name           Type         Device  Default Istart Iend  Step  Values
                 ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1,4}            ),
                 ParamConfig("A_SAH_NO_SPOT",      VALUES_STR,  DOG,    0,      -1,    -1,   -1,   {0,1}              ),
             });
 
-    ACTIVITY_CONFIG_LIST[1] = ActivityConfig( 
-            ACTIVITY_SURF, 
-            "Surf", 
+    ACTIVITY_CONFIG_LIST[1] = ActivityConfig(
+            ACTIVITY_SURF,
+            activityNames[ACTIVITY_SURF],
             {
-                //           Param name           Type         Device  Default Istart Iend  Step  Values  
+                //           Param name           Type         Device  Default Istart Iend  Step  Values
                 ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    3,      -1,    -1,   -1,   {3}                ),
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                ),
                 ParamConfig("BAT_WARN_LVL",       INVISIBLE,   DOG,    0.3f,    0,    1, 0.05f,   {}                 ),
@@ -220,10 +235,10 @@ init_activity_config_list(){
             });
 
     ACTIVITY_CONFIG_LIST[2] = ActivityConfig(
-            ACTIVITY_SKI, 
-            "Ski", 
+            ACTIVITY_SKI,
+            activityNames[ACTIVITY_SKI],
             {
-                //           Param name           Type         Device  Default Istart Iend  Step  Values  
+                //           Param name           Type         Device  Default Istart Iend  Step  Values
                 ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                 ),
                 ParamConfig("RTL_RET_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}               ),
@@ -234,9 +249,9 @@ init_activity_config_list(){
 
     ACTIVITY_CONFIG_LIST[3] = ActivityConfig(
             ACTIVITY_SKATE,
-            "Skatepark", 
+            activityNames[ACTIVITY_SKATE],
             {
-                //           Param name           Type         Device  Default Istart Iend  Step  Values  
+                //           Param name           Type         Device  Default Istart Iend  Step  Values
                 ParamConfig("NAV_AFOL_MODE",      VALUES_STR,      DOG,    0,      -1,    -1,   -1,   {0}                ),
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,      DOG,    1,      -1,    -1,   -1,   {1}                ),
                 ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    0,      -1,    -1,   -1,   {0}                ),
@@ -245,10 +260,10 @@ init_activity_config_list(){
             });
 
     ACTIVITY_CONFIG_LIST[4] = ActivityConfig(
-            ACTIVITY_CYCLE, 
-            "MTB", 
+            ACTIVITY_CYCLE,
+            activityNames[ACTIVITY_CYCLE],
             {
-                //           Param name           Type         Device  Default Istart Iend  Step  Values  
+                //           Param name           Type         Device  Default Istart Iend  Step  Values
                 ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    1,       -1,    -1,   -1,   {1}                ),
                 ParamConfig("RTL_RET_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,       -1,    -1,   -1,   {0,1}              ),
@@ -258,10 +273,10 @@ init_activity_config_list(){
             });
 
     ACTIVITY_CONFIG_LIST[5] = ActivityConfig(
-            ACTIVITY_WAKE, 
-            "Wakeboard", 
+            ACTIVITY_WAKE,
+            activityNames[ACTIVITY_WAKE],
             {
-                //           Param name           Type         Device  Default Istart Iend  Step  Values  
+                //           Param name           Type         Device  Default Istart Iend  Step  Values
                 ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    0,      -1,    -1,   -1,   {0,1,2,3,4}        ),
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}              ),
                 ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    0,      -1,    -1,   -1,   {1}                ),
@@ -270,22 +285,22 @@ init_activity_config_list(){
             });
 
     ACTIVITY_CONFIG_LIST[6] = ActivityConfig(
-            ACTIVITY_BIKE, 
-            "Motocross", 
+            ACTIVITY_BIKE,
+            activityNames[ACTIVITY_BIKE],
             {
-                //           Param name           Type         Device  Default Istart Iend  Step  Values  
+                //           Param name           Type         Device  Default Istart Iend  Step  Values
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}              ),
                 ParamConfig("RTL_RET_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
                 ParamConfig("SENS_SON_MIN",       INTERVAL,    DOG,    7.0f,    3,    20, 0.5f,   {}                 ),
                 ParamConfig("PAFOL_OPT_D",        INTERVAL,    DOG,    10.0f,   5,    40,    1,   {}                 ),
-                ParamConfig("AIRD_TRAJ_RAD",      INVISIBLE,   ALL,    6.0f,    3,    20,    1,   {}                 ), 
+                ParamConfig("AIRD_TRAJ_RAD",      INVISIBLE,   ALL,    6.0f,    3,    20,    1,   {}                 ),
             });
 
     ACTIVITY_CONFIG_LIST[7] = ActivityConfig(
-            ACTIVITY_SNOWBOARD, 
-            "Snow", 
+            ACTIVITY_SNOWBOARD,
+            activityNames[ACTIVITY_SNOWBOARD],
             {
-                //           Param name           Type         Device  Default Istart Iend  Step  Values  
+                //           Param name           Type         Device  Default Istart Iend  Step  Values
                 ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                 ),
                 ParamConfig("RTL_RET_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}               ),
@@ -295,17 +310,17 @@ init_activity_config_list(){
             });
 
     ACTIVITY_CONFIG_LIST[8] = ActivityConfig(
-            ACTIVITY_KITE, 
-            "Kiteboard", 
+            ACTIVITY_KITE,
+            activityNames[ACTIVITY_KITE],
             {
             }
             );
 
     ACTIVITY_CONFIG_LIST[9] = ActivityConfig(
-            ACTIVITY_CUSTOM, 
-            "Custom", 
-            {   
-                //           Param name           Type         Device  Default Istart Iend  Step  Values  
+            ACTIVITY_CUSTOM,
+            activityNames[ACTIVITY_CUSTOM],
+            {
+                //           Param name           Type         Device  Default Istart Iend  Step  Values
                 ParamConfig("A_ACTIVITY",         INVISIBLE,    ALL,    0,      -1,    -1,   -1,   {}                 ),
                 ParamConfig("NAV_AFOL_MODE",      VALUES_STR,   DOG,    1,      -1,    -1,   -1,   {0,1,2,3,4}        ),
                 ParamConfig("A_BSC_SAF_ACT",      VALUES_STR,   DOG,    1,      -1,    -1,   -1,   {1,2}              ),
@@ -326,10 +341,10 @@ init_activity_config_list(){
             });
 
     // ACTIVITY_CONFIG_LIST[9] = ActivityConfig(
-    //         ACTIVITY_CUSTOM, 
-    //         "Custom", 
-    //         {   
-    //             //           Param name           Type         Device  Default Istart Iend  Step  Values  
+    //         ACTIVITY_CUSTOM,
+    //         "Custom",
+    //         {
+    //             //           Param name           Type         Device  Default Istart Iend  Step  Values
     //             ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}              ),
     //             ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    0,      -1,    -1,   -1,   {0,1}              ),
     //             ParamConfig("BAT_WARN_LVL",       INVISIBLE,   DOG,    0.3f,    0,    1, 0.05f,   {}                 ),
@@ -337,7 +352,7 @@ init_activity_config_list(){
     //         });
 
     activity_config_list_inited = true;
-    return true; 
+    return true;
 
     };
 

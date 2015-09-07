@@ -841,43 +841,43 @@ static void giveActivityParams(int activity, int *imageId, const char **text)
     {
         case ACTIVITY_SKI:
             *imageId = IMAGE_SCREENS_ICONS_SKI;
-            *text = "Ski";
+            *text = activityNames[ACTIVITY_SKI];
             break;
         case ACTIVITY_SNOWBOARD:
             *imageId = IMAGE_SCREENS_ICONS_SNOW;
-            *text = "Snow";
+            *text = activityNames[ACTIVITY_SNOWBOARD];
             break;
         case ACTIVITY_SURF:
             *imageId = IMAGE_SCREENS_ICONS_SURF;
-            *text = "Surf";
+            *text = activityNames[ACTIVITY_SURF];
             break;
         case ACTIVITY_CUSTOM:
             *imageId = IMAGE_SCREENS_ICONS_CUSTOM;
-            *text = "Custom";
+            *text = activityNames[ACTIVITY_CUSTOM];
             break;
         case ACTIVITY_TEST:
             *imageId = IMAGE_SCREENS_ICONS_TEST;
-            *text = "Test";
+            *text = activityNames[ACTIVITY_TEST];
             break;
         case ACTIVITY_WAKE:
             *imageId = IMAGE_SCREENS_ICONS_WAKE;
-            *text = "Wake";
+            *text = activityNames[ACTIVITY_WAKE];
             break;
         case ACTIVITY_BIKE:
             *imageId = IMAGE_SCREENS_ICONS_BIKE;
-            *text = "Bike";
+            *text = activityNames[ACTIVITY_BIKE];
             break;
         case ACTIVITY_CYCLE:
             *imageId = IMAGE_SCREENS_ICONS_CYCLE;
-            *text = "Cycle";
+            *text = activityNames[ACTIVITY_CYCLE];
             break;
         case ACTIVITY_SKATE:
             *imageId = IMAGE_SCREENS_ICONS_SKATE;
-            *text = "Skate";
+            *text = activityNames[ACTIVITY_SKATE];
             break;
         case ACTIVITY_KITE:
             *imageId = IMAGE_SCREENS_ICONS_KITE;
-            *text = "Kite";
+            *text = activityNames[ACTIVITY_KITE];
             break;
     }
 }
