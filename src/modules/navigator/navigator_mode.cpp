@@ -98,159 +98,160 @@ NavigatorMode::updateParameters() {
 void
 NavigatorMode::updateParamHandles() {
 
-    _parameter_handles.first_point_lat = param_find("NAV_CP_FIR_LA");
-    _parameter_handles.first_point_lon = param_find("NAV_CP_FIR_LO");
-    _parameter_handles.first_point_alt = param_find("NAV_CP_FIR_AL");
-    _parameter_handles.last_point_lat = param_find("NAV_CP_LAS_LA");
-    _parameter_handles.last_point_lon = param_find("NAV_CP_LAS_LO");
-    _parameter_handles.last_point_alt = param_find("NAV_CP_LAS_AL");
+    NavigatorMode::parameter_handles.first_point_lat = param_find("NAV_CP_FIR_LA");
+    NavigatorMode::parameter_handles.first_point_lon = param_find("NAV_CP_FIR_LO");
+    NavigatorMode::parameter_handles.first_point_alt = param_find("NAV_CP_FIR_AL");
+    NavigatorMode::parameter_handles.last_point_lat = param_find("NAV_CP_LAS_LA");
+    NavigatorMode::parameter_handles.last_point_lon = param_find("NAV_CP_LAS_LO");
+    NavigatorMode::parameter_handles.last_point_alt = param_find("NAV_CP_LAS_AL");
 
-    _parameter_handles.down_button_step = param_find("NAV_DOWN_STEP");
-    _parameter_handles.up_button_step = param_find("NAV_UP_STEP");
-    _parameter_handles.horizon_button_step = param_find("NAV_HOR_STEP");
-	_parameter_handles.takeoff_alt = param_find("NAV_TAKEOFF_ALT");
-	_parameter_handles.takeoff_acceptance_radius = param_find("NAV_TAKEOFF_ACR");
-	_parameter_handles.acceptance_radius = param_find("NAV_ACC_RAD");
+    NavigatorMode::parameter_handles.down_button_step = param_find("NAV_DOWN_STEP");
+    NavigatorMode::parameter_handles.up_button_step = param_find("NAV_UP_STEP");
+    NavigatorMode::parameter_handles.horizon_button_step = param_find("NAV_HOR_STEP");
+	NavigatorMode::parameter_handles.takeoff_alt = param_find("NAV_TAKEOFF_ALT");
+	NavigatorMode::parameter_handles.takeoff_acceptance_radius = param_find("NAV_TAKEOFF_ACR");
+	NavigatorMode::parameter_handles.acceptance_radius = param_find("NAV_ACC_RAD");
 
-	_parameter_handles.afol_mode = param_find("NAV_AFOL_MODE");
+	NavigatorMode::parameter_handles.afol_mode = param_find("NAV_AFOL_MODE");
 
-	_parameter_handles.rtl_ret_alt = param_find("RTL_RET_ALT");
+	NavigatorMode::parameter_handles.rtl_ret_alt = param_find("RTL_RET_ALT");
 
-	_parameter_handles.pafol_buf_size = param_find("PAFOL_BUFF_SIZE");
-	_parameter_handles.pafol_optimal_dist = param_find("PAFOL_OPT_D");
-	_parameter_handles.pafol_break_dist = param_find("PAFOL_BRK_D");
-	_parameter_handles.pafol_break_coef = param_find("PAFOL_BRK_C");
-	_parameter_handles.pafol_min_alt_off = param_find("PAFOL_ALT_OFF");
+	NavigatorMode::parameter_handles.pafol_buf_size = param_find("PAFOL_BUFF_SIZE");
+	NavigatorMode::parameter_handles.pafol_optimal_dist = param_find("PAFOL_OPT_D");
+	NavigatorMode::parameter_handles.pafol_break_dist = param_find("PAFOL_BRK_D");
+	NavigatorMode::parameter_handles.pafol_break_coef = param_find("PAFOL_BRK_C");
+	NavigatorMode::parameter_handles.pafol_min_alt_off = param_find("PAFOL_ALT_OFF");
 
-    _parameter_handles.pafol_acc_dst_to_line = param_find("PAFOL_AC_DST_LN");
-    _parameter_handles.pafol_acc_dst_to_point = param_find("PAFOL_AC_DST_PT");
-    _parameter_handles.pafol_acc_rad = param_find("PAFOL_ACC_RAD");
+    NavigatorMode::parameter_handles.pafol_acc_dst_to_line = param_find("PAFOL_AC_DST_LN");
+    NavigatorMode::parameter_handles.pafol_acc_dst_to_point = param_find("PAFOL_AC_DST_PT");
+    NavigatorMode::parameter_handles.pafol_acc_rad = param_find("PAFOL_ACC_RAD");
 
-    _parameter_handles.pafol_vel_i = param_find("PAFOL_VPID_I");
-    _parameter_handles.pafol_vel_p = param_find("PAFOL_VPID_P");
-    _parameter_handles.pafol_vel_d = param_find("PAFOL_VPID_D");
+    NavigatorMode::parameter_handles.pafol_vel_i = param_find("PAFOL_VPID_I");
+    NavigatorMode::parameter_handles.pafol_vel_p = param_find("PAFOL_VPID_P");
+    NavigatorMode::parameter_handles.pafol_vel_d = param_find("PAFOL_VPID_D");
 
-    _parameter_handles.pafol_vel_i_add_dec_rate = param_find("PAFOL_VPID_I_DR");
-    _parameter_handles.pafol_vel_i_add_inc_rate = param_find("PAFOL_VPID_I_IR");
-    _parameter_handles.pafol_vel_i_upper_limit = param_find("PAFOL_VPID_I_UL");
-    _parameter_handles.pafol_vel_i_lower_limit = param_find("PAFOL_VPID_I_LL");
+    NavigatorMode::parameter_handles.pafol_vel_i_add_dec_rate = param_find("PAFOL_VPID_I_DR");
+    NavigatorMode::parameter_handles.pafol_vel_i_add_inc_rate = param_find("PAFOL_VPID_I_IR");
+    NavigatorMode::parameter_handles.pafol_vel_i_upper_limit = param_find("PAFOL_VPID_I_UL");
+    NavigatorMode::parameter_handles.pafol_vel_i_lower_limit = param_find("PAFOL_VPID_I_LL");
 
-    _parameter_handles.pafol_backward_distance_limit = param_find("PAFOL_BW_DST_LIM");
+    NavigatorMode::parameter_handles.pafol_backward_distance_limit = param_find("PAFOL_BW_DST_LIM");
 
-    _parameter_handles.pafol_acc_dst_to_gate = param_find("PAFOL_GT_AC_DST");
-    _parameter_handles.pafol_gate_width = param_find("PAFOL_GT_WIDTH");
+    NavigatorMode::parameter_handles.pafol_acc_dst_to_gate = param_find("PAFOL_GT_AC_DST");
+    NavigatorMode::parameter_handles.pafol_gate_width = param_find("PAFOL_GT_WIDTH");
 
-	_parameter_handles.mpc_max_speed = param_find("MPC_XY_VEL_MAX");
-    _parameter_handles.airdog_dst_inv = param_find("A_DST_INV");
-    _parameter_handles.airdog_init_pos_dst = param_find("A_INIT_POS_D");
-    _parameter_handles.airdog_init_pos_use = param_find("A_INIT_POS_U");
+	NavigatorMode::parameter_handles.mpc_max_speed = param_find("MPC_XY_VEL_MAX");
+    NavigatorMode::parameter_handles.airdog_dst_inv = param_find("A_DST_INV");
+    NavigatorMode::parameter_handles.airdog_init_pos_dst = param_find("A_INIT_POS_D");
+    NavigatorMode::parameter_handles.airdog_init_pos_use = param_find("A_INIT_POS_U");
 
-    _parameter_handles.a_yaw_ignore_radius = param_find("A_YAW_IGNR_R");
-    _parameter_handles.proportional_gain = param_find("MPC_XY_P");
-	_parameter_handles.follow_rpt_alt	= param_find("FOL_RPT_ALT");
-	_parameter_handles.start_follow_immediately = param_find("A_FOL_IMDTLY");
+    NavigatorMode::parameter_handles.a_yaw_ignore_radius = param_find("A_YAW_IGNR_R");
+    NavigatorMode::parameter_handles.proportional_gain = param_find("MPC_XY_P");
+	NavigatorMode::parameter_handles.follow_rpt_alt	= param_find("FOL_RPT_ALT");
+	NavigatorMode::parameter_handles.start_follow_immediately = param_find("A_FOL_IMDTLY");
 
-    _parameter_handles.airdog_traj_radius = param_find("AIRD_TRAJ_RAD");
+    NavigatorMode::parameter_handles.airdog_traj_radius = param_find("AIRD_TRAJ_RAD");
 
 
-    _parameter_handles.offset_min_distance = param_find("OFF_DST_MIN");
-    _parameter_handles.offset_max_distance = param_find("OFF_DST_MAX");
+    NavigatorMode::parameter_handles.offset_min_distance = param_find("OFF_DST_MIN");
+    NavigatorMode::parameter_handles.offset_max_distance = param_find("OFF_DST_MAX");
 
-    _parameter_handles.max_offset_rot_speed = param_find("OFF_MAX_ROT_SPD");
-    _parameter_handles.offset_angle_error_treshold = param_find("OFF_ANGL_ERR_T");
+    NavigatorMode::parameter_handles.max_offset_rot_speed = param_find("OFF_MAX_ROT_SPD");
+    NavigatorMode::parameter_handles.offset_angle_error_treshold = param_find("OFF_ANGL_ERR_T");
 
-    _parameter_handles.offset_rot_speed_ch_cmd_step = param_find("OFF_ROT_SPD_STP");
-    _parameter_handles.offset_rot_speed_ratio = param_find("OFF_ROT_SPD_R");
+    NavigatorMode::parameter_handles.offset_rot_speed_ch_cmd_step = param_find("OFF_ROT_SPD_STP");
+    NavigatorMode::parameter_handles.offset_rot_speed_ratio = param_find("OFF_ROT_SPD_R");
     
-    _parameter_handles.front_follow_additional_angle = param_find("OFF_FR_ADD_ANG");
+    NavigatorMode::parameter_handles.front_follow_additional_angle = param_find("OFF_FR_ADD_ANG");
 
-    _parameter_handles.max_offset_sp_angle_err = param_find("OFF_MAX_SP_ANG_D");
+    NavigatorMode::parameter_handles.max_offset_sp_angle_err = param_find("OFF_MAX_SP_ANG_D");
 
-    _parameter_handles.offset_initial_distance = param_find("OFF_INTL_DST");
+    NavigatorMode::parameter_handles.offset_initial_distance = param_find("OFF_INTL_DST");
 
 }
 
 void
 NavigatorMode::updateParamValues() {
 
-    param_get(_parameter_handles.first_point_lat, &(_parameters.first_point_lat));
-    param_get(_parameter_handles.first_point_lon, &(_parameters.first_point_lon));
-    param_get(_parameter_handles.first_point_alt, &(_parameters.first_point_alt));
-    param_get(_parameter_handles.last_point_lat, &(_parameters.last_point_lat));
-    param_get(_parameter_handles.last_point_lon, &(_parameters.last_point_lon));
-    param_get(_parameter_handles.last_point_alt, &(_parameters.last_point_alt));
-    param_get(_parameter_handles.down_button_step, &(_parameters.down_button_step));
-    param_get(_parameter_handles.up_button_step, &(_parameters.up_button_step));
-    param_get(_parameter_handles.horizon_button_step, &(_parameters.horizon_button_step));
-	param_get(_parameter_handles.takeoff_alt, &(_parameters.takeoff_alt));
-	param_get(_parameter_handles.takeoff_acceptance_radius, &(_parameters.takeoff_acceptance_radius));
-	param_get(_parameter_handles.acceptance_radius, &(_parameters.acceptance_radius));
-	param_get(_parameter_handles.afol_mode, &(_parameters.afol_mode));
+    param_get(NavigatorMode::parameter_handles.first_point_lat, &(NavigatorMode::parameters.first_point_lat));
+    param_get(NavigatorMode::parameter_handles.first_point_lon, &(NavigatorMode::parameters.first_point_lon));
+    param_get(NavigatorMode::parameter_handles.first_point_alt, &(NavigatorMode::parameters.first_point_alt));
+    param_get(NavigatorMode::parameter_handles.last_point_lat, &(NavigatorMode::parameters.last_point_lat));
+    param_get(NavigatorMode::parameter_handles.last_point_lon, &(NavigatorMode::parameters.last_point_lon));
+    param_get(NavigatorMode::parameter_handles.last_point_alt, &(NavigatorMode::parameters.last_point_alt));
+    param_get(NavigatorMode::parameter_handles.down_button_step, &(NavigatorMode::parameters.down_button_step));
+    param_get(NavigatorMode::parameter_handles.up_button_step, &(NavigatorMode::parameters.up_button_step));
+    param_get(NavigatorMode::parameter_handles.horizon_button_step, &(NavigatorMode::parameters.horizon_button_step));
+	param_get(NavigatorMode::parameter_handles.takeoff_alt, &(NavigatorMode::parameters.takeoff_alt));
+	param_get(NavigatorMode::parameter_handles.takeoff_acceptance_radius, &(NavigatorMode::parameters.takeoff_acceptance_radius));
+	param_get(NavigatorMode::parameter_handles.acceptance_radius, &(NavigatorMode::parameters.acceptance_radius));
+	param_get(NavigatorMode::parameter_handles.afol_mode, &(NavigatorMode::parameters.afol_mode));
 
-	param_get(_parameter_handles.rtl_ret_alt, &(_parameters.rtl_ret_alt));
+	param_get(NavigatorMode::parameter_handles.rtl_ret_alt, &(NavigatorMode::parameters.rtl_ret_alt));
 
-	param_get(_parameter_handles.pafol_buf_size, &(_parameters.pafol_buf_size));
-	param_get(_parameter_handles.pafol_optimal_dist, &(_parameters.pafol_optimal_dist));
-	param_get(_parameter_handles.pafol_break_dist, &(_parameters.pafol_break_dist));
-	param_get(_parameter_handles.pafol_break_coef, &(_parameters.pafol_break_coef));
-	param_get(_parameter_handles.pafol_min_alt_off, &(_parameters.pafol_min_alt_off));
-	param_get(_parameter_handles.pafol_acc_rad, &(_parameters.pafol_acc_rad));
+	param_get(NavigatorMode::parameter_handles.pafol_buf_size, &(NavigatorMode::parameters.pafol_buf_size));
+	param_get(NavigatorMode::parameter_handles.pafol_optimal_dist, &(NavigatorMode::parameters.pafol_optimal_dist));
+	param_get(NavigatorMode::parameter_handles.pafol_break_dist, &(NavigatorMode::parameters.pafol_break_dist));
+	param_get(NavigatorMode::parameter_handles.pafol_break_coef, &(NavigatorMode::parameters.pafol_break_coef));
+	param_get(NavigatorMode::parameter_handles.pafol_min_alt_off, &(NavigatorMode::parameters.pafol_min_alt_off));
+	param_get(NavigatorMode::parameter_handles.pafol_acc_rad, &(NavigatorMode::parameters.pafol_acc_rad));
 
-	param_get(_parameter_handles.pafol_acc_dst_to_gate, &(_parameters.pafol_acc_dst_to_gate));
-	param_get(_parameter_handles.pafol_gate_width, &(_parameters.pafol_gate_width));
-
-
-	param_get(_parameter_handles.pafol_vel_i_add_dec_rate, &(_parameters.pafol_vel_i_add_dec_rate));
-	param_get(_parameter_handles.pafol_vel_i_add_inc_rate, &(_parameters.pafol_vel_i_add_inc_rate));
-	param_get(_parameter_handles.pafol_vel_i_upper_limit, &(_parameters.pafol_vel_i_upper_limit));
-	param_get(_parameter_handles.pafol_vel_i_lower_limit, &(_parameters.pafol_vel_i_lower_limit));
-
-    param_get(_parameter_handles.pafol_backward_distance_limit, &(_parameters.pafol_backward_distance_limit));
-
-	param_get(_parameter_handles.pafol_vel_i, &(_parameters.pafol_vel_i));
-	param_get(_parameter_handles.pafol_vel_p, &(_parameters.pafol_vel_p));
-	param_get(_parameter_handles.pafol_vel_d, &(_parameters.pafol_vel_d));
-
-	param_get(_parameter_handles.mpc_max_speed, &(_parameters.mpc_max_speed));
-	param_get(_parameter_handles.rtl_ret_alt, &(_parameters.rtl_ret_alt));
-
-	param_get(_parameter_handles.airdog_dst_inv, &(_parameters.airdog_dst_inv));
-	param_get(_parameter_handles.airdog_init_pos_dst, &(_parameters.airdog_init_pos_dst));
-	param_get(_parameter_handles.airdog_init_pos_use, &(_parameters.airdog_init_pos_use));
-
-    param_get(_parameter_handles.a_yaw_ignore_radius, &(_parameters.a_yaw_ignore_radius));
-    param_get(_parameter_handles.proportional_gain, &(_parameters.proportional_gain));
-    param_get(_parameter_handles.follow_rpt_alt, &(_parameters.follow_rpt_alt));
-    param_get(_parameter_handles.start_follow_immediately, &(_parameters.start_follow_immediately));
-
-    param_get(_parameter_handles.airdog_traj_radius, &(_parameters.airdog_traj_radius));
+	param_get(NavigatorMode::parameter_handles.pafol_acc_dst_to_gate, &(NavigatorMode::parameters.pafol_acc_dst_to_gate));
+	param_get(NavigatorMode::parameter_handles.pafol_gate_width, &(NavigatorMode::parameters.pafol_gate_width));
 
 
-    param_get(_parameter_handles.offset_min_distance,&(_parameters.offset_min_distance));
-    param_get(_parameter_handles.offset_max_distance,&(_parameters.offset_max_distance));
+	param_get(NavigatorMode::parameter_handles.pafol_vel_i_add_dec_rate, &(NavigatorMode::parameters.pafol_vel_i_add_dec_rate));
+	param_get(NavigatorMode::parameter_handles.pafol_vel_i_add_inc_rate, &(NavigatorMode::parameters.pafol_vel_i_add_inc_rate));
+	param_get(NavigatorMode::parameter_handles.pafol_vel_i_upper_limit, &(NavigatorMode::parameters.pafol_vel_i_upper_limit));
+	param_get(NavigatorMode::parameter_handles.pafol_vel_i_lower_limit, &(NavigatorMode::parameters.pafol_vel_i_lower_limit));
 
-    param_get(_parameter_handles.max_offset_rot_speed,&(_parameters.max_offset_rot_speed));
-    param_get(_parameter_handles.offset_angle_error_treshold,&(_parameters.offset_angle_error_treshold));
+    param_get(NavigatorMode::parameter_handles.pafol_backward_distance_limit, &(NavigatorMode::parameters.pafol_backward_distance_limit));
 
-    param_get(_parameter_handles.offset_rot_speed_ch_cmd_step,&(_parameters.offset_rot_speed_ch_cmd_step));
-    param_get(_parameter_handles.offset_rot_speed_ratio,&(_parameters.offset_rot_speed_ratio));
+	param_get(NavigatorMode::parameter_handles.pafol_vel_i, &(NavigatorMode::parameters.pafol_vel_i));
+	param_get(NavigatorMode::parameter_handles.pafol_vel_p, &(NavigatorMode::parameters.pafol_vel_p));
+	param_get(NavigatorMode::parameter_handles.pafol_vel_d, &(NavigatorMode::parameters.pafol_vel_d));
 
-    param_get(_parameter_handles.front_follow_additional_angle, &(_parameters.front_follow_additional_angle));
+	param_get(NavigatorMode::parameter_handles.mpc_max_speed, &(NavigatorMode::parameters.mpc_max_speed));
+	param_get(NavigatorMode::parameter_handles.rtl_ret_alt, &(NavigatorMode::parameters.rtl_ret_alt));
 
-    param_get(_parameter_handles.max_offset_sp_angle_err, &(_parameters.max_offset_sp_angle_err));
+	param_get(NavigatorMode::parameter_handles.airdog_dst_inv, &(NavigatorMode::parameters.airdog_dst_inv));
+	param_get(NavigatorMode::parameter_handles.airdog_init_pos_dst, &(NavigatorMode::parameters.airdog_init_pos_dst));
+	param_get(NavigatorMode::parameter_handles.airdog_init_pos_use, &(NavigatorMode::parameters.airdog_init_pos_use));
 
-    param_get(_parameter_handles.offset_initial_distance, &(_parameters.offset_initial_distance));
+    param_get(NavigatorMode::parameter_handles.a_yaw_ignore_radius, &(NavigatorMode::parameters.a_yaw_ignore_radius));
+    param_get(NavigatorMode::parameter_handles.proportional_gain, &(NavigatorMode::parameters.proportional_gain));
+    param_get(NavigatorMode::parameter_handles.follow_rpt_alt, &(NavigatorMode::parameters.follow_rpt_alt));
+    param_get(NavigatorMode::parameter_handles.start_follow_immediately, &(NavigatorMode::parameters.start_follow_immediately));
+
+    param_get(NavigatorMode::parameter_handles.airdog_traj_radius, &(NavigatorMode::parameters.airdog_traj_radius));
+
+
+    param_get(NavigatorMode::parameter_handles.offset_min_distance,&(NavigatorMode::parameters.offset_min_distance));
+    param_get(NavigatorMode::parameter_handles.offset_max_distance,&(NavigatorMode::parameters.offset_max_distance));
+
+    param_get(NavigatorMode::parameter_handles.max_offset_rot_speed,&(NavigatorMode::parameters.max_offset_rot_speed));
+    param_get(NavigatorMode::parameter_handles.offset_angle_error_treshold,&(NavigatorMode::parameters.offset_angle_error_treshold));
+
+    param_get(NavigatorMode::parameter_handles.offset_rot_speed_ch_cmd_step,&(NavigatorMode::parameters.offset_rot_speed_ch_cmd_step));
+    param_get(NavigatorMode::parameter_handles.offset_rot_speed_ratio,&(NavigatorMode::parameters.offset_rot_speed_ratio));
+
+    param_get(NavigatorMode::parameter_handles.front_follow_additional_angle, &(NavigatorMode::parameters.front_follow_additional_angle));
+
+    param_get(NavigatorMode::parameter_handles.max_offset_sp_angle_err, &(NavigatorMode::parameters.max_offset_sp_angle_err));
+
+    param_get(NavigatorMode::parameter_handles.offset_initial_distance, &(NavigatorMode::parameters.offset_initial_distance));
 }
 
 
 void
 NavigatorMode::run(bool active, bool parameters_updated) {
 
-    if (parameters_updated) {
-        updateParameters();
-    }
-
 	if (active) {
+
+        if (parameters_updated) {
+            updateParameters();
+        }
+
 		if (_first_run) {
 			/* first run */
 			_first_run = false;
@@ -386,7 +387,7 @@ NavigatorMode::check_current_pos_sp_reached(SETPOINT_TYPE expected_sp_type)
 	{
 		float alt_diff = fabs(pos_sp_triplet->current.alt - global_pos->alt);
 
-        if (_parameters.takeoff_acceptance_radius >= alt_diff) {
+        if (NavigatorMode::parameters.takeoff_acceptance_radius >= alt_diff) {
 
             commander_request_s *commander_request = _navigator->get_commander_request();
             commander_request->request_type = AIRD_STATE_CHANGE;
@@ -412,7 +413,7 @@ NavigatorMode::check_current_pos_sp_reached(SETPOINT_TYPE expected_sp_type)
 			&dist_xy, &dist_z
 		);
 
-        if (_parameters.acceptance_radius >= distance){
+        if (NavigatorMode::parameters.acceptance_radius >= distance){
             return true;
         }
 
@@ -483,7 +484,7 @@ NavigatorMode::takeoff()
 		pos_sp_triplet->current.alt = global_pos->alt + 3.0f; // - range_finder.distance
 	}
 	else {
-		pos_sp_triplet->current.alt = global_pos->alt + _parameters.takeoff_alt;
+		pos_sp_triplet->current.alt = global_pos->alt + NavigatorMode::parameters.takeoff_alt;
 	}
 
 	pos_sp_triplet->current.position_valid = true;
@@ -541,14 +542,14 @@ NavigatorMode::go_to_intial_position(){
             float alpha = atan2(offset_y, offset_x);
 
             math::Vector<3> new_drone_offset(
-                cosf(alpha) * _parameters.airdog_init_pos_dst,
-                sinf(alpha) * _parameters.airdog_init_pos_dst,
+                cosf(alpha) * NavigatorMode::parameters.airdog_init_pos_dst,
+                sinf(alpha) * NavigatorMode::parameters.airdog_init_pos_dst,
                 offset_z
                 );
 
             double lat_new;
             double lon_new;
-            //double alt_new = target_pos->alt + _parameters.takeoff_alt;
+            //double alt_new = target_pos->alt + NavigatorMode::parameters.takeoff_alt;
 
             add_vector_to_global_position(
                     target_pos->lat,
@@ -561,7 +562,7 @@ NavigatorMode::go_to_intial_position(){
 
             float dst = sqrt( offset_x * offset_x + offset_y * offset_y);
 
-            if (dst <= _parameters.airdog_dst_inv && dst > _parameters.airdog_init_pos_dst) {
+            if (dst <= NavigatorMode::parameters.airdog_dst_inv && dst > NavigatorMode::parameters.airdog_init_pos_dst) {
                 _navigator->invalidate_setpoint_triplet();
 
                 pos_sp_triplet->current.yaw = _wrap_pi(atan2f(-new_drone_offset(1), -new_drone_offset(0)));

@@ -101,7 +101,7 @@ Leashed::on_active()
 void
 Leashed::execute_vehicle_command() {
     // Update _parameter values with the latest navigator_mode parameters
-    memcpy(&_parameters, &(NavigatorMode::_parameters), sizeof(_parameters));
+    memcpy(&NavigatorMode::parameters, &(NavigatorMode::parameters), sizeof(NavigatorMode::parameters));
 	vehicle_command_s cmd = _vcommand;
 	if (cmd.command == VEHICLE_CMD_DO_SET_MODE){
 
@@ -139,7 +139,7 @@ Leashed::execute_vehicle_command() {
                 double first[3];
                 //double last[3];
                 _navigator->get_path_points(0, first);
-                first[2] += (double)_parameters.up_button_step;
+                first[2] += (double)NavigatorMode::parameters.up_button_step;
                 _navigator->set_next_path_point(first, true, 0);
                 _navigator->publish_position_restriction();
                 break;
@@ -147,7 +147,7 @@ Leashed::execute_vehicle_command() {
             case REMOTE_CMD_DOWN: {
                 double first[3];
                 _navigator->get_path_points(0, first);
-                first[2] -= (double)_parameters.down_button_step;
+                first[2] -= (double)NavigatorMode::parameters.down_button_step;
                 _navigator->set_next_path_point(first, true, 0);
                 _navigator->publish_position_restriction();
                 break;

@@ -54,6 +54,155 @@
 #include <uORB/topics/vehicle_status.h>
  #include <uORB/topics/commander_request.h>
 
+struct PARAMETERS {
+    long int first_point_lat;
+    long int first_point_lon;
+    float first_point_alt;
+    long int last_point_lat;
+    long int last_point_lon;
+    float last_point_alt;
+    float down_button_step;
+    float up_button_step;
+    float horizon_button_step;
+    float takeoff_alt;
+    float takeoff_acceptance_radius;
+    float acceptance_radius;
+
+    int afol_mode;
+
+    float rtl_ret_alt;
+
+    ssize_t pafol_buf_size;
+    float pafol_break_dist;
+    float pafol_break_coef;
+    float pafol_optimal_dist;
+    float pafol_min_alt_off;
+    float pafol_acc_rad;
+    float pafol_acc_dst_to_gate;
+    float pafol_gate_width;
+
+    float pafol_vel_i;
+    float pafol_vel_p;
+    float pafol_vel_d;
+
+    float pafol_vel_i_add_dec_rate;
+    float pafol_vel_i_add_inc_rate;
+
+    float pafol_vel_i_lower_limit;
+    float pafol_vel_i_upper_limit;
+
+    float pafol_backward_distance_limit;
+
+    float mpc_max_speed;
+
+    float airdog_dst_inv;
+    float airdog_init_pos_dst;
+    int airdog_init_pos_use;
+
+    int follow_rpt_alt;
+
+    float a_yaw_ignore_radius;
+    // Proportional gain for horizontal position error
+    float proportional_gain;
+
+    int start_follow_immediately;
+
+    float airdog_traj_radius;
+
+    float offset_min_distance;
+    float offset_max_distance;
+
+    float max_offset_rot_speed;
+    float offset_angle_error_treshold;
+
+    float offset_rot_speed_ch_cmd_step;
+    float offset_rot_speed_ratio;
+
+    float front_follow_additional_angle;
+
+    float max_offset_sp_angle_err;
+    
+    float offset_initial_distance;
+
+};
+
+
+struct PARAM_HANDLES {
+    param_t first_point_lat;
+    param_t first_point_lon;
+    param_t first_point_alt;
+    param_t last_point_lat;
+    param_t last_point_lon;
+    param_t last_point_alt;
+    param_t down_button_step;
+    param_t up_button_step;
+    param_t horizon_button_step;
+    param_t takeoff_alt;
+    param_t takeoff_acceptance_radius;
+    param_t acceptance_radius;
+
+    param_t afol_mode;
+
+    param_t rtl_ret_alt;
+
+    param_t pafol_buf_size;
+    param_t pafol_break_coef;
+    param_t pafol_break_dist;
+    param_t pafol_optimal_dist;
+    param_t pafol_min_alt_off;
+    param_t pafol_acc_rad;
+
+    param_t pafol_acc_dst_to_gate;
+    param_t pafol_gate_width;
+
+    param_t pafol_acc_dst_to_line;
+    param_t pafol_acc_dst_to_point;
+    param_t pafol_stop_speed;
+
+    param_t pafol_vel_i;
+    param_t pafol_vel_p;
+    param_t pafol_vel_d;
+
+    param_t pafol_vel_i_add_dec_rate;
+    param_t pafol_vel_i_add_inc_rate;
+
+    param_t pafol_vel_i_lower_limit;
+    param_t pafol_vel_i_upper_limit;
+
+    param_t pafol_backward_distance_limit;
+
+    param_t mpc_max_speed;
+
+    param_t airdog_dst_inv;
+    param_t airdog_init_pos_dst;
+    param_t airdog_init_pos_use;
+
+    param_t follow_rpt_alt;
+
+    param_t a_yaw_ignore_radius;
+    param_t proportional_gain;
+    param_t start_follow_immediately;
+
+    param_t airdog_traj_radius;
+
+
+    param_t offset_min_distance;
+    param_t offset_max_distance;
+
+    param_t max_offset_rot_speed;
+    param_t offset_angle_error_treshold;
+
+    param_t offset_rot_speed_ch_cmd_step;
+    param_t offset_rot_speed_ratio;
+
+    param_t front_follow_additional_angle;
+     
+    param_t max_offset_sp_angle_err;
+
+    param_t offset_initial_distance;
+
+};
+
 class Navigator;
 
 class NavigatorMode : public control::SuperBlock
@@ -109,158 +258,6 @@ public:
     void disarm();
     void resetModeArguments(main_state_t main_state);
 
-
-	struct {
-        long int first_point_lat;
-        long int first_point_lon;
-        float first_point_alt;
-        long int last_point_lat;
-        long int last_point_lon;
-        float last_point_alt;
-        float down_button_step;
-        float up_button_step;
-        float horizon_button_step;
-		float takeoff_alt;
-		float takeoff_acceptance_radius;
-		float acceptance_radius;
-
-        int afol_mode;
-
-		float rtl_ret_alt;
-
-		ssize_t pafol_buf_size;
-		float pafol_break_dist;
-		float pafol_break_coef;
-		float pafol_optimal_dist;
-		float pafol_min_alt_off;
-        float pafol_acc_rad;
-        float pafol_acc_dst_to_gate;
-        float pafol_gate_width;
-
-
-        float pafol_vel_i;
-        float pafol_vel_p;
-        float pafol_vel_d;
-
-        float pafol_vel_i_add_dec_rate;
-        float pafol_vel_i_add_inc_rate;
-
-        float pafol_vel_i_lower_limit;
-        float pafol_vel_i_upper_limit;
-
-        float pafol_backward_distance_limit;
-
-		float mpc_max_speed;
-
-        float airdog_dst_inv;
-        float airdog_init_pos_dst;
-        int airdog_init_pos_use;
-
-        int follow_rpt_alt;
-
-        float a_yaw_ignore_radius;
-        // Proportional gain for horizontal position error
-        float proportional_gain;
-
-        int start_follow_immediately;
-
-        float airdog_traj_radius;
-
-        float offset_min_distance;
-        float offset_max_distance;
-
-        float max_offset_rot_speed;
-        float offset_angle_error_treshold;
-
-        float offset_rot_speed_ch_cmd_step;
-        float offset_rot_speed_ratio;
-
-        float front_follow_additional_angle;
-    
-        float max_offset_sp_angle_err;
-        
-        float offset_initial_distance;
-
-	} _parameters;
-
-
-	struct {
-        param_t first_point_lat;
-        param_t first_point_lon;
-        param_t first_point_alt;
-        param_t last_point_lat;
-        param_t last_point_lon;
-        param_t last_point_alt;
-        param_t down_button_step;
-        param_t up_button_step;
-        param_t horizon_button_step;
-		param_t takeoff_alt;
-		param_t takeoff_acceptance_radius;
-		param_t acceptance_radius;
-
-        param_t afol_mode;
-
-		param_t rtl_ret_alt;
-
-		param_t pafol_buf_size;
-		param_t pafol_break_coef;
-		param_t pafol_break_dist;
-		param_t pafol_optimal_dist;
-		param_t pafol_min_alt_off;
-        param_t pafol_acc_rad;
-
-        param_t pafol_acc_dst_to_gate;
-        param_t pafol_gate_width;
-
-        param_t pafol_acc_dst_to_line;
-        param_t pafol_acc_dst_to_point;
-        param_t pafol_stop_speed;
-
-        param_t pafol_vel_i;
-        param_t pafol_vel_p;
-        param_t pafol_vel_d;
-
-        param_t pafol_vel_i_add_dec_rate;
-        param_t pafol_vel_i_add_inc_rate;
-
-        param_t pafol_vel_i_lower_limit;
-        param_t pafol_vel_i_upper_limit;
-
-        param_t pafol_backward_distance_limit;
-
-		param_t mpc_max_speed;
-
-        param_t airdog_dst_inv;
-        param_t airdog_init_pos_dst;
-        param_t airdog_init_pos_use;
-
-        param_t follow_rpt_alt;
-
-        param_t a_yaw_ignore_radius;
-        param_t proportional_gain;
-        param_t start_follow_immediately;
-
-        param_t airdog_traj_radius;
-
-
-        param_t offset_min_distance;
-        param_t offset_max_distance;
-
-        param_t max_offset_rot_speed;
-        param_t offset_angle_error_treshold;
-
-        param_t offset_rot_speed_ch_cmd_step;
-        param_t offset_rot_speed_ratio;
-
-        param_t front_follow_additional_angle;
-         
-        param_t max_offset_sp_angle_err;
-
-        param_t offset_initial_distance;
-
-	} _parameter_handles;
-
-
 protected:
 	Navigator *_navigator;
 
@@ -281,6 +278,9 @@ protected:
     void go_to_intial_position();
     camera_mode_t _camera_mode;
 
+    static PARAMETERS parameters;
+    static PARAM_HANDLES parameter_handles;
+
 private:
 
 	bool _first_run;
@@ -295,3 +295,4 @@ private:
 };
 
 #endif
+

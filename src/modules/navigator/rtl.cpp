@@ -85,7 +85,7 @@ RTL::on_activation()
 
 	first_rtl_setpoint_set = false;
 
-	float accaptance_radius = _parameters.acceptance_radius;
+	float accaptance_radius = NavigatorMode::parameters.acceptance_radius;
 
 	float xy_distance = get_distance_to_next_waypoint(
 			global_pos->lat, global_pos->lon,
@@ -102,7 +102,7 @@ RTL::on_activation()
 	} else if (xy_distance <= accaptance_radius) {
 		rtl_state = RTL_STATE_LAND;
 		/* No need climb */
-	} else if ( global_pos->alt >= home_pos->alt + _parameters.rtl_ret_alt) {
+	} else if ( global_pos->alt >= home_pos->alt + NavigatorMode::parameters.rtl_ret_alt) {
 		rtl_state = RTL_STATE_RETURN;
 	} else {
 		rtl_state = RTL_STATE_CLIMB;
@@ -169,7 +169,7 @@ RTL::set_rtl_setpoint()
     pos_sp_triplet->current.valid = true;
     pos_sp_triplet->next.valid = false;
 
-    float climb_alt = _navigator->get_home_position()->alt + _parameters.rtl_ret_alt;
+    float climb_alt = _navigator->get_home_position()->alt + NavigatorMode::parameters.rtl_ret_alt;
 
 	switch (rtl_state) {
 		case RTL_STATE_CLIMB: {

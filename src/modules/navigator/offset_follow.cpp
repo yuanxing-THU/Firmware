@@ -66,7 +66,9 @@ OffsetFollow::on_activation()
     _rotation_speed_ms = 0.0f;
 
     if (_vstatus->nav_state == NAVIGATION_STATE_CIRCLE_AROUND) {
-        _rotation_speed_ms = _parameters.offset_rot_speed_ch_cmd_step;
+
+        _rotation_speed_ms = NavigatorMode::parameters.offset_rot_speed_ch_cmd_step;
+
     } 
 }
 
@@ -122,8 +124,8 @@ OffsetFollow::on_active_front_follow() {
 
     shortest_arc(_offset_sp_angle, _offset_goal_angle, min_angle_err, direction);
 
-    if (min_angle_err > _parameters.offset_angle_error_treshold) {
-        _rotation_speed_ms = direction * _target_speed * _parameters.offset_rot_speed_ratio;
+    if (min_angle_err > NavigatorMode::parameters.offset_angle_error_treshold) {
+        _rotation_speed_ms = direction * _target_speed * NavigatorMode::parameters.offset_rot_speed_ratio;
     } else {
         _rotation_speed_ms = 0.0f;
     }
@@ -240,10 +242,10 @@ OffsetFollow::execute_vehicle_command_circle_around() {
                 break;
             case REMOTE_CMD_LEFT: 
 
-                _rotation_speed_ms -= _parameters.offset_rot_speed_ch_cmd_step;
+                _rotation_speed_ms -= NavigatorMode::parameters.offset_rot_speed_ch_cmd_step;
                 break;
             case REMOTE_CMD_RIGHT: 
-                _rotation_speed_ms += _parameters.offset_rot_speed_ch_cmd_step;
+                _rotation_speed_ms += NavigatorMode::parameters.offset_rot_speed_ch_cmd_step;
                 break;
             case REMOTE_CMD_CLOSER: 
                 offset_distance_step(-1);
@@ -295,14 +297,14 @@ OffsetFollow::offset_distance_step(int direction) {
 
     printf("Distance step\n");
 
-    float step_len = _parameters.horizon_button_step;
+    float step_len = NavigatorMode::parameters.horizon_button_step;
     float cur_dst = sqrt(_follow_offset_vect(0) * _follow_offset_vect(0) + _follow_offset_vect(1) * _follow_offset_vect(1));
     float dst_left = 0.0f;
 
     if (direction == 1) {
-        dst_left = _parameters.offset_max_distance - cur_dst;
+        dst_left = NavigatorMode::parameters.offset_max_distance - cur_dst;
     } else if (direction == -1) {
-        dst_left = cur_dst - _parameters.offset_min_distance;
+        dst_left = cur_dst - NavigatorMode::parameters.offset_min_distance;
     }
 
     if (step_len > dst_left) step_len = dst_left;
@@ -317,7 +319,7 @@ OffsetFollow::offset_rotation_step(int direction, float &angle) {
 
     printf("Rotation step\n");
 
-    float alpha = _parameters.horizon_button_step / _radius;
+    float alpha = NavigatorMode::parameters.horizon_button_step / _radius;
     angle += direction * alpha;
     normalize_angle(angle);
 
@@ -329,10 +331,10 @@ OffsetFollow::offset_height_step(int direction) {
     printf("Height step\n");
 
     if (direction == -1)
-        _base_offset(2) += direction * _parameters.up_button_step;
+        _base_offset(2) += direction * NavigatorMode::parameters.up_button_step;
 
     if (direction == 1)
-        _base_offset(2) += direction * _parameters.down_button_step;
+        _base_offset(2) += direction * NavigatorMode::parameters.down_button_step;
 
 }
 
@@ -358,7 +360,7 @@ OffsetFollow::init_base_offset() {
     R_phi.from_euler(0.0f, 0.0f, -_offset_sp_angle);
     _base_offset = R_phi * _base_offset;
 
-    _base_offset(0) = _parameters.offset_initial_distance;
+    _base_offset(0) = NavigatorMode::parameters.offset_initial_distance;
 
     _radius = sqrt(_base_offset(0) * _base_offset(0) + _base_offset(1) * _base_offset(1));
 
@@ -366,18 +368,18 @@ OffsetFollow::init_base_offset() {
 
     _base_offset_inited = true;
 
-    _front_follow_aditional_angle = _parameters.front_follow_additional_angle;
+    _front_follow_aditional_angle = NavigatorMode::parameters.front_follow_additional_angle;
 
 }
 
 void
 OffsetFollow::update_offset_sp_angle() {
 
-    if (_rotation_speed_ms >= _parameters.max_offset_rot_speed)
-        _rotation_speed_ms = _parameters.max_offset_rot_speed;
+    if (_rotation_speed_ms >= NavigatorMode::parameters.max_offset_rot_speed)
+        _rotation_speed_ms = NavigatorMode::parameters.max_offset_rot_speed;
         
-    if (_rotation_speed_ms <= -_parameters.max_offset_rot_speed)
-        _rotation_speed_ms = -_parameters.max_offset_rot_speed;
+    if (_rotation_speed_ms <= -NavigatorMode::parameters.max_offset_rot_speed)
+        _rotation_speed_ms = -NavigatorMode::parameters.max_offset_rot_speed;
 
     _rotation_speed = _rotation_speed_ms / _radius;
 
@@ -392,9 +394,9 @@ OffsetFollow::update_offset_sp_angle() {
 
     shortest_arc(_actual_angle, _offset_sp_angle, offset_sp_angle_err, direction);
 
-    if (offset_sp_angle_err > _parameters.max_offset_sp_angle_err) {
+    if (offset_sp_angle_err > NavigatorMode::parameters.max_offset_sp_angle_err) {
     
-        _offset_sp_angle = _actual_angle + direction * _parameters.max_offset_sp_angle_err;
+        _offset_sp_angle = _actual_angle + direction * NavigatorMode::parameters.max_offset_sp_angle_err;
     
     }
 

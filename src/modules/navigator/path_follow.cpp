@@ -54,7 +54,7 @@ PathFollow::~PathFollow() {
 bool PathFollow::init() {
 	updateParameters();
 
-	_inited = _traj_point_queue.init(_parameters.pafol_buf_size);
+	_inited = _traj_point_queue.init(NavigatorMode::parameters.pafol_buf_size);
 
 	return (_inited);
 }
@@ -84,7 +84,7 @@ void PathFollow::on_activation() {
     _follow_path_startup = true;
 
 	_mavlink_fd = _navigator->get_mavlink_fd();
-    _optimal_distance = _parameters.pafol_optimal_dist;
+    _optimal_distance = NavigatorMode::parameters.pafol_optimal_dist;
 
     _last_passed_point.y = _drone_local_pos.y;
     _last_passed_point.x = _drone_local_pos.x;
@@ -92,12 +92,12 @@ void PathFollow::on_activation() {
 
     at_least_one_point = false;
 
-    if (_parameters.follow_rpt_alt == 0) {
+    if (NavigatorMode::parameters.follow_rpt_alt == 0) {
         _starting_z = _drone_local_pos.z;
         _vertical_offset = 0.0f;
     }
 
-    if (_parameters.follow_rpt_alt == 1) {
+    if (NavigatorMode::parameters.follow_rpt_alt == 1) {
         _vertical_offset = _drone_local_pos.z - _target_local_pos.z;
     }
 
@@ -219,7 +219,7 @@ void PathFollow::on_active() {
     }
 
 
-    if (euclidean_distance(_target_local_pos.x, _target_local_pos.y, _drone_local_pos.x, _drone_local_pos.y ) < _parameters.pafol_optimal_dist - 7.0f ){
+    if (euclidean_distance(_target_local_pos.x, _target_local_pos.y, _drone_local_pos.x, _drone_local_pos.y ) < NavigatorMode::parameters.pafol_optimal_dist - 7.0f ){
 
         _traj_point_queue.do_empty();
         _trajectory_distance = 0.0f;
@@ -280,18 +280,18 @@ void PathFollow::execute_vehicle_command() {
 				break;
 			}
 			case REMOTE_CMD_FURTHER:
-				_optimal_distance += _parameters.horizon_button_step;
+				_optimal_distance += NavigatorMode::parameters.horizon_button_step;
 				break;
 			case REMOTE_CMD_CLOSER: {
-				_optimal_distance -= _parameters.horizon_button_step;
+				_optimal_distance -= NavigatorMode::parameters.horizon_button_step;
 				break;
 			}
 			case REMOTE_CMD_UP: {
-				_vertical_offset -= _parameters.up_button_step;
+				_vertical_offset -= NavigatorMode::parameters.up_button_step;
 				break;
 			}
 			case REMOTE_CMD_DOWN: {
-				_vertical_offset += _parameters.down_button_step;
+				_vertical_offset += NavigatorMode::parameters.down_button_step;
                 break;
 			}
 		}
@@ -363,9 +363,9 @@ float PathFollow::calculate_desired_velocity() {
         _follow_path_startup = false; 
     }
 
-    float fp_i_coif = _parameters.pafol_vel_i;
-    float fp_p_coif = _parameters.pafol_vel_p;
-    float fp_d_coif = _parameters.pafol_vel_d;
+    float fp_i_coif = NavigatorMode::parameters.pafol_vel_i;
+    float fp_p_coif = NavigatorMode::parameters.pafol_vel_p;
+    float fp_d_coif = NavigatorMode::parameters.pafol_vel_d;
 
     hrt_abstime t = hrt_absolute_time();
     float calc_vel_pid_dt = _calc_vel_pid_t_prev != 0 ? (t - _calc_vel_pid_t_prev) * 1e-6f : 0.0f;
@@ -387,7 +387,7 @@ float PathFollow::calculate_desired_velocity() {
     // some extra help to decrease it, we do it with factor pafol_vel_i_add_dec_rate [follow path velocity integral part aditional decrease rate]
     if (dst_to_optimal < -1.0f && _fp_d < -1.0f && _drone_speed > 2.0f) {
 
-        float additional_i_dec = _fp_d * _parameters.pafol_vel_i_add_dec_rate;
+        float additional_i_dec = _fp_d * NavigatorMode::parameters.pafol_vel_i_add_dec_rate;
         if (additional_i_dec < 0.0f) additional_i_dec = -additional_i_dec;
         _fp_i -= additional_i_dec * calc_vel_pid_dt;
 
@@ -396,14 +396,14 @@ float PathFollow::calculate_desired_velocity() {
     // In some cases the same extra help is needed to increase the integral part a bit faster.
     if (dst_to_optimal > 1.0f && _fp_d > 1.0f && _drone_speed > 2.0f) {
 
-        float additional_i_inc = _fp_d * _parameters.pafol_vel_i_add_inc_rate;
+        float additional_i_inc = _fp_d * NavigatorMode::parameters.pafol_vel_i_add_inc_rate;
         if (additional_i_inc < 0.0f) additional_i_inc = -additional_i_inc;
         _fp_i += additional_i_inc * calc_vel_pid_dt;
 
     }
 
-    if (_fp_i>_parameters.pafol_vel_i_upper_limit) _fp_i = _parameters.pafol_vel_i_upper_limit;
-    if (_fp_i<_parameters.pafol_vel_i_lower_limit) _fp_i = _parameters.pafol_vel_i_lower_limit;
+    if (_fp_i>NavigatorMode::parameters.pafol_vel_i_upper_limit) _fp_i = NavigatorMode::parameters.pafol_vel_i_upper_limit;
+    if (_fp_i<NavigatorMode::parameters.pafol_vel_i_lower_limit) _fp_i = NavigatorMode::parameters.pafol_vel_i_lower_limit;
 
     _vel_new =_fp_i * fp_i_coif + _fp_p * fp_p_coif + _fp_d * fp_d_coif;
 
@@ -435,7 +435,7 @@ float PathFollow::calculate_desired_velocity() {
             _vel_new = -1.0f;
 
         if (!(going_bckw_st(0) == _drone_local_pos.x && going_bckw_st(1) == _drone_local_pos.y) &&
-                euclidean_distance(going_bckw_st(0), going_bckw_st(1), _drone_local_pos.x, _drone_local_pos.y)> _parameters.pafol_backward_distance_limit )
+                euclidean_distance(going_bckw_st(0), going_bckw_st(1), _drone_local_pos.x, _drone_local_pos.y)> NavigatorMode::parameters.pafol_backward_distance_limit )
         {
             _vel_new = 0.0f;
 
@@ -447,8 +447,8 @@ float PathFollow::calculate_desired_velocity() {
 
     // mavlink_log_info(_mavlink_fd, "i:%.3f, p:%.3f d:%.3f", (double)fp_d_coif, (double)fp_p_coif, (double)fp_i_coif);
     // mavlink_log_info(_mavlink_fd, "dst:%.3f, fp_i:%.3f fp_d:%.3f, ad:%.3f", (double)dst_to_optimal, (double)_fp_i, (double)_fp_d);
-    // mavlink_log_info(_mavlink_fd, "ul:%.3f, ll:%.3f ir:%.3f dr:%.3f", (double)_parameters.pafol_vel_i_lower_limit, (double)_parameters.pafol_vel_i_upper_limit,
-    //        (double)_parameters.pafol_vel_i_add_inc_rate, (double)_parameters.pafol_vel_i_add_dec_rate);
+    // mavlink_log_info(_mavlink_fd, "ul:%.3f, ll:%.3f ir:%.3f dr:%.3f", (double)NavigatorMode::parameters.pafol_vel_i_lower_limit, (double)NavigatorMode::parameters.pafol_vel_i_upper_limit,
+    //        (double)NavigatorMode::parameters.pafol_vel_i_add_inc_rate, (double)NavigatorMode::parameters.pafol_vel_i_add_dec_rate);
 
     _calc_vel_pid_t_prev = t;
 
@@ -482,8 +482,8 @@ float PathFollow::calculate_current_distance() {
 
     if (_first_tp_flag == true) {
 
-            float acc_dst_to_gate = _parameters.pafol_acc_dst_to_gate;
-            float traj_radius = _parameters.airdog_traj_radius;
+            float acc_dst_to_gate = NavigatorMode::parameters.pafol_acc_dst_to_gate;
+            float traj_radius = NavigatorMode::parameters.airdog_traj_radius;
 
             if (_dst_to_gate > traj_radius)
                 rate_a = 1.0f;
@@ -539,8 +539,8 @@ bool PathFollow::check_queue_ready() {
 
 bool PathFollow::traj_point_reached() {
 
-    float acc_dst_to_gate = _parameters.pafol_acc_dst_to_gate;
-    float gate_width = _parameters.pafol_gate_width;
+    float acc_dst_to_gate = NavigatorMode::parameters.pafol_acc_dst_to_gate;
+    float gate_width = NavigatorMode::parameters.pafol_gate_width;
 
     calculate_dst_to_gate();
 
@@ -661,7 +661,7 @@ PathFollow::calculate_desired_z() {
 
     float ret_z = 0.0f;
 
-    if (_parameters.follow_rpt_alt == 0) {
+    if (NavigatorMode::parameters.follow_rpt_alt == 0) {
 
         ret_z = _starting_z;
 
@@ -675,8 +675,8 @@ PathFollow::calculate_desired_z() {
         // Go for trajectory point
         if (_first_tp_flag){
 
-            length_full = _z_start_dst_to_gate - _parameters.pafol_acc_dst_to_gate;
-            length_left = _dst_to_gate - _parameters.pafol_acc_dst_to_gate;
+            length_full = _z_start_dst_to_gate - NavigatorMode::parameters.pafol_acc_dst_to_gate;
+            length_left = _dst_to_gate - NavigatorMode::parameters.pafol_acc_dst_to_gate;
             rate_left = length_left / length_full;
             rate_done = 1.0f - rate_left;
 
@@ -714,7 +714,7 @@ PathFollow::calculate_alt_values(bool tp_just_reached){
 
     if (_z_start < _first_tp.z){
 
-        float dst_to_reaching_point = _dst_to_gate - _parameters.pafol_acc_dst_to_gate;
+        float dst_to_reaching_point = _dst_to_gate - NavigatorMode::parameters.pafol_acc_dst_to_gate;
         float rate = dst_to_reaching_point / _dst_to_gate;
 
         _z_goal = _z_start + (_first_tp.z - _z_start) * rate;

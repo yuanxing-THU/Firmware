@@ -92,10 +92,10 @@ Loiter::on_activation()
 	//Ignore all commands received from target so far
 	update_vehicle_command();
 
-    if (_parameters.first_point_lat == _parameters.last_point_lat
-        && _parameters.first_point_lon == _parameters.last_point_lon
-        && _parameters.first_point_lat != 0
-        && _parameters.first_point_lon != 0
+    if (NavigatorMode::parameters.first_point_lat == NavigatorMode::parameters.last_point_lat
+        && NavigatorMode::parameters.first_point_lon == NavigatorMode::parameters.last_point_lon
+        && NavigatorMode::parameters.first_point_lat != 0
+        && NavigatorMode::parameters.first_point_lon != 0
         ){
         // Deleting points, from logs and parameters, can't be valid
         int i_reset = 0;
@@ -113,13 +113,13 @@ Loiter::on_activation()
             //TODO [Max] send request to save parameters
         }
     } else {
-        if (_parameters.first_point_lat != 0
-                || _parameters.first_point_lon != 0
-                || _parameters.first_point_alt != 0.0f) {
+        if (NavigatorMode::parameters.first_point_lat != 0
+                || NavigatorMode::parameters.first_point_lon != 0
+                || NavigatorMode::parameters.first_point_alt != 0.0f) {
             double first_point[3];
-            first_point[0] = _parameters.first_point_lat / 1e7;
-            first_point[1] = _parameters.first_point_lon / 1e7;
-            first_point[2] = _parameters.first_point_alt;
+            first_point[0] = NavigatorMode::parameters.first_point_lat / 1e7;
+            first_point[1] = NavigatorMode::parameters.first_point_lon / 1e7;
+            first_point[2] = NavigatorMode::parameters.first_point_alt;
             if ( (first_point[0] / 10) < 1.0 || (first_point[1] / 10) < 1.0)
             {
                 mavlink_log_critical(_mavlink_fd, "ERROR: CBP insufficient first point precision");
@@ -130,13 +130,13 @@ Loiter::on_activation()
                 fprintf(stderr, "[loi] setting first point\n");
             }
         }
-        if (_parameters.last_point_lat != 0
-                || _parameters.last_point_lon != 0
-                || _parameters.last_point_alt != 0.0f) {
+        if (NavigatorMode::parameters.last_point_lat != 0
+                || NavigatorMode::parameters.last_point_lon != 0
+                || NavigatorMode::parameters.last_point_alt != 0.0f) {
             double last_point[3];
-            last_point[0] = _parameters.last_point_lat / 1e7;
-            last_point[1] = _parameters.last_point_lon / 1e7;
-            last_point[2] = _parameters.last_point_alt;
+            last_point[0] = NavigatorMode::parameters.last_point_lat / 1e7;
+            last_point[1] = NavigatorMode::parameters.last_point_lon / 1e7;
+            last_point[2] = NavigatorMode::parameters.last_point_alt;
             if ( (last_point[0] / 10) < 1.0 || (last_point[1] / 10) < 1.0)
             {
                 mavlink_log_critical(_mavlink_fd, "ERROR: CBP insufficient second point precision");
@@ -212,12 +212,12 @@ Loiter::on_active()
 			// TODO! [AK] Consider resetting camera while "freeze" mode is not implemented, as currently there is no easy way to activate "aim" camera while freezed
 			set_sub_mode(LOITER_SUB_MODE_AIM_AND_SHOOT, 2, -1);
 		}
-		else if (_parameters.airdog_init_pos_use == 1){
+		else if (NavigatorMode::parameters.airdog_init_pos_use == 1){
             set_sub_mode(LOITER_SUB_MODE_GO_TO_POSITION, 2);
             go_to_intial_position();
         }
         else {
-        	if (_parameters.start_follow_immediately == 1) {
+        	if (NavigatorMode::parameters.start_follow_immediately == 1) {
         		start_follow();
         	}
         	else {
@@ -234,7 +234,7 @@ Loiter::on_active()
 	}
 
 	if (loiter_sub_mode == LOITER_SUB_MODE_GO_TO_POSITION && check_current_pos_sp_reached()) {
-		if (_parameters.start_follow_immediately == 1) {
+		if (NavigatorMode::parameters.start_follow_immediately == 1) {
         	start_follow();
     	}
     	else {
@@ -373,7 +373,7 @@ Loiter::execute_command_in_aim_and_shoot(vehicle_command_s cmd){
             }
 			case REMOTE_CMD_UP: {
 
-				pos_sp_triplet->current.alt = global_pos->alt + _parameters.up_button_step;
+				pos_sp_triplet->current.alt = global_pos->alt + NavigatorMode::parameters.up_button_step;
 				pos_sp_triplet->current.lat = global_pos->lat;
 				pos_sp_triplet->current.lon = global_pos->lon;
 				pos_sp_triplet->current.position_valid = true;
@@ -384,7 +384,7 @@ Loiter::execute_command_in_aim_and_shoot(vehicle_command_s cmd){
 			}
 			case REMOTE_CMD_DOWN: {
 
-				pos_sp_triplet->current.alt = global_pos->alt - _parameters.down_button_step;
+				pos_sp_triplet->current.alt = global_pos->alt - NavigatorMode::parameters.down_button_step;
 				pos_sp_triplet->current.lat = global_pos->lat;
 				pos_sp_triplet->current.lon = global_pos->lon;
 				pos_sp_triplet->current.position_valid = true;
@@ -403,7 +403,7 @@ Loiter::execute_command_in_aim_and_shoot(vehicle_command_s cmd){
 				// circumference C: (radius * 2* PI)
 				// step length fraction of C: step/C
 				// angle of step fraction in radians: step/C * 2PI
-				double alpha = (double)_parameters.horizon_button_step / radius;
+				double alpha = (double)NavigatorMode::parameters.horizon_button_step / radius;
 
 				// vector yaw rotation +alpha or -alpha depending on left or right
 				R_phi.from_euler(0.0f, 0.0f, -alpha);
@@ -437,7 +437,7 @@ Loiter::execute_command_in_aim_and_shoot(vehicle_command_s cmd){
 				// circumference C: (radius * 2* PI)
 				// step length fraction of C: step/C
 				// angle of step fraction in radians: step/C * 2PI
-				double alpha = (double)_parameters.horizon_button_step / radius;
+				double alpha = (double)NavigatorMode::parameters.horizon_button_step / radius;
 
 				// vector yaw rotation +alpha or -alpha depending on left or right
 				R_phi.from_euler(0.0f, 0.0f, +alpha);
@@ -467,8 +467,8 @@ Loiter::execute_command_in_aim_and_shoot(vehicle_command_s cmd){
 
 				// Create vector in the same direction, with loiter_step length
 				math::Vector<3> offset_delta(
-						cosf(alpha) * _parameters.horizon_button_step,
-						sinf(alpha) * _parameters.horizon_button_step,
+						cosf(alpha) * NavigatorMode::parameters.horizon_button_step,
+						sinf(alpha) * NavigatorMode::parameters.horizon_button_step,
 						0);
 
 				math::Vector<3> offset_new = offset - offset_delta;
@@ -499,8 +499,8 @@ Loiter::execute_command_in_aim_and_shoot(vehicle_command_s cmd){
 
 				// Create vector in the same direction, with loiter_step length
 				math::Vector<3> offset_delta(
-						cosf(alpha) * _parameters.horizon_button_step,
-						sinf(alpha) * _parameters.horizon_button_step,
+						cosf(alpha) * NavigatorMode::parameters.horizon_button_step,
+						sinf(alpha) * NavigatorMode::parameters.horizon_button_step,
 						0);
 
 				math::Vector<3> offset_new = offset + offset_delta;
@@ -690,14 +690,14 @@ Loiter::execute_command_in_taking_off(vehicle_command_s cmd) {
 
 void
 Loiter::start_follow() {
-	if (_parameters.afol_mode == 0) {
+	if (NavigatorMode::parameters.afol_mode == 0) {
 
     	commander_request_s *commander_request = _navigator->get_commander_request();
 		commander_request->request_type = V_MAIN_STATE_CHANGE;
 		commander_request->main_state = MAIN_STATE_ABS_FOLLOW;
 		_navigator->set_commander_request_updated();
 
-    } else if (_parameters.afol_mode == 1) {
+    } else if (NavigatorMode::parameters.afol_mode == 1) {
 
         commander_request_s *commander_request = _navigator->get_commander_request();
         commander_request->request_type = V_MAIN_STATE_CHANGE;
@@ -707,23 +707,23 @@ Loiter::start_follow() {
 
         _navigator->set_commander_request_updated();
 
-    } else if (_parameters.afol_mode == 2) {
+    } else if (NavigatorMode::parameters.afol_mode == 2) {
         commander_request_s *commander_request = _navigator->get_commander_request();
         commander_request->request_type = V_MAIN_STATE_CHANGE;
         commander_request->main_state = MAIN_STATE_CABLE_PARK;
         _navigator->set_commander_request_updated();
-    } else if (_parameters.afol_mode == 3) {
+    } else if (NavigatorMode::parameters.afol_mode == 3) {
         commander_request_s *commander_request = _navigator->get_commander_request();
         commander_request->request_type = V_MAIN_STATE_CHANGE;
         commander_request->main_state = MAIN_STATE_FRONT_FOLLOW;
         _navigator->set_commander_request_updated();
 
-    } else if (_parameters.afol_mode == 4) {
+    } else if (NavigatorMode::parameters.afol_mode == 4) {
         commander_request_s *commander_request = _navigator->get_commander_request();
         commander_request->request_type = V_MAIN_STATE_CHANGE;
         commander_request->main_state = MAIN_STATE_CIRCLE_AROUND;
         _navigator->set_commander_request_updated();
-    } else if (_parameters.afol_mode == 5) {
+    } else if (NavigatorMode::parameters.afol_mode == 5) {
         // Do nothing! Reserved for "Hover aim and shoot", so stay in Loiter
     }
 }

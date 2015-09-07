@@ -90,6 +90,9 @@ extern "C" __EXPORT int navigator_main(int argc, char *argv[]);
 
 static bool is_empty(double array[3]);
 
+PARAMETERS NavigatorMode::parameters;
+PARAM_HANDLES NavigatorMode::parameter_handles;
+
 namespace navigator
 {
 
@@ -149,7 +152,6 @@ Navigator::Navigator() :
 	_dataLinkLoss(this, "DLL"),
 	_engineFailure(this, "EF"),
 	_gpsFailure(this, "GPSF"),
-	_abs_follow(this, "FOL"),
 	_path_follow(this, "PAT"),
 	_offset_follow(this, "OFS"),
     _cable_path(this, "CBL"),
@@ -170,11 +172,10 @@ Navigator::Navigator() :
 	_navigation_mode_array[4] = &_engineFailure;
 	_navigation_mode_array[5] = &_gpsFailure;
 	_navigation_mode_array[6] = &_rcLoss;
-	_navigation_mode_array[7] = &_abs_follow;
-	_navigation_mode_array[8] = &_path_follow;
-	_navigation_mode_array[9] = &_land;
-    _navigation_mode_array[10] = &_cable_path;
-    _navigation_mode_array[11] = &_offset_follow;
+	_navigation_mode_array[7] = &_path_follow;
+	_navigation_mode_array[8] = &_land;
+    _navigation_mode_array[9] = &_cable_path;
+    _navigation_mode_array[10] = &_offset_follow;
 
 	updateParams();
 

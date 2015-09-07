@@ -57,8 +57,6 @@ SRCS		= navigator_main.cpp \
 		  enginefailure.cpp \
 		  gpsfailure.cpp \
 		  gpsfailure_params.c \
-		  abs_follow.cpp \
-		  abs_follow_params.c \
 		  path_follow.cpp \
 		  path_follow_params.c \
 		  leashed_follow.cpp \
