@@ -17,9 +17,9 @@ template <command_id_t CMD, typename Device, typename ... Args>
 void
 reply(Request< CMD >, Device & dev, Args & ...);
 
-template <command_id_t CMD, typename T, typename ... Args>
+template <command_id_t CMD, typename ... Args>
 inline errcode_t
-verify_request(Request< CMD >, T, const Args & ...)
+verify_request(Request< CMD >, const Args & ...)
 {
 	dbg("CMD 0x%04x verify_request() default OK.\n", CMD);
 	return ERRCODE_OK;

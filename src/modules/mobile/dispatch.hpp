@@ -48,7 +48,12 @@ struct RequestData< CMD, void >
 template < command_id_t CMD, typename Device, typename ... Args >
 inline errcode_t
 fetch(RequestData< CMD, void > & self, Device & dev, Args & ... args)
-{ return ERRCODE_OK; }
+{
+	Request< CMD > tag;
+	errcode_t r = verify_request(tag, args...);
+	dbg("CMD 0x%04x fetch: verify_request() -> 0x%02x.\n", CMD, r);
+	return r;
+}
 
 template < command_id_t CMD, typename Device, typename ... Args >
 void
