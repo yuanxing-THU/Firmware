@@ -32,6 +32,8 @@ private:
     bool leash_has_home;
     
     bool bothGotGPS();
+
+    void showGPSDisplay();
 };
 
 }

@@ -12,6 +12,9 @@
 
 #include <stdio.h>
 
+static const hrt_abstime  blink_time = 1.5e6; //1.5 second
+static const hrt_abstime  between_blinks = 1.5e6; //1.5 seconds
+
 namespace modes
 {
 
@@ -63,6 +66,7 @@ Base* Main::processGround(int orbId)
     Base *nextMode = nullptr;
     DataManager *dm = DataManager::instance();
 
+    makeAction();
     if (orbId == FD_KbdHandler && !ignoreKeyEvent)
     {
         if (key_pressed(BTN_MODE))
@@ -295,6 +299,8 @@ bool Main::onError(int errorCode)
 
 Base* Main::makeAction()
 {
+    static hrt_abstime change_time = 0;
+    static bool blink_ready = false;
     Base *nextMode = nullptr;
     DataManager *dm = DataManager::instance();
 
@@ -306,9 +312,33 @@ Base* Main::makeAction()
         switch (baseCondition.sub)
         {
             case NONE:
-                DisplayHelper::showMain(MAINSCREEN_INFO, currentActivity,
-                                        AIRDOGMODE_NONE, FOLLOW_PATH, LAND_SPOT,
-                                        leashGPS, airdogGPS);
+                if (change_time == 0)
+                {
+                    change_time = hrt_absolute_time();
+                }
+
+                if (blink_ready)
+                {
+                    if (hrt_absolute_time() - change_time > blink_time) 
+                    {
+                        blink_ready = false;
+                        change_time = 0;
+                    }
+                    DisplayHelper::showMain(MAINSCREEN_INFO, "READY...",
+                                            AIRDOGMODE_NONE, FOLLOW_PATH, LAND_SPOT,
+                                            leashGPS, airdogGPS);
+                }
+                else
+                {
+                    if (hrt_absolute_time() - change_time > between_blinks) 
+                    {
+                        blink_ready = true;
+                        change_time = 0;
+                    }
+                    DisplayHelper::showMain(MAINSCREEN_INFO, currentActivity,
+                                            AIRDOGMODE_NONE, FOLLOW_PATH, LAND_SPOT,
+                                            leashGPS, airdogGPS);
+                }
                 break;
             case HELP:
                 DisplayHelper::showMain(MAINSCREEN_READY_TO_TAKEOFF, currentActivity,

@@ -422,9 +422,9 @@ Base* Menu::makeAction()
     switch (currentEntry)
     {
         case MENUENTRY_SELECT:
-            dm->activityManager.set_waiting_for_params();
             sendAirDogCommnad(VEHICLE_CMD_NAV_REMOTE_CMD, REMOTE_CMD_SWITCH_ACTIVITY,
                     current_activity, 0, 0, 0, 0, 0);
+            dm->activityManager.set_waiting_for_params();
             nextMode = new ModeConnect(); //Connect will wait for new params
             break;
 
