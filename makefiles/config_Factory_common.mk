@@ -34,6 +34,7 @@ MODULES += modules/systemlib
 MODULES += modules/uORB
 MODULES += systemcmds/boardinfo
 MODULES += systemcmds/nshterm
+MODULES += systemcmds/param
 MODULES += systemcmds/reboot
 MODULES += systemcmds/ver
 
