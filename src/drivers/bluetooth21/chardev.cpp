@@ -201,7 +201,7 @@ poll(FAR struct file * filp, FAR struct pollfd * p_fd, bool setup_phase)
 	return r;
 }
 
-static int     
+static int
 ioctl(FAR struct file *filp, int cmd, unsigned long arg){
 
     dbg("IOCTL");
@@ -228,7 +228,7 @@ ioctl(FAR struct file *filp, int cmd, unsigned long arg){
         dbg("PAIRING TOGGLED");
         Globals::Service::toggle_pairing();
 		break;
-    
+
     }
 
     return r;

@@ -40,13 +40,7 @@ main(int argc, const char * argv[])
 	using BT::streq;
 	using namespace BT::Daemon;
 
-	if (argc < 2)
-	{
-		usage(argv[0]);
-		return 1;
-	}
-
-	if (streq(argv[1], "start") and argc >= 4)
+	if (argc >= 4 and streq(argv[1], "start"))
 	{
 		Main::start(argv);
 
@@ -64,11 +58,11 @@ main(int argc, const char * argv[])
 			return 1;
 		}
 	}
-	else if (streq(argv[1], "status") and argc == 2)
+	else if (argc == 2 and streq(argv[1], "status"))
 	{
 		Main::report_status(stdout);
 	}
-	else if (streq(argv[1], "stop") and argc == 2)
+	else if (argc == 2 and streq(argv[1], "stop"))
 	{
 		if (Main::is_running())
 			Main::request_stop();

@@ -23,7 +23,7 @@ PARAM_DEFINE_INT32(A_TELEMETRY_FLOW, CONFIG_TELEMETRY_HAS_CTSRTS);
  *    4 -- No telemetry
  *
  */
-PARAM_DEFINE_INT32(A_TELEMETRY_MODE, 1 );
+PARAM_DEFINE_INT32(A_TELEMETRY_MODE, 1);
 
 /*
  * Factory address index to connect to for one-connect mode in factory service mode.
@@ -33,7 +33,7 @@ PARAM_DEFINE_INT32(A_TELEMETRY_MODE, 1 );
  *
  * '-1' means - no default address and device should look for device to connect to.
  */
-PARAM_DEFINE_INT32(A_BT_CONNECT_TO, -1 );
+PARAM_DEFINE_INT32(A_BT_CONNECT_TO, -1);
 
 /*
  *
@@ -42,11 +42,11 @@ PARAM_DEFINE_INT32(A_BT_CONNECT_TO, -1 );
  * 1 -- User mode. (Real user expierence. Pairing is required.)
  *
  */
-PARAM_DEFINE_INT32(A_BT_SVC_MODE, 1 );
+PARAM_DEFINE_INT32(A_BT_SVC_MODE, 1);
 
 /*
  * Minimum BT firmware version allowed
  * Relies on the fact that BT firmware build numbers grow,
  * which might not be the case if major versions change
  */
-PARAM_DEFINE_INT32(A_BT_MIN_BUILD, 277 );
+PARAM_DEFINE_INT32(A_BT_MIN_BUILD, 277);

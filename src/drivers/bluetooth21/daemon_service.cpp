@@ -43,9 +43,11 @@ using namespace BT::Service;
 const char
 PROCESS_NAME[] = "bt21_service";
 
-hrt_abstime last_pairing_check = 0;
+static hrt_abstime
+last_pairing_check = 0;
 
-int _bt_state_pub = -1;
+static int
+_bt_state_pub = -1;
 
 static volatile bool
 should_run = false;
@@ -76,7 +78,7 @@ connect_mode = ConnectMode::UNDEFINED;
 ServiceMode
 service_mode = ServiceMode::UNDEFINED;
 
-bool 
+bool
 valid_connect_address = false;
 
 static Address6
@@ -244,8 +246,8 @@ pairing_loop(ServiceIO & service_io, ServiceState & svc){
             if (paired) {
                 connect_address = pairing_address;
                 valid_connect_address = true;
-            } 
-        } 
+            }
+        }
 
         if (!paired) {
             dbg("Paired failed.\n");
@@ -253,7 +255,7 @@ pairing_loop(ServiceIO & service_io, ServiceState & svc){
         } else {
 
             dbg("Paired with %d devices ! \n", svc.pairing.paired_devices );
-        
+
         }
 
     }
@@ -305,7 +307,7 @@ synced_loop(MultiPlexer & mp, ServiceIO & service_io, ServiceState & svc)
 
                 }
             }
-        } 
+        }
 
 		if (svc.conn.changed)
 		{
@@ -414,7 +416,7 @@ daemon()
     publish_bt_state(svc);
 
 	auto service_io = make_service_io(trace.dev, svc);
-	should_run = (service_mode != ServiceMode::UNDEFINED 
+	should_run = (service_mode != ServiceMode::UNDEFINED
         and connect_mode != ConnectMode::UNDEFINED
 		and fileno(raw_dev) > -1
 		and sync_soft_reset(service_io, svc.sync)
@@ -452,7 +454,7 @@ daemon()
     if (connect_mode == ConnectMode::ONE_CONNECT) {
 
         if (service_mode == ServiceMode::FACTORY) {
-        
+
             int32_t connect_to_param = Params::get("A_BT_CONNECT_TO");
 
             if (connect_to_param >= 0 && connect_to_param < (int32_t)n_factory_addresses)
@@ -480,11 +482,11 @@ daemon()
                 connect_address = get_trusted_address(service_io, 1, 1);
                 valid_connect_address = true;
             }
-        
+
         }
-    
+
     }
-    
+
 	if (should_run)
 	{
 		fsync(service_io.dev);
