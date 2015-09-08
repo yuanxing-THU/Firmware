@@ -279,11 +279,14 @@ private:
 	hrt_abstime _ref_timestamp;
 	float _alt_start;			/**< start altitude, i.e. when vehicle was armed */
 	float _target_alt_start;	/**< target start altitude, i.e. when vehicle was armed or target was found first time (if vehicle was already armed) */
+
 	bool _target_alt_start_valid;	/**< target start altitude valid flag */
 
+    float _target_alt_on_follow_start;
 	bool _reset_pos_sp;
 	bool _reset_alt_sp;
 	bool _mode_auto;
+    bool _mode_follow;
 	bool _reset_follow_offset;
     hrt_abstime landed_time;
 
@@ -306,6 +309,7 @@ private:
 	math::Vector<3> _sp_move_rate;
 
 	math::Vector<3> _tpos;
+
 	math::Vector<3> _tvel;
 
     math::LowPassFilter<float> _tvel_lpf_x;
@@ -516,10 +520,12 @@ MulticopterPositionControl::MulticopterPositionControl() :
 	_alt_start(0.0f),
 	_target_alt_start(0.0f),
 	_target_alt_start_valid(false),
+    _target_alt_on_follow_start(20.0f),
 
 	_reset_pos_sp(true),
 	_reset_alt_sp(true),
 	_mode_auto(false),
+    _mode_follow(false),
 	_reset_follow_offset(true),
     landed_time(0),
 	_loop_perf(perf_alloc(PC_ELAPSED, "mc_pos_control")),
@@ -1534,6 +1540,7 @@ MulticopterPositionControl::update_target_pos()
 			} else {
 				/* NaN on output, use previous value if possible and reset LPF */
 				if (!(isfinite(_tvel(0)) && isfinite(_tvel(1)) && isfinite(_tvel(2)))) {
+
 					_tvel.zero();
 				}
 
@@ -1556,6 +1563,11 @@ MulticopterPositionControl::update_target_pos()
 void
 MulticopterPositionControl::control_follow(float dt)
 {
+
+    if (!_mode_follow){
+        _target_alt_on_follow_start = _tpos(2);
+    }
+
 	/* follow target, change offset from target instead of moving setpoint directly */
 	reset_follow_offset();
 
@@ -1621,8 +1633,18 @@ MulticopterPositionControl::control_follow(float dt)
 	follow_offset_new(2) += _sp_move_rate(2) * dt;
 
 	_follow_offset = follow_offset_new;
-	_pos_sp = _tpos + _follow_offset;
 
+    float z_to_follow;
+
+    if (_params.follow_rpt_alt) {
+        z_to_follow = _tpos(2);
+    } else {
+        z_to_follow = _target_alt_on_follow_start;
+    }
+
+    _pos_sp(0) = _tpos(0) + _follow_offset(0);
+    _pos_sp(1) = _tpos(1) + _follow_offset(1);
+    _pos_sp(2) = z_to_follow + _follow_offset(2);
 
 	/* feed forward manual setpoint move rate with weight vel_ff */
 	_vel_ff_sp_mv_r = _sp_move_rate.emult(_params.vel_ff);
@@ -1638,7 +1660,6 @@ MulticopterPositionControl::control_follow(float dt)
 	/* update position setpoint and feed-forward velocity if not repeating target altitude */
 	if (!_params.follow_rpt_alt) {
 
-        _pos_sp(2) = _pos(2);
         _vel_ff_t(2) = 0.0f;
         _sp_move_rate(2) -= _tvel(2);
 
@@ -1888,10 +1909,13 @@ MulticopterPositionControl::task_main()
 
             }
 
+            bool  control_follow_run = false;
+
 			/* select control source */
 			if (_control_mode.flag_control_manual_enabled) {
 				if (_control_mode.flag_control_follow_target) {
 					/* follow */
+                    control_follow_run = true;
 					control_follow(dt);
 
 				} else {
@@ -1916,7 +1940,8 @@ MulticopterPositionControl::task_main()
 						}
 						else {
                         	// For auto ABS Follow
-                        	control_follow(dt);
+                            control_follow_run = true;
+                          	control_follow(dt);
                     	}
                     } else {
                         /* AUTO */
@@ -1924,6 +1949,12 @@ MulticopterPositionControl::task_main()
                     }
                 }
 			}
+
+            if (control_follow_run) {
+                _mode_follow = true;
+            } else {
+                _mode_follow = false;
+            }
 
 			if (_control_mode.flag_control_point_to_target) {
 				point_to_target();
