@@ -64,25 +64,25 @@
  */
 typedef enum {
 	MAIN_STATE_MANUAL = 0,
-	MAIN_STATE_ALTCTL,
-	MAIN_STATE_POSCTL,
-	MAIN_STATE_AUTO_MISSION,
-	MAIN_STATE_LOITER,
-	MAIN_STATE_RTL,
-	MAIN_STATE_ABS_FOLLOW,
-    MAIN_STATE_CABLE_PARK,
-    MAIN_STATE_AUTO_PATH_FOLLOW,
-	MAIN_STATE_ACRO,
-	MAIN_STATE_OFFBOARD,
-	MAIN_STATE_FOLLOW,
-    MAIN_STATE_EMERGENCY_RTL,
-    MAIN_STATE_EMERGENCY_LAND,
-	MAIN_STATE_AUTO_STANDBY,
-    MAIN_STATE_CIRCLE_AROUND,
-    MAIN_STATE_KITE_LITE,
-    MAIN_STATE_FRONT_FOLLOW,
-    MAIN_STATE_LAND,
-	MAIN_STATE_MAX,
+	MAIN_STATE_ALTCTL = 1,
+	MAIN_STATE_POSCTL = 2,
+	MAIN_STATE_AUTO_MISSION 	= 3,
+	MAIN_STATE_LOITER 			= 4,
+	MAIN_STATE_RTL 				= 5,
+	MAIN_STATE_ABS_FOLLOW 		= 6,
+    MAIN_STATE_CABLE_PARK 		= 7,
+    MAIN_STATE_AUTO_PATH_FOLLOW = 8,
+	MAIN_STATE_ACRO 			= 9,
+	MAIN_STATE_OFFBOARD 		= 10,
+	MAIN_STATE_FOLLOW 			= 11,
+    MAIN_STATE_EMERGENCY_RTL 	= 12,
+    MAIN_STATE_EMERGENCY_LAND 	= 13,
+	MAIN_STATE_AUTO_STANDBY 	= 14,
+    MAIN_STATE_CIRCLE_AROUND 	= 15,
+    MAIN_STATE_KITE_LITE 		= 16,
+    MAIN_STATE_FRONT_FOLLOW 	= 17,
+    MAIN_STATE_LAND 			= 18,
+	MAIN_STATE_MAX 				= 19,
 } main_state_t;
 
 typedef enum {
@@ -117,30 +117,30 @@ typedef enum {
  * Navigation state, i.e. "what should vehicle do".
  */
 typedef enum {
-	NAVIGATION_STATE_MANUAL = 0,		/**< Manual mode */
-	NAVIGATION_STATE_ALTCTL,			/**< Altitude control mode */
-	NAVIGATION_STATE_POSCTL,			/**< Position control mode */
-	NAVIGATION_STATE_AUTO_MISSION,		/**< Auto mission mode */
-	NAVIGATION_STATE_LOITER,		    /**< Auto loiter mode */
-	NAVIGATION_STATE_RTL,			    /**< Auto return to launch mode */
-	NAVIGATION_STATE_AUTO_RCRECOVER,	/**< RC recover mode */
-	NAVIGATION_STATE_AUTO_RTGS,			/**< Auto return to groundstation on data link loss */
-	NAVIGATION_STATE_ABS_FOLLOW,        /**< AUTO Abs Follow mode */
-    NAVIGATION_STATE_CABLE_PARK,        /**< Auto cable park mode */
-	NAVIGATION_STATE_AUTO_LANDENGFAIL,	/**< Auto land on engine failure */
-	NAVIGATION_STATE_AUTO_LANDGPSFAIL,	/**< Auto land on gps failure (e.g. open loop loiter down) */
-    NAVIGATION_STATE_AUTO_PATH_FOLLOW,  /**< AUTO Path Follow mode */
-	NAVIGATION_STATE_ACRO,				/**< Acro mode */
-	NAVIGATION_STATE_LAND,				/**< Land mode */
-	NAVIGATION_STATE_DESCEND,			/**< Descend mode (no position control) */
-	NAVIGATION_STATE_TERMINATION,		/**< Termination mode */
-	NAVIGATION_STATE_OFFBOARD,
-	NAVIGATION_STATE_FOLLOW,			/**< Manual-controlled follow mode */
-	NAVIGATION_STATE_AUTO_STANDBY,		/**< Auto Stand-By mode.*/
-    NAVIGATION_STATE_CIRCLE_AROUND,
-    NAVIGATION_STATE_KITE_LITE,
-    NAVIGATION_STATE_FRONT_FOLLOW,
-	NAVIGATION_STATE_MAX,
+	NAVIGATION_STATE_MANUAL 			= 0,	/**< Manual mode */
+	NAVIGATION_STATE_ALTCTL				= 1,	/**< Altitude control mode */
+	NAVIGATION_STATE_POSCTL				= 2,	/**< Position control mode */
+	NAVIGATION_STATE_AUTO_MISSION		= 3,	/**< Auto mission mode */
+	NAVIGATION_STATE_LOITER 			= 4,	/**< Auto loiter mode */
+	NAVIGATION_STATE_RTL 				= 5,	/**< Auto return to launch mode */
+	NAVIGATION_STATE_AUTO_RCRECOVER		= 6,	/**< RC recover mode */
+	NAVIGATION_STATE_AUTO_RTGS			= 7,	/**< Auto return to groundstation on data link loss */
+	NAVIGATION_STATE_ABS_FOLLOW       	= 8, 	/**< AUTO Abs Follow mode */
+    NAVIGATION_STATE_CABLE_PARK       	= 9,	/**< Auto cable park mode */
+	NAVIGATION_STATE_AUTO_LANDENGFAIL	= 10,	/**< Auto land on engine failure */
+	NAVIGATION_STATE_AUTO_LANDGPSFAIL	= 11,	/**< Auto land on gps failure (e.g. open loop loiter down) */
+    NAVIGATION_STATE_AUTO_PATH_FOLLOW	= 12,	/**< AUTO Path Follow mode */
+	NAVIGATION_STATE_ACRO 				= 13,	/**< Acro mode */
+	NAVIGATION_STATE_LAND 				= 14,	/**< Land mode */
+	NAVIGATION_STATE_DESCEND			= 15,	/**< Descend mode (no position control) */
+	NAVIGATION_STATE_TERMINATION		= 16,	/**< Termination mode */
+	NAVIGATION_STATE_OFFBOARD			= 17,
+	NAVIGATION_STATE_FOLLOW 			= 18,	/**< Manual-controlled follow mode */
+	NAVIGATION_STATE_AUTO_STANDBY		= 19,	/**< Auto Stand-By mode.*/
+    NAVIGATION_STATE_CIRCLE_AROUND		= 20,
+    NAVIGATION_STATE_KITE_LITE			= 21,
+    NAVIGATION_STATE_FRONT_FOLLOW		= 22,
+	NAVIGATION_STATE_MAX				= 23,
 } navigation_state_t;
 
 enum VEHICLE_MODE_FLAG {
