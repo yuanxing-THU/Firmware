@@ -911,6 +911,11 @@ MulticopterPositionControl::reset_pos_sp()
 				- _params.vel_ff(0) * _sp_move_rate(0)) / _params.pos_p(0);
 		_pos_sp(1) = _pos(1) + (_vel(1) - _att_sp.R_body[1][2] * _att_sp.thrust / _params.vel_p(1)
 				- _params.vel_ff(1) * _sp_move_rate(1)) / _params.pos_p(1);
+		// Can happen, for example, when att_sp is 0 and velocity P is 0 too
+		if (!isfinite(_pos_sp(0)) || !isfinite(_pos_sp(1))) {
+			_pos_sp(0) = _pos(0);
+			_pos_sp(1) = _pos(1);
+		}
 		mavlink_log_info(_mavlink_fd, "[mpc] reset pos sp: %.2f, %.2f", (double)_pos_sp(0), (double)_pos_sp(1));
 	}
 }
@@ -962,6 +967,10 @@ MulticopterPositionControl::reset_alt_sp()
 	if (_reset_alt_sp) {
 		_reset_alt_sp = false;
 		_pos_sp(2) = _pos(2) + (_vel(2) - _params.vel_ff(2) * _sp_move_rate(2)) / _params.pos_p(2);
+		// Can happen if position P is 0
+		if (!isfinite(_pos_sp(2))) {
+			_pos_sp(2) = _pos(2);
+		}
 		mavlink_log_info(_mavlink_fd, "[mpc] reset alt sp: %.2f", -(double)_pos_sp(2));
 	}
 }
