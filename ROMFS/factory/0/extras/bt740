@@ -1,0 +1,16 @@
+set R FAIL
+
+echo ---
+
+if [ x$TTY_BT21 != x ]
+then
+	echo bluetooth21 firmware-version $TTY_BT21
+	if bluetooth21 firmware-version $TTY_BT21
+	then
+		set R OK
+	fi
+fi
+
+echo ===
+
+echo $R

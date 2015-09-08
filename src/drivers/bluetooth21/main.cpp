@@ -20,8 +20,9 @@ usage(const char name[])
 		"\t%s           factory one-connect\n"
 		"\t%s status\n"
 		"\t%s stop\n"
+		"\t%s firmware-version tty\n"
 		"\n"
-		, name, name, name, name, name, name
+		, name, name, name, name, name, name, name
 	);
 }
 
@@ -75,6 +76,10 @@ main(int argc, const char * argv[])
 			fputc('.', stderr);
 			fflush(stderr);
 		}
+	}
+	else if (argc == 3 and streq(argv[1], "firmware-version"))
+	{
+		return Main::check_version_firmware(argv[2]);
 	}
 	else
 	{

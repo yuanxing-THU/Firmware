@@ -83,3 +83,44 @@ ready to work.
 OK
 nsh>
 ```
+
+
+#### BT740
+
+Here are two commands required:
+* `sh /etc/extras/settings`
+* `sh /etc/extras/bt740`
+
+AIRFMU output:
+```
+nsh> sh /etc/extras/settings
+nsh> sh /etc/extras/bt740
+---
+bluetooth21 firmware-version /dev/ttyS1
+bt21_io starting ...
+bt21_io started.
+bluetooth21:   18811014: BT required version: x.x.x.277
+bluetooth21:   18841232: BT firmware version: 2.3.1.277
+bt21_io stop requested.
+bt21_io stopped.
+===
+OK
+nsh>
+```
+
+ALMAIN output:
+```
+nsh> sh /etc/extras/settings
+nsh> sh /etc/extras/bt740
+---
+bluetooth21 firmware-version /dev/ttyS0
+bt21_io starting ...
+bt21_io started.
+bluetooth21:  221039267: BT required version: x.x.x.277
+bluetooth21:  221069237: BT firmware version: 2.3.1.277
+bt21_io stop requested.
+bt21_io stopped.
+===
+OK
+nsh>
+```

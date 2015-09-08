@@ -28,6 +28,9 @@ report_status(FILE *);
 void
 request_stop();
 
+int
+check_version_firmware(const char ttyname[]);
+
 }
 // end of namespace Main
 
@@ -81,6 +84,9 @@ report_status(FILE *);
 
 void
 request_stop();
+
+bool
+check_version_firmware();
 
 }
 // end of namespace Service

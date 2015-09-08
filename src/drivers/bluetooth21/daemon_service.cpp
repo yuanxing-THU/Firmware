@@ -592,6 +592,30 @@ request_stop()
 	fprintf(stderr, "%s stop requested.\n", PROCESS_NAME);
 }
 
+bool
+check_version_firmware()
+{
+	using namespace BT::Service::Laird;
+
+	unique_file raw_dev = tty_open(DEV_BT_SVC);
+	auto trace = make_trace_handle<SERVICE_TRACE>(
+		SERVICE_TRACE_FILE, raw_dev, "bt21_io  ", "bt21_svc "
+	);
+
+	ServiceState svc;
+	auto service_io = make_service_io(trace.dev, svc);
+
+	uint32_t required_build = Params::get("A_BT_MIN_BUILD");
+
+	log_info("BT required version: x.x.x.%u.\n", required_build);
+
+	bool ok = ( fileno(raw_dev) > -1
+		and required_build <= 0xFFFF
+		and check_module_firmware(service_io, required_build)
+	);
+
+	return ok ? 0 : 1;
+}
 
 
 }

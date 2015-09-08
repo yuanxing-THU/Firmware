@@ -6,6 +6,16 @@ ROMFS_ROOT ?= $(PX4_BASE)/ROMFS/factory/0/
 MODULES += modules/i2c_exchange
 
 #
+# Bluetooth21 BT740
+#
+MODULES += drivers/bluetooth21
+
+#
+# FRAM
+#
+MODULES += systemcmds/mtd
+
+#
 # OTP write modules
 #
 MODULES += lib/airdog/hwinfo
@@ -16,11 +26,6 @@ MODULES += systemcmds/flash
 # Debug / Security dangerous modules
 #
 MODULES += systemcmds/mem
-
-#
-# FRAM
-#
-MODULES += systemcmds/mtd
 
 #
 # Minimal required module set

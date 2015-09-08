@@ -131,6 +131,39 @@ request_stop()
 	fprintf(stderr, "%s stop requested.\n", PROCESS_NAME);
 }
 
+int
+check_version_firmware(const char ttyname[])
+{
+	if (is_running())
+	{
+		report_status(stderr);
+		fprintf(stderr, "Stop the %s driver first.\n", PROCESS_NAME);
+		return 1;
+	}
+
+	bool ok = Multiplexer::start(ttyname);
+	while (ok)
+	{
+		usleep(WAIT_PERIOD_us);
+		bool wait =      Multiplexer::is_running()
+			 and not Multiplexer::has_started();
+		if (not wait) { break; }
+	}
+
+	ok = running = Multiplexer::is_running();
+	if (ok)
+	{
+		ok = Service::check_version_firmware();
+
+		Multiplexer::request_stop();
+		Multiplexer::join();
+	}
+
+	running = false;
+
+	return ok ;
+}
+
 }
 // end of namespace Main
 }
