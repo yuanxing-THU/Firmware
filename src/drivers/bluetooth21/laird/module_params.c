@@ -26,3 +26,10 @@ PARAM_DEFINE_INT32(A_BT_S80_LATENCY, 30000);
  * UART poll latency one of -- (worst) 0, 1, 2, 3 (best).
  */
 PARAM_DEFINE_INT32(A_BT_S84_POLL, 1);
+
+/*
+ * Minimum BT firmware version allowed
+ * Relies on the fact that BT firmware build numbers grow,
+ * which might not be the case if major versions change
+ */
+PARAM_DEFINE_INT32(A_BT_MIN_BUILD, 277);
