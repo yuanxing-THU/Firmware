@@ -30,9 +30,7 @@ Acquiring_gps::Acquiring_gps() :
     leash_has_home(false)
 {
     checkGPS();
-    DisplayHelper::showMain(MAINSCREEN_INFO, "Getting GPS",
-                            AIRDOGMODE_NONE, FOLLOW_PATH, LAND_SPOT,
-                            leashGPS, airdogGPS);
+    showGPSDisplay();
 }
 
 int Acquiring_gps::getTimeout()
@@ -102,6 +100,8 @@ void Acquiring_gps::showGPSDisplay()
     static hrt_abstime change_time = 0;
     static bool blink_ready = false;
     char currentActivity[20];
+    int follow_mode = dm->activityManager.getFollowValue();
+    int land_mode =   dm->activityManager.getLandValue();
 
     dm->activityManager.get_display_name(currentActivity, sizeof(currentActivity));
 
@@ -118,7 +118,7 @@ void Acquiring_gps::showGPSDisplay()
             change_time = 0;
         }
         DisplayHelper::showMain(MAINSCREEN_INFO, "Getting GPS",
-                                AIRDOGMODE_NONE, FOLLOW_PATH, LAND_SPOT,
+                                AIRDOGMODE_NONE, follow_mode, land_mode,
                                 leashGPS, airdogGPS);
     }
     else
@@ -129,7 +129,7 @@ void Acquiring_gps::showGPSDisplay()
             change_time = 0;
         }
         DisplayHelper::showMain(MAINSCREEN_INFO, currentActivity,
-                                AIRDOGMODE_NONE, FOLLOW_PATH, LAND_SPOT,
+                                AIRDOGMODE_NONE, follow_mode, land_mode,
                                 leashGPS, airdogGPS);
     }
 }

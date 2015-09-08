@@ -28,9 +28,8 @@ Main::Main() :
 
     displayInfo.mode = MAINSCREEN_INFO;
     displayInfo.airdog_mode = AIRDOGMODE_NONE;
-    /*TODO[Max] presset info for next two required*/
-    displayInfo.follow_mode = FOLLOW_PATH;
-    displayInfo.land_mode = LAND_SPOT;
+    displayInfo.follow_mode = dm->activityManager.getFollowValue();
+    displayInfo.land_mode =   dm->activityManager.getLandValue();
 
     local_timer = 0;
     baseCondition.main = GROUNDED;
@@ -324,9 +323,11 @@ Base* Main::makeAction()
                         blink_ready = false;
                         change_time = 0;
                     }
-                    DisplayHelper::showMain(MAINSCREEN_INFO, "READY...",
-                                            AIRDOGMODE_NONE, FOLLOW_PATH, LAND_SPOT,
-                                            leashGPS, airdogGPS);
+                    DisplayHelper::showMain(MAINSCREEN_INFO, "READY..."
+                                                ,AIRDOGMODE_NONE
+                                                ,displayInfo.follow_mode
+                                                ,displayInfo.land_mode
+                                                ,leashGPS, airdogGPS);
                 }
                 else
                 {
@@ -335,15 +336,22 @@ Base* Main::makeAction()
                         blink_ready = true;
                         change_time = 0;
                     }
-                    DisplayHelper::showMain(MAINSCREEN_INFO, currentActivity,
-                                            AIRDOGMODE_NONE, FOLLOW_PATH, LAND_SPOT,
-                                            leashGPS, airdogGPS);
+                    DisplayHelper::showMain(MAINSCREEN_INFO, currentActivity
+                                                ,AIRDOGMODE_NONE
+                                                ,displayInfo.follow_mode
+                                                ,displayInfo.land_mode
+                                                ,leashGPS, airdogGPS);
                 }
                 break;
             case HELP:
                 DisplayHelper::showMain(MAINSCREEN_READY_TO_TAKEOFF, currentActivity,
                                         AIRDOGMODE_NONE, FOLLOW_PATH, LAND_SPOT,
                                         leashGPS, airdogGPS);
+                DisplayHelper::showMain(MAINSCREEN_READY_TO_TAKEOFF, currentActivity
+                                            ,AIRDOGMODE_NONE
+                                            ,displayInfo.follow_mode
+                                            ,displayInfo.land_mode
+                                            ,leashGPS, airdogGPS);
                 break;
             case CONFIRM_TAKEOFF:
                 DOG_PRINT("[leash_app]{main menu} confirm airdog screen\n");
@@ -424,22 +432,25 @@ Base* Main::processFlight(int orbId)
             displayInfo.airdog_mode = AIRDOGMODE_PAUSE;
             baseCondition.sub = PAUSE;
         }
-        else if (dm->airdog_status.state_main == MAIN_STATE_ABS_FOLLOW)
-        {
-            displayInfo.follow_mode = FOLLOW_ABS;
-            displayInfo.airdog_mode = AIRDOGMODE_PLAY;
-            baseCondition.sub = PLAY;
-        }
-        else if (dm->airdog_status.state_main == MAIN_STATE_AUTO_PATH_FOLLOW)
-        {
-            displayInfo.follow_mode = FOLLOW_PATH;
-            displayInfo.airdog_mode = AIRDOGMODE_PLAY;
-            baseCondition.sub = PLAY;
-        }
         else if (dm->airdog_status.state_main == MAIN_STATE_RTL)
         {
             displayInfo.airdog_mode = AIRDOGMODE_PAUSE;
             baseCondition.sub = RTL;
+        }
+        else
+        {
+            switch(dm->airdog_status.state_main)
+            {
+                case MAIN_STATE_ABS_FOLLOW:
+                case MAIN_STATE_CABLE_PARK:
+                case MAIN_STATE_AUTO_PATH_FOLLOW:
+                case MAIN_STATE_CIRCLE_AROUND:
+                case MAIN_STATE_KITE_LITE:
+                case MAIN_STATE_FRONT_FOLLOW:
+                    displayInfo.airdog_mode = AIRDOGMODE_PLAY;
+                    baseCondition.sub = PLAY;
+                    break;
+            }
         }
         // process airdog state
         if (dm->airdog_status.state_aird == AIRD_STATE_LANDING)

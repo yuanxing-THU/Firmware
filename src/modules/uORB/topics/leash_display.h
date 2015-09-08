@@ -32,14 +32,17 @@ typedef char LeashDisplay_Lines[LEASHDISPLAY_LINE_COUNT][LEASHDISPLAY_LINE_LENGH
 
 enum
 {
-    FOLLOW_PATH,
     FOLLOW_ABS,
+    FOLLOW_PATH,
+    FOLLOW_LINE,
+    FOLLOW_ADAPTIVE,
+    FOLLOW_CIRCLE,
     FOLLOW_MAX,
 };
 
 enum
 {
-    LAND_HOME,
+    LAND_HOME = 1,
     LAND_SPOT,
     LAND_MAX,
 };

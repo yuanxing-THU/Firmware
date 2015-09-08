@@ -100,7 +100,6 @@ void Screen::showMain(int mode, const char *presetName, int leashBattery, int ai
                       int airdogMode, int followMode, int landMode,
                       int leashGPS, int airdogGPS)
 {
-    DOG_PRINT("[display]{main} current mode %d\n", mode);
     int width = 0;
     int cx = 0;
     TextBlock blockpresetName(presetName, 4, 4, &Font::LucideGrandeSmall);
@@ -133,6 +132,8 @@ void Screen::showMain(int mode, const char *presetName, int leashBattery, int ai
         blockBatterySegment.x += 4;
     }
 
+
+
     int airdogImageId = -1;
 
     switch (airdogMode)
@@ -156,23 +157,43 @@ void Screen::showMain(int mode, const char *presetName, int leashBattery, int ai
     switch (followMode)
     {
         case FOLLOW_PATH:
-            followImageId = IMAGE_SCREENS_PATH;
+            followImageId = IMAGE_SCREENS_ICONS_MODES_PATH;
             break;
 
         case FOLLOW_ABS:
-            followImageId = IMAGE_SCREENS_ABS;
+            followImageId = IMAGE_SCREENS_ICONS_MODES_FIXED;
             break;
-    }
 
+        case FOLLOW_LINE:
+            followImageId = IMAGE_SCREENS_ICONS_MODES_LINE;
+            break;
+
+        case FOLLOW_ADAPTIVE:
+            followImageId = IMAGE_SCREENS_ICONS_MODES_ADAP;
+            break;
+
+        case FOLLOW_CIRCLE:
+            followImageId = IMAGE_SCREENS_ICONS_MODES_CIRCLE;
+            break;
+
+        default:
+            followImageId = IMAGE_SCREENS_ICONS_MODES_ERROR;
+            break;
+
+    }
 
     switch (landMode)
     {
         case LAND_HOME:
-            landImageId = IMAGE_SCREENS_HOME;
+            landImageId = IMAGE_SCREENS_ICONS_MODES_HOME;
             break;
 
         case LAND_SPOT:
-            landImageId = IMAGE_SCREENS_SPOT;
+            landImageId = IMAGE_SCREENS_ICONS_MODES_SPOT;
+            break;
+
+        default:
+            landImageId = IMAGE_SCREENS_ICONS_MODES_ERROR;
             break;
     }
 
@@ -188,7 +209,6 @@ void Screen::showMain(int mode, const char *presetName, int leashBattery, int ai
 
         display_draw_line(0, 29, 64, 29); // horizontal gps line
 
-        DOG_PRINT("[screen] leash_gps: %d\n", leashGPS);
 
         //Display AirLeash icon
         display_draw_line(2, 23, 2, 25);

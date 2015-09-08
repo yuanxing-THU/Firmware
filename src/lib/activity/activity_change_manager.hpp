@@ -45,6 +45,12 @@ class __EXPORT ActivityChangeManager {
         bool get_display_name(char* buffer, int buffer_len);
         int get_current_activity();
 
+        /* get follow/land value number saved on drone
+         * returns -1 on error
+         */
+        int getFollowValue();
+        int getLandValue();
+
         ParamChangeManager * get_next_visible_param();
         ParamChangeManager * get_prev_visible_param();
         ParamChangeManager * get_current_param();
@@ -54,7 +60,7 @@ class __EXPORT ActivityChangeManager {
 
         bool process_received_params(activity_params_s);
         bool params_received();
-        bool set_waiting_for_params();
+        void set_waiting_for_params();
 
         bool request_dog_params();
 

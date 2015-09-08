@@ -51,9 +51,31 @@ ActivityChangeManager::init(int _activity)
     }
 }
 
-bool
+void
 ActivityChangeManager::set_waiting_for_params(){
     params_up_to_date = false;
+}
+
+int
+ActivityChangeManager::getFollowValue()
+{
+    int result = -1;
+    if (!strncmp(ALLOWED_PARAMS[1].name, "NAV_AFOL_MODE", 20)) // returns 0 if strings are equal
+    {
+        result = (int)params[1].saved_value;
+    }
+    return result;
+}
+
+int
+ActivityChangeManager::getLandValue()
+{
+    int result = -1;
+    if (!strncmp(ALLOWED_PARAMS[2].name, "A_BSC_SAF_ACT", 20)) // returns 0 if strings are equal
+    {
+        result = (int)params[2].saved_value;
+    }
+    return result;
 }
 
 

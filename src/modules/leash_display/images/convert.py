@@ -10,14 +10,10 @@ filelist = [
 	'screens/play.png',
 	'screens/pause.png',
 	'screens/play_pause.png',
-	'screens/spot.png',
-	'screens/home.png',
-	'screens/abs.png',
-	'screens/path.png',
 	'screens/logo.png',
 	'screens/lnd_fol.png',
 	'screens/battery.png',
-	'screens/battery_segment.png',	
+	'screens/battery_segment.png',
 	];
 
 def addPath(path):
@@ -30,13 +26,13 @@ def addFont(path):
 		l = str(chr(i))
 		filename = outpath + l + ".png"
 		filelist.append(filename)
-	
+
 	outpath = path + "/big_"
 	for i in range(ord('A'), ord('Z')+1):
 		l = str(chr(i))
 		filename = outpath + l + ".png"
 		filelist.append(filename)
-	
+
 	outpath = path + "/"
 	for i in range(ord('0'), ord('9')+1):
 		l = str(chr(i))
@@ -51,6 +47,7 @@ addFont("screens/fonts/LucidaGrande_30")
 addFont("screens/fonts/LucidaGrande_15")
 addFont("screens/fonts/LucidaGrande_22")
 addFont("screens/fonts/LucidaGrande_12")
+addPath("screens/icons/modes/*.png")
 addPath("screens/icons/*.png")
 
 def getPngData(filename):
@@ -81,7 +78,7 @@ for filename in filelist:
 		imageInfo += ', '
 
 	imageInfo += '{' + str(w) + ',' + str(h) + ',' + str(totalSize) + '}'
-	imageData += data 
+	imageData += data
 	totalSize += size
 	i += 1
 
