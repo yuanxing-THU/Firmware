@@ -88,8 +88,8 @@ MODULES		+= modules/airdog
 MODULES		+= modules/commander
 MODULES		+= modules/gpio_led
 MODULES		+= modules/mavlink
-MODULES		+= modules/mobile
 MODULES		+= modules/navigator
+#MODULES		+= modules/mobile
 #MODULES		+= modules/uavcan
 
 #
