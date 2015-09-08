@@ -402,7 +402,7 @@ daemon()
 
 	fprintf(stderr, "%s starting ...\n", PROCESS_NAME);
 
-	unique_file raw_dev = tty_open("/dev/btservice");// TODO name #define/constexpr
+	unique_file raw_dev = tty_open(DEV_BT_SVC);
 	auto trace = make_trace_handle<SERVICE_TRACE>(
 		SERVICE_TRACE_FILE, raw_dev, "bt21_io  ", "bt21_svc "
 	);

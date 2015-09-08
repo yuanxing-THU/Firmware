@@ -20,6 +20,7 @@
 #include "io_multiplexer_flags.hpp"
 #include "io_multiplexer_global.hpp"
 #include "io_multiplexer_rw.hpp"
+#include "svc_settings.hpp"
 
 
 #define _BLUETOOTH21_BASE		0x2d00
@@ -261,9 +262,9 @@ static const struct file_operations g_fileops_ctl =
 };
 
 
-
+using BT::Service::DEV_BT_SVC;
 static const char * const devname[8] = {
-	"/dev/btservice", "/dev/bt1", "/dev/bt2", "/dev/bt3",
+	DEV_BT_SVC, "/dev/bt1", "/dev/bt2", "/dev/bt3",
 	"/dev/bt4", "/dev/bt5", "/dev/bt6", "/dev/bt7"
 };
 

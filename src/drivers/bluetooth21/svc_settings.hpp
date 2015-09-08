@@ -7,6 +7,8 @@ namespace BT
 namespace Service
 {
 
+constexpr char DEV_BT_SVC[] = "/dev/btservice";
+
 /*
  * Generated using http://bluetooth-pentest.narod.ru/software/bluetooth_class_of_device-service_generator.html
  */
