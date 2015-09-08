@@ -90,7 +90,7 @@ configure_before_reboot(ServiceIO & io, uint8_t service_mode)
 
     // Factory service mode - no input no output pairing (not secure)
     if (service_mode == (uint8_t)ServiceMode::FACTORY) reg6 = 12;
-        
+
     // User service mode - passcode pairing (more secure)
     if (service_mode == (uint8_t)ServiceMode::USER) reg6 = 14;
 
@@ -123,7 +123,7 @@ configure_before_reboot(ServiceIO & io, uint8_t service_mode)
 		{ 14, 1 },     // Auto-accept connections
 		{ 34, 2 },     // Number of incoming connections
 		{ 35, 1 },     // Number of outgoing connections
-        //{ 47, 0 },      // Link key is sent during pairing(EVT_LINK_KEY_EX is sent insteady of EVT_LINK_KEY): Yes 
+        //{ 47, 0 },      // Link key is sent during pairing(EVT_LINK_KEY_EX is sent insteady of EVT_LINK_KEY): Yes
 		{ 80, reg80 }, // UART latency time in microseconds.
 		{ 81, 50 },    // MP mode: Memory % for UART RX processing.
 		{ 82, 60 },    // UART buffer fill level to *DE*assert RTS.

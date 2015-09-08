@@ -107,9 +107,9 @@
    /*STATUS values pertaining to multipoint library are mapped to >= 0x80*/
 #define MPSTATUS_FAIL                               0x80
 #define MPSTATUS_BUSY_TRY_LATER                     0x81
-#define MPSTATUS_SDP_REGISTER_BUSY                  0x82 
-#define MPSTATUS_RFC_REGISTER_FAIL                  0x83 
-#define MPSTATUS_TOO_MANY_PROFILES                  0x84 
+#define MPSTATUS_SDP_REGISTER_BUSY                  0x82
+#define MPSTATUS_RFC_REGISTER_FAIL                  0x83
+#define MPSTATUS_TOO_MANY_PROFILES                  0x84
 #define MPSTATUS_MALLOC_FAILED                      0x85
 #define MPSTATUS_NULL_POINTER                       0x86
 #define MPSTATUS_INQUIRY_IN_PROGRESS                0x87
@@ -225,7 +225,7 @@
 #define MPSTATUS_IAS_REJECTEDSECURITY               0xF9
 #define MPSTATUS_IAS_FAIL                           0xFA
 
-                                                
+
 #define MPSTATUS_CONTACT_MANUFACTURER               0xFF
 
 

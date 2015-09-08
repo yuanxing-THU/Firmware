@@ -301,8 +301,8 @@ send_receive_verbose(
 template <typename Device, typename State>
 void
 wait_process_event(ServiceBlockingIO< Device, State > & service_io)
-{ 
-    
+{
+
 	ResponceEventBuffer packet;
 
 	ssize_t r = wait_service_packet(service_io.dev, packet);
@@ -317,7 +317,7 @@ wait_process_event(ServiceBlockingIO< Device, State > & service_io)
 		if (is_command(event))
 			dbg("Unexpected command response 0x%02x.\n", event);
 	}
-    
+
 }
 
 
@@ -333,7 +333,7 @@ uint8_t
 wait_any_answer(
 	ServiceBlockingIO< Device, State > & self,
 	event_id_t cmd,
-	void * buf, 
+	void * buf,
     size_t bufsize,
 	Time::duration_t wait_for
 ) {

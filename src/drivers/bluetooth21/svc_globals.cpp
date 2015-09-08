@@ -7,9 +7,9 @@ namespace Globals
 namespace Service
 {
 
-bool pairing_on = false; 
+bool pairing_on = false;
 
-void 
+void
 turn_pairing_on(){
     pairing_on = true;
 }
@@ -24,7 +24,7 @@ toggle_pairing(){
     pairing_on = !pairing_on;
 }
 
-bool 
+bool
 get_pairing_status(){
     return pairing_on;
 }

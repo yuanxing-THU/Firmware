@@ -24,7 +24,7 @@ pair(ServiceBlockingIO< Device, State> & io){
 
     dbg("<- pair() start \n");
 
-    RESPONSE_PAIR_INITIATE rsp; 
+    RESPONSE_PAIR_INITIATE rsp;
 
     auto cmd = prefill_packet<COMMAND_PAIR_INITIATE, CMD_PAIR_INITIATE>();
     const auto wait_for = Time::duration_sec(30);
@@ -65,7 +65,7 @@ pair(ServiceBlockingIO< Device, State> & io){
 }
 
 
-bool 
+bool
 get_pairing_confirmation(){
     // ToDo: Confirmation button processing here.
     dbg("Drone is confirming pairing.\n");
@@ -78,7 +78,7 @@ is_drone() {
 
     dbg("Checking if drone.\n");
     uint32_t i = Params::get("MAV_TYPE");
-    return i == 2; 
+    return i == 2;
 
 }
 
@@ -87,7 +87,7 @@ bool
 confirm_deny_pairing(Device & dev, const RESPONSE_EVENT_UNION & p) {
 
     // Pairing confirmation is implemented and used only on drone side.
-    
+
     if (is_drone()){
         auto cmd = prefill_packet<CONFIRM_SIMPLE_PAIRING, CNF_SIMPLE_PAIRING>();
         cmd.action = SSP_ACTION_DISPLAY_YESNO;
@@ -108,7 +108,7 @@ confirm_deny_pairing(Device & dev, const RESPONSE_EVENT_UNION & p) {
     } else {
 
         return false;
-    
+
     }
 }
 
@@ -127,7 +127,7 @@ send_passcode(Device & dev, const RESPONSE_EVENT_UNION & p) {
     cmd.actionValue[0] = 0;
     cmd.actionValue[1] = 0;
     cmd.actionValue[2] = 114;
-    cmd.actionValue[3] = 255; 
+    cmd.actionValue[3] = 255;
 
     if (not write_command(dev, &cmd, sizeof cmd))
     {
@@ -140,7 +140,7 @@ send_passcode(Device & dev, const RESPONSE_EVENT_UNION & p) {
 }
 
 template <typename Device, typename State>
-bool 
+bool
 handle(ServiceBlockingIO< Device, State > & service_io, PairingState & self, const RESPONSE_EVENT_UNION & p)
 {
 
@@ -149,7 +149,7 @@ handle(ServiceBlockingIO< Device, State > & service_io, PairingState & self, con
 
         switch (get_event_id(p))
         {
-            case EVT_SIMPLE_PAIRING: 
+            case EVT_SIMPLE_PAIRING:
 
                 dbg("->EVT_SIMPLE_PAIRING\n");
 
@@ -166,7 +166,7 @@ handle(ServiceBlockingIO< Device, State > & service_io, PairingState & self, con
 
                 // self.link_key = p.evtLinkKeyEx.linkKey;
                 // Link key received - add to trusted db?
-                
+
                 // dbg("Pairing done. Adding trusted key. ");
                 // bool ok = add_trusted_key(service_io, pairing_address, svc.pairing.link_key);
 
@@ -179,7 +179,7 @@ handle(ServiceBlockingIO< Device, State > & service_io, PairingState & self, con
 
                 // If EVT_LINK_KEY is received then this device is added to ROLLING trust db
                 // Let's move it to PERSISTANT trust db
-                
+
                 move_rolling_to_persistant(service_io, p.evtLinkKey.bdAddr);
                 service_io.state.pairing.paired_devices++;
 
@@ -191,12 +191,12 @@ handle(ServiceBlockingIO< Device, State > & service_io, PairingState & self, con
 }
 
 template <typename Device, typename State>
-bool 
+bool
 handle_evt_simple_pairing(ServiceBlockingIO< Device, State > & service_io,const RESPONSE_EVENT_UNION & p) {
 
     switch (p.evtSimplePairing.action) {
         case SSP_ACTION_COMPLETE:
-            
+
             dbg("Pairing complete action.\n");
 
             return true;

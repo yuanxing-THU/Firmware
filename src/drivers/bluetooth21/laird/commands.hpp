@@ -277,9 +277,9 @@ trusted_db_record_count_get(ServiceIO & io, uint8_t dbType)
         dbg("-> command trusted_db_record_count_get() resulting count: %d.\n" , rsp.count);
     }
 
-    if (ok) 
+    if (ok)
         return rsp.count;
-     else 
+     else
         return -1;
 
 }
