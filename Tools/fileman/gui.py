@@ -131,12 +131,16 @@ class Application(tk.Frame):
                     print("Getting last GPS date of the log file")
                     # Python interface of sdlog2_dump sux, so use system call
                     lastGPS = os.popen("%s/sdlog2_dump.py %s -m GPS_GPSTime" % (quote(os.path.dirname(__file__)), quote(self.dir_to_save+'/'+new_filename))).readlines()
-                    try:
-                        replace_string = datetime.utcfromtimestamp(long(lastGPS[-1]) / 1000000).strftime("%y%m%d-%H%M")
-                        filename_with_timestamp = new_filename.replace("log001", replace_string)
-                        os.rename(self.dir_to_save+'/'+new_filename, self.dir_to_save+'/'+filename_with_timestamp)
-                    except ValueError as err:
-                        print(err)
+                    if len(lastGPS) > 0:
+                        try:
+                            replace_string = datetime.utcfromtimestamp(long(lastGPS[-1]) / 1000000).strftime("%y%m%d-%H%M")
+                            filename_with_timestamp = new_filename.replace("log001", replace_string)
+                            os.rename(self.dir_to_save+'/'+new_filename, self.dir_to_save+'/'+filename_with_timestamp)
+                        except ValueError as err:
+                            print("Unable to get the last date")
+                            print(err)
+                    else:
+                        print("Empty log file!")
 
                 print("Success.")
             else:
