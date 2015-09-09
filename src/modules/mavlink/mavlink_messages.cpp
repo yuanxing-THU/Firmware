@@ -2403,6 +2403,7 @@ private:
 	MavlinkOrbSubscription *_activity_params_sub;
 
 	uint64_t _activity_sndr_time;
+	uint64_t _activity_params_time;
 
 	/* do not allow top copying this class */
 	MavlinkStreamActivityParams(const MavlinkStreamActivityParams &);
@@ -2412,8 +2413,15 @@ protected:
 	explicit MavlinkStreamActivityParams(Mavlink *mavlink) : MavlinkStream(mavlink),
 		_activity_params_sndr_sub(_mavlink->add_orb_subscription(ORB_ID(activity_params_sndr))),
 		_activity_params_sub(_mavlink->add_orb_subscription(ORB_ID(activity_params))),
-        _activity_sndr_time(0)
-	{}
+        _activity_sndr_time(0),
+        _activity_params_time(0)
+	{
+        
+		struct activity_params_sndr_s activity_params_sndr;
+        activity_params_sndr.type = ACTIVITY_PARAMS_SNDR_OFF;
+        orb_advertise(ORB_ID(activity_params_sndr), &activity_params_sndr);
+
+    }
 
 	void send(const hrt_abstime t)
 	{
@@ -2421,21 +2429,22 @@ protected:
 		struct activity_params_s activity_params;
 		struct activity_params_sndr_s activity_params_sndr;
 
-        // Timestamp in msg will be updated only when sndr will be published
 		_activity_params_sndr_sub->update(&_activity_sndr_time, &activity_params_sndr);
 
-        if (activity_params_sndr.type != ACTIVITY_PARAMS_SNDR_STOP) {
+        if (_activity_sndr_time != 0 && activity_params_sndr.type != ACTIVITY_PARAMS_SNDR_OFF) {
 
-            _activity_params_sub->update(&activity_params);
+            _activity_params_sub->update(&_activity_params_time, &activity_params);
 
-            mavlink_activity_params_t msg;
-            msg.timestamp = _activity_sndr_time;
+            if (_activity_params_time != 0) {
+                mavlink_activity_params_t msg;
+                msg.timestamp = _activity_sndr_time;
 
-            for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++) {
-                msg.values[i] = activity_params.values[i];
+                for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++) {
+                    msg.values[i] = activity_params.values[i];
+                }
+
+                _mavlink->send_message(MAVLINK_MSG_ID_ACTIVITY_PARAMS, &msg);
             }
-
-            _mavlink->send_message(MAVLINK_MSG_ID_ACTIVITY_PARAMS, &msg);
         }
 	}
 };

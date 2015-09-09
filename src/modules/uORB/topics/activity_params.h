@@ -29,9 +29,8 @@ ORB_DECLARE(activity_params);
 
 
 typedef enum {
-    ACTIVITY_PARAMS_SNDR_VALUES = 0,
-    ACTIVITY_PARAMS_SNDR_STOP,
-    ACTIVITY_PARAMS_SNDR_FAILED,
+    ACTIVITY_PARAMS_SNDR_OFF = 0,
+    ACTIVITY_PARAMS_SNDR_ON = 1,
 } activity_params_sndr_type;
 
 struct activity_params_sndr_s {

@@ -31,7 +31,6 @@ ActivityChangeManager::ActivityChangeManager(int _activity) :
         init_activity_config();
         
         activity_params_sub = orb_subscribe(ORB_ID(activity_params));
-        start_activity_param_messasges();
 
 }
 
@@ -431,7 +430,7 @@ bool
 ActivityChangeManager::send_params_to_dog(){
 
     activity_params_sndr_s activity_params_sndr;
-    activity_params_sndr.type = ACTIVITY_PARAMS_SNDR_VALUES;
+    activity_params_sndr.type = ACTIVITY_PARAMS_SNDR_ON;
 
     int activity_params_sndr_pub = orb_advertise(ORB_ID(activity_params_sndr), &activity_params_sndr);
 
@@ -469,10 +468,10 @@ ActivityChangeManager::params_received() {
 }
 
 bool 
-ActivityChangeManager::stop_activity_param_messasges() {
+ActivityChangeManager::activity_param_messasges_on() {
 
     activity_params_sndr_s sndr;
-    sndr.type = ACTIVITY_PARAMS_SNDR_STOP;
+    sndr.type = ACTIVITY_PARAMS_SNDR_OFF;
     orb_advertise(ORB_ID(activity_params_sndr), &sndr);
 
     return true;
@@ -480,10 +479,10 @@ ActivityChangeManager::stop_activity_param_messasges() {
 
 
 bool 
-ActivityChangeManager::start_activity_param_messasges() {
+ActivityChangeManager::activity_param_messasges_off() {
 
     activity_params_sndr_s sndr;
-    sndr.type = ACTIVITY_PARAMS_SNDR_VALUES;
+    sndr.type = ACTIVITY_PARAMS_SNDR_ON;
     orb_advertise(ORB_ID(activity_params_sndr), &sndr);
 
     return true;

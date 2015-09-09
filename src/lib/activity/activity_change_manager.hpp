@@ -64,8 +64,8 @@ class __EXPORT ActivityChangeManager {
 
         bool request_dog_params();
 
-        bool start_activity_param_messasges();
-        bool stop_activity_param_messasges();
+        bool activity_param_messasges_on();
+        bool activity_param_messasges_off();
 
         void init(int _activity);
        
