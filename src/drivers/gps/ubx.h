@@ -511,6 +511,7 @@ public:
 	UBX(const int &fd, struct vehicle_gps_position_s *gps_position, struct satellite_info_s *satellite_info);
 	~UBX();
 	int			receive(const unsigned timeout);
+	bool			is_configured();
 	int			configure(unsigned &baudrate);
 	int			configureGps();
 private:

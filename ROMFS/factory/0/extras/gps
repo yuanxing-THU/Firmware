@@ -1,0 +1,138 @@
+set R FAIL
+
+echo ---
+
+if [ x$TTY_GPS != x ]
+then
+	echo "Warning: It could take long time!"
+
+	echo
+	echo gps start -d $TTY_GPS
+	gps start -d $TTY_GPS
+
+# Attempt 0
+	sleep 3
+	echo
+	echo gps test
+	if gps test
+	then
+		set R OK
+	fi
+
+# Attempt 1
+	if [ $R != OK ]
+	then
+		sleep 3
+		echo
+		echo gps test
+		if gps test
+		then
+			set R OK
+		fi
+	fi
+
+# Attempt 2
+	if [ $R != OK ]
+	then
+		sleep 5
+		echo
+		echo gps test
+		if gps test
+		then
+			set R OK
+		fi
+	fi
+
+# Attempt 3
+	if [ $R != OK ]
+	then
+		sleep 7
+		echo
+		echo gps test
+		if gps test
+		then
+			set R OK
+		fi
+	fi
+
+# Attempt 4
+	if [ $R != OK ]
+	then
+		sleep 7
+		echo
+		echo gps test
+		if gps test
+		then
+			set R OK
+		fi
+	fi
+
+# Attempt 5
+	if [ $R != OK ]
+	then
+		sleep 7
+		echo
+		echo gps test
+		if gps test
+		then
+			set R OK
+		fi
+	fi
+
+# Attempt 6
+	if [ $R != OK ]
+	then
+		sleep 9
+		echo
+		echo gps test
+		if gps test
+		then
+			set R OK
+		fi
+	fi
+
+# Attempt 7
+	if [ $R != OK ]
+	then
+		sleep 9
+		echo
+		echo gps test
+		if gps test
+		then
+			set R OK
+		fi
+	fi
+
+# Attempt 8
+	if [ $R != OK ]
+	then
+		sleep 9
+		echo
+		echo gps test
+		if gps test
+		then
+			set R OK
+		fi
+	fi
+
+# Attempt 9
+	if [ $R != OK ]
+	then
+		sleep 9
+		echo
+		echo gps test
+		if gps test
+		then
+			set R OK
+		fi
+	fi
+
+	echo
+	echo gps stop
+	gps stop
+fi
+
+echo ===
+
+echo $R
+

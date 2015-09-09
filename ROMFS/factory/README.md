@@ -1,9 +1,5 @@
 # Factory checks
 
-## USB checks
-
-### FMU only checks
-
 #### eMMC
 
 ```sh
@@ -120,6 +116,157 @@ bluetooth21:  221039267: BT required version: x.x.x.277
 bluetooth21:  221069237: BT firmware version: 2.3.1.277
 bt21_io stop requested.
 bt21_io stopped.
+===
+OK
+nsh>
+```
+
+
+#### GPS
+
+Here are two commands required:
+* `sh /etc/extras/settings`
+* `sh /etc/extras/gps`
+
+AIRFMU output (fast case):
+```
+nsh> sh /etc/extras/settings
+nsh> sh /etc/extras/gps
+---
+Warning: It could take long time!
+
+gps start -d /dev/ttyS3
+[gps] starting
+gps: using NAV-PVT
+gps: GPS enabled 1 8 24
+gps: SBAS enabled 1
+gps: BDS enabled 0
+gps: QZSS enabled 1
+gps: GLONASS enabled 0
+gps: Gps configuration ok
+gps: VER hash 0x38eee1b4
+gps: VER hw  "  00080000"
+gps: VER sw  "                  2.01 (75331)"
+gps: VER ext "                  PROTVER 15.00"
+gps: VER ext "          GPS;SBAS;GLO;BDS;QZSS"
+gps: module found: UBX
+
+gps test
+gps: PASS
+
+gps stop
+gps: module lost
+gps: exiting
+===
+OK
+nsh>
+```
+
+ALMAIN output (fast case):
+```
+nsh> sh /etc/extras/settings
+nsh> sh /etc/extras/gps
+---
+Warning: It could take long time!
+
+gps start -d /dev/ttyS1
+[gps] starting
+gps: using NAV-PVT
+gps: GPS enabled 1 8 24
+gps: SBAS enabled 1
+gps: BDS enabled 0
+gps: QZSS enabled 1
+gps: GLONASS enabled 0
+gps: Gps configuration ok
+gps: VER hash 0x38eee1b4
+gps: VER hw  "  00080000"
+gps: VER sw  "                  2.01 (75331)"
+gps: VER ext "                  PROTVER 15.00"
+gps: VER ext "          GPS;SBAS;GLO;BDS;QZSS"
+gps: module found: UBX
+
+gps test
+gps: PASS
+
+gps stop
+gps: module lost
+gps: exiting
+===
+OK
+nsh>
+```
+
+ALMAIN output (slow case):
+```
+nsh> sh /etc/extras/settings
+nsh> sh /etc/extras/gps
+---
+Warning: It could take long time!
+
+gps start -d /dev/ttyS1
+[gps] starting
+gps: ubx checksum err
+gps: ubx checksum err
+gps: ubx checksum err
+
+gps test
+gps: No communication.
+gps: ubx checksum err
+gps: ubx checksum err
+gps: ubx checksum err
+
+gps test
+gps: No communication.
+gps: ubx msg 0x0107 invalid len 46556
+gps: ubx msg 0x0107 invalid len 46428
+gps: ubx msg 0x0107 invalid len 22364
+gps: ubx msg 0xe16d len 20652 unexpected
+gps: ubx disabling msg 0xe16d
+
+gps test
+gps: No communication.
+gps: ubx msg 0x0107 invalid len 46428
+gps: ubx checksum err
+gps: ubx msg 0x0107 invalid len 46556
+gps: ubx checksum err
+gps: ubx checksum err
+gps: ubx checksum err
+
+gps test
+gps: No communication.
+gps: ubx checksum err
+gps: ubx msg 0x0107 invalid len 4950
+gps: ubx checksum err
+gps: ubx msg 0x0107 invalid len 22108
+gps: ubx checksum err
+gps: ubx msg 0x0107 invalid len 22108
+
+gps test
+gps: No communication.
+gps: ubx checksum err
+gps: ubx msg 0x0107 invalid len 57436
+gps: ubx msg 0x0107 invalid len 4951
+gps: ubx checksum err
+gps: using NAV-PVT
+gps: GPS enabled 1 8 24
+gps: SBAS enabled 1
+gps: BDS enabled 0
+gps: QZSS enabled 1
+gps: GLONASS enabled 0
+gps: Gps configuration ok
+gps: VER hash 0x38eee1b4
+gps: VER hw  "  00080000"
+gps: VER sw  "                  2.01 (75331)"
+gps: VER ext "                  PROTVER 15.00"
+gps: VER ext "          GPS;SBAS;GLO;BDS;QZSS"
+gps: module found: UBX
+
+gps test
+gps: PASS
+
+gps stop
+gps: module lost
+gps: exiting
 ===
 OK
 nsh>

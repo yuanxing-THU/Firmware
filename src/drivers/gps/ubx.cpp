@@ -106,6 +106,12 @@ UBX::~UBX()
 {
 }
 
+bool
+UBX::is_configured()
+{
+	return _configured;
+}
+
 int
 UBX::configure(unsigned &baudrate)
 {

@@ -104,6 +104,11 @@ public:
 	 */
 	void				print_info();
 
+	/**
+	 * Check if the GPS device detected and works.
+	 */
+	bool				is_healthy();
+
 private:
 
 	bool				_task_should_exit;				///< flag to make the main worker task exit
@@ -522,6 +527,12 @@ GPS::print_info()
 	usleep(100000);
 }
 
+bool
+GPS::is_healthy()
+{
+	return _healthy and _Helper != nullptr and _Helper->is_configured();
+}
+
 /**
  * Local functions in support of the shell command.
  */
@@ -596,8 +607,10 @@ stop()
 void
 test()
 {
+	if (g_dev == nullptr) { errx(1, "Driver was not started."); }
 
-	errx(0, "PASS");
+	if (g_dev->is_healthy()) { errx(0, "PASS"); }
+	else { errx(1, "No communication."); }
 }
 
 /**

@@ -50,6 +50,7 @@ public:
 	GPS_Helper() {};
 	virtual ~GPS_Helper() {};
 
+	virtual bool			is_configured() = 0;
 	virtual int			configure(unsigned &baud) = 0;
 	virtual int 			receive(unsigned timeout) = 0;
 	int 				set_baudrate(const int &fd, unsigned baud);

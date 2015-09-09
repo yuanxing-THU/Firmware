@@ -16,6 +16,11 @@ MODULES += drivers/bluetooth21
 MODULES += systemcmds/mtd
 
 #
+# GPS
+#
+MODULES += drivers/gps
+
+#
 # OTP write modules
 #
 MODULES += lib/airdog/hwinfo

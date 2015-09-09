@@ -1,1 +1,2 @@
 set TTY_BT21 /dev/ttyS1
+set TTY_GPS /dev/ttyS3
