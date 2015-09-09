@@ -75,7 +75,7 @@ bool
 get_filename(file_index_t index, filename_buf_t & name)
 {
 	FileCatalog c = catalog(index);
-	bool ok = false;
+	bool ok;
 	switch (c)
 	{
 	case FileCatalog::ACTIVITY:
@@ -83,12 +83,16 @@ get_filename(file_index_t index, filename_buf_t & name)
 		break;
 	case FileCatalog::PUBLIC:
 		strncpy(name, "/fs/microsd/mobile/public.dat", sizeof name);
-		ok = true;
+		ok = index == 1;
 		break;
 	default:
-		dbg("No name for file index 0x%08x.\n", index);
+		ok = false;
+	}
+	if (ok) { dbg("File index 0x%08x name '%s'.\n", index, name); }
+	else
+	{
 		*name = '\0';
-		break;
+		dbg("No name for file index 0x%08x.\n", index);
 	}
 	return ok;
 }
