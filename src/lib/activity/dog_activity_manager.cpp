@@ -258,6 +258,10 @@ bool
 DogActivityManager::is_inited() {
 
     check_file_state();
+
+    if (_inited)
+        send_params_to_leash();
+
     return _inited;
 
 }
