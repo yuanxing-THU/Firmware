@@ -16,12 +16,14 @@ enum FileCatalog : uint8_t
 	INVALID,
 	ACTIVITY,
 	PUBLIC,
+	AUTH_DEPRICATED, // Two be removed! Useless 100% sure after 2015-11-01.
 };
 
 FileCatalog
 catalog(file_index_t index)
 {
 	if (index == 1) { return FileCatalog::PUBLIC; }
+	if ((index >> 8) == 0x000001) { return FileCatalog::AUTH_DEPRICATED; }
 	if ((index >> 16) == 0x0001) { return FileCatalog::ACTIVITY; }
 	return FileCatalog::INVALID;
 }
@@ -80,6 +82,17 @@ get_filename(file_index_t index, filename_buf_t & name)
 	{
 	case FileCatalog::ACTIVITY:
 		ok = get_activity_filename(index, name);
+		break;
+	case FileCatalog::AUTH_DEPRICATED:
+		ok = true;
+		switch (index)
+		{
+		case 0x100: case 0x101:
+			strncpy(name, "/etc/mobile-empty.dat", sizeof name);
+			break;
+		default:
+			ok = false;
+		}
 		break;
 	case FileCatalog::PUBLIC:
 		strncpy(name, "/fs/microsd/mobile/public.dat", sizeof name);
