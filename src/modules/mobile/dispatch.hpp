@@ -125,15 +125,6 @@ process_one_command(Device & f, FileWriteState & receive_file)
 	case CMD_INFO_CERT:
 		handle< CMD_INFO_CERT >(f);
 		break;
-	case CMD_STATUS_OVERALL:
-		handle< CMD_STATUS_OVERALL >(f);
-		break;
-	case CMD_ACTIVATION_READ:
-		handle< CMD_ACTIVATION_READ >(f);
-		break;
-	case CMD_ACTIVATION_WRITE:
-		handle< CMD_ACTIVATION_WRITE >(f);
-		break;
 	case CMD_FILE_INFO:
 		handle< CMD_FILE_INFO >(f);
 		break;
@@ -149,6 +140,29 @@ process_one_command(Device & f, FileWriteState & receive_file)
 	case CMD_WRITE_END:
 		handle< CMD_WRITE_END >(f, receive_file);
 		break;
+
+	/*
+	 * Mobile commands
+	 */
+
+	case CMD_STATUS_OVERALL:
+		handle< CMD_STATUS_OVERALL >(f);
+		break;
+	case CMD_ACTIVATION_READ:
+		handle< CMD_ACTIVATION_READ >(f);
+		break;
+	case CMD_ACTIVATION_WRITE:
+		handle< CMD_ACTIVATION_WRITE >(f);
+		break;
+
+	/*
+	 * Desktop commands
+	 */
+
+	case CMD_REBOOT:
+		handle< CMD_REBOOT >(f);
+		break;
+
 	default:
 		reply_command_result(f, ERRCODE_REQUEST_INVALID, cmd);
 		dump_unknown_command(cmd);

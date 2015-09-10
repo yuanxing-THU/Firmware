@@ -26,15 +26,26 @@ enum {                                              // Little-endian debug
 	CMD_VERSION_HARDWARE = CMD_AB('V', 'H'),    // 0x4856
 	CMD_INFO_SERIAL = CMD_AB('I', 'S'),         // 0x5349
 	CMD_INFO_CERT = CMD_AB('I', 'C'),           // 0x4349
-	CMD_STATUS_OVERALL = CMD_AB('S', 'O'),      // 0x4559
-	CMD_ACTIVATION_READ = CMD_AB('A', 'R'),     // 0x5241
-	CMD_ACTIVATION_WRITE = CMD_AB('A', 'W'),    // 0x5741
 	CMD_FILE_INFO = CMD_AB('F', 'I'),           // 0x4946
 	CMD_READ_BLOCK = CMD_AB('R', 'B'),          // 0x4252
 	CMD_WRITE_START = CMD_AB('W', 'S'),         // 0x5357
 	CMD_WRITE_BLOCK = CMD_AB('W', 'B'),         // 0x4257
 	CMD_WRITE_END = CMD_AB('W', 'E'),           // 0x4557
-	CMD_LOG_INDEX = CMD_AB('L', 'I'),           // 0x494c
+
+	/*
+	 * Mobile commands
+	 */
+
+	CMD_STATUS_OVERALL = CMD_AB('S', 'O'),      // 0x4559
+	CMD_ACTIVATION_READ = CMD_AB('A', 'R'),     // 0x5241
+	CMD_ACTIVATION_WRITE = CMD_AB('A', 'W'),    // 0x5741
+
+	/*
+	 * Desktop commands
+	 */
+
+	CMD_REBOOT = CMD_AB('r', 't'),              // 0x7472
+	CMD_LOG_INDEX = CMD_AB('l', 'i'),           // 0x696c
 };
 
 #undef CMD_AB
@@ -46,6 +57,7 @@ enum {                                           // Little-endian debug
 	ERRCODE_REQUEST_INVALID = 0x02,
 	ERRCODE_REQUEST_HEADER_INVALID = 0x03,
 	ERRCODE_REQUEST_BODY_INVALID = 0x04,
+	ERRCODE_REQUEST_FORBIDDEN = 0x05,
 	ERRCODE_ACTIVATION_FAILED = 'F',         // 0x46
 	ERRCODE_BASE64_ERROR = '6',              // 0x36
 	ERRCODE_FILE_BLOCK_INVALID = 'B',        // 0x42
