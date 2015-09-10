@@ -73,6 +73,7 @@
 #include <uORB/topics/position_restriction.h>
 #include <uORB/topics/user_camera_offsets.h>
 #include <uORB/topics/follow_offset.h>
+#include <uORB/topics/home_position.h>
 #include <systemlib/param/param.h>
 #include <systemlib/err.h>
 #include <systemlib/systemlib.h>
@@ -140,6 +141,7 @@ private:
     int     _vehicle_status_sub;    /**< vehicle status subscription */
     int 	_pos_restrict_sub;		/**< position restriction subscribtion */
     int 	_follow_offset_sub;		/**< offset for follow offset modes*/
+    int		_home_pos_sub;			/**< home position */
 
 	orb_advert_t	_att_sp_pub;			/**< attitude setpoint publication */
 	orb_advert_t	_local_pos_sp_pub;		/**< vehicle local position setpoint publication */
@@ -160,6 +162,8 @@ private:
 	struct position_restriction_s		_pos_restrict;	/**< position restriction*/
     struct camera_user_offsets_s        _cam_offset;    /**< user defined camera offset */
     struct follow_offset_s              _orb_follow_offset; /** < follow offset for offset follow modes > */
+    struct home_position_s 				_home_pos; /**< Home position in both global and local coordinates */
+    bool 								_home_valid; /**< We can't relay on home_timestamp for the time being */
 
 	struct {
         param_t cbp_max_init_speed;
@@ -509,12 +513,15 @@ MulticopterPositionControl::MulticopterPositionControl() :
 	_pos_sp_triplet_sub(-1),
 	_global_vel_sp_sub(-1),
 	_follow_offset_sub(-1),
+	_home_pos_sub(-1),
 
 /* publications */
 	_att_sp_pub(-1),
 	_local_pos_sp_pub(-1),
 	_global_vel_sp_pub(-1),
 	_cam_control_pub(-1),
+
+	_home_valid(false),
 
 	_ref_alt(0.0f),
 	_ref_timestamp(0),
@@ -547,6 +554,7 @@ MulticopterPositionControl::MulticopterPositionControl() :
 	memset(&_cam_control, 0, sizeof(_cam_control));
 
 	memset(&_ref_pos, 0, sizeof(_ref_pos));
+	memset(&_home_pos, 0, sizeof(_home_pos));
 
 	_params.pos_p.zero();
 	_params.vel_p.zero();
@@ -860,6 +868,21 @@ MulticopterPositionControl::poll_subscriptions()
         orb_copy(ORB_ID(follow_offset), _follow_offset_sub, &_orb_follow_offset);
     }
 
+    orb_check(_home_pos_sub, &updated);
+	if (updated) {
+		orb_copy(ORB_ID(home_position), _home_pos_sub, &_home_pos);
+		_home_valid = true;
+		if (_ref_timestamp != 0) {
+			/* Reproject home to be on the safe side. Not all the publications set x, y, z */
+			map_projection_project(&_ref_pos, _home_pos.lat, _home_pos.lon, &_home_pos.x, &_home_pos.y);
+			_home_pos.z = -(_home_pos.alt - _ref_alt);
+		}
+		/*
+		 * If ref is invalid and home publication didn't have x, y, z...
+		 * We still won't fly to home without ref and on ref update home will be projected
+		 */
+	}
+
 }
 
 float
@@ -903,6 +926,12 @@ MulticopterPositionControl::update_ref()
 			/* reproject position setpoint to new reference */
 			map_projection_project(&_ref_pos, lat_sp, lon_sp, &_pos_sp.data[0], &_pos_sp.data[1]);
 			_pos_sp(2) = -(alt_sp - _ref_alt);
+
+			if (_home_valid) {
+				/* Reproject home in case ref was changed */
+				map_projection_project(&_ref_pos, _home_pos.lat, _home_pos.lon, &_home_pos.x, &_home_pos.y);
+				_home_pos.z = -(_home_pos.alt - _ref_alt);
+			}
 		}
 
 		_ref_timestamp = _local_pos.ref_timestamp;
@@ -1796,6 +1825,7 @@ MulticopterPositionControl::task_main()
     _vehicle_status_sub = orb_subscribe(ORB_ID(vehicle_status));
     _pos_restrict_sub = orb_subscribe(ORB_ID(position_restriction));
     _follow_offset_sub = orb_subscribe(ORB_ID(follow_offset));
+    _home_pos_sub = orb_subscribe(ORB_ID(home_position));
 
 	parameters_update(true);
 
