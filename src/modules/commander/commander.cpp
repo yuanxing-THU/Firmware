@@ -172,8 +172,6 @@ static bool on_usb_power = false;
 
 static float takeoff_alt = 5.0f;
 static int parachute_enabled = 0;
-static float eph_threshold = 5.0f;
-static float epv_threshold = 10.0f;
 
 static struct vehicle_status_s status;
 static struct actuator_armed_s armed;
@@ -887,6 +885,11 @@ int commander_thread_main(int argc, char *argv[])
 	param_t _param_ef_time_thres = param_find("COM_EF_TIME");
 	param_t _param_activity = param_find("A_ACTIVITY");
 	param_t _param_activity_on = param_find("A_ACTIVITY_ON");
+	param_t _param_eph_threshold = param_find("A_GPS_LOSS_EPH");
+	param_t _param_epv_threshold = param_find("A_GPS_LOSS_EPV");
+
+	float eph_threshold = 5.0f;
+	float epv_threshold = 10.0f;
 
     int32_t activity_on;
 
@@ -1268,7 +1271,8 @@ int commander_thread_main(int argc, char *argv[])
 	bool target_position_was_valid = false;
 	bool trg_eph_good;
 	bool trg_epv_good;
-
+	// -1=not_inited, 0=invalid, 1=valid
+	int8_t gps_was_ok = -1;
 
 	while (!thread_should_exit) {
  
@@ -1365,6 +1369,9 @@ int commander_thread_main(int argc, char *argv[])
 
 			param_get(_param_target_datalink_timeout, &target_datalink_timeout);
 			param_get(_param_target_visibility_timeout_2, &target_visibility_timeout_2);
+
+			param_get(_param_eph_threshold, &eph_threshold);
+			param_get(_param_epv_threshold, &epv_threshold);
 
 			param_get(_param_good_target_eph, &good_target_eph);
 			param_get(_param_good_target_epv, &good_target_epv);
@@ -1520,26 +1527,39 @@ int commander_thread_main(int argc, char *argv[])
 
 		/* update condition_global_position_valid */
 		/* hysteresis for EPH/EPV */
-		bool eph_good;
+		bool eph_evp_good;
 
 		if (status.condition_global_position_valid) {
-			if (global_position.eph > eph_threshold * 2.5f) {
-				eph_good = false;
-
+			if (global_position.eph > eph_threshold || global_position.epv > epv_threshold) {
+				eph_evp_good = false;
 			} else {
-				eph_good = true;
+				eph_evp_good = true;
 			}
 
 		} else {
-			if (global_position.eph < eph_threshold) {
-				eph_good = true;
+			if (global_position.eph < eph_threshold * 0.75f && global_position.epv < epv_threshold * 0.75f) {
+				eph_evp_good = true;
 
 			} else {
-				eph_good = false;
+				eph_evp_good = false;
 			}
 		}
 
-		check_valid(global_position.timestamp, POSITION_TIMEOUT, eph_good, &(status.condition_global_position_valid), &status_changed);
+		check_valid(global_position.timestamp, POSITION_TIMEOUT, eph_evp_good, &(status.condition_global_position_valid), &status_changed);
+
+		if (!status.condition_global_position_valid) {
+			if (gps_was_ok == 1) {
+				QLOG_literal("[commander] GPS signal became bad!");
+				// Only set bad GPS flag in case GPS was already inited
+				gps_was_ok = 0;
+			}
+		}
+		else {
+			if (gps_was_ok == 0) {
+				QLOG_literal("[commander] GPS signal recovered!");
+			}
+			gps_was_ok = 1;
+		}
 
 		/* update home position */
 		if (!status.condition_home_position_valid && status.condition_global_position_valid && !armed.armed &&
@@ -1574,7 +1594,7 @@ int commander_thread_main(int argc, char *argv[])
 		bool local_eph_good;
 
 		if (status.condition_local_position_valid) {
-			if (local_position.eph > eph_threshold * 2.5f) {
+			if (local_position.eph > eph_threshold) {
 				local_eph_good = false;
 
 			} else {
@@ -1582,7 +1602,7 @@ int commander_thread_main(int argc, char *argv[])
 			}
 
 		} else {
-			if (local_position.eph < eph_threshold) {
+			if (local_position.eph < eph_threshold * 0.75f) {
 				local_eph_good = true;
 
 			} else {

@@ -298,3 +298,14 @@ PARAM_DEFINE_INT32(A_ACTIVITY, 0);
  */
 PARAM_DEFINE_INT32(A_ACTIVITY_ON, 1);
 
+/**
+ * EPH limit after which GPS will be considered invalid and GPS-failsafe will be enabled
+ * @group airdog
+ */
+PARAM_DEFINE_FLOAT(A_GPS_LOSS_EPH, 4.5f);
+
+/**
+ * EPV limit after which GPS will be considered invalid and GPS-failsafe will be enabled
+ * @group airdog
+ */
+PARAM_DEFINE_FLOAT(A_GPS_LOSS_EPV, 10.0f);
