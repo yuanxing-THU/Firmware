@@ -1495,6 +1495,9 @@ int sdlog2_thread_main(int argc, char *argv[])
 			log_msg.body.log_ATT.gx = buf.att.g_comp[0];
 			log_msg.body.log_ATT.gy = buf.att.g_comp[1];
 			log_msg.body.log_ATT.gz = buf.att.g_comp[2];
+			log_msg.body.log_ATT.roll_off = buf.att.rate_offsets[0];
+			log_msg.body.log_ATT.pitch_off = buf.att.rate_offsets[1];
+			log_msg.body.log_ATT.yaw_off = buf.att.rate_offsets[2];
 			LOGBUFFER_WRITE_AND_COUNT(ATT);
 		}
 
