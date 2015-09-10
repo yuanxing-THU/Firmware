@@ -167,8 +167,8 @@ __BEGIN_DECLS
 
 #define ADC_SYSPOWER_VOLTAGE_CHANNEL	ADC_BATTERY_VOLTAGE_CHANNEL
 
-// VDD 5V with K=1/2 measured by 12bit ADC with reference of 3.3v.
-#define ADC_SYSPOWER_VOLTAGE_SCALE	(3.3 * 2 / 4096)
+// VDD 5V with K=1/2 measured by 12bit ADC with reference of 3.0V.
+#define ADC_SYSPOWER_VOLTAGE_SCALE	(3.0 * 2 / 4096)
 #define ADC_SENSORS_VOLTAGE_SCALE	ADC_SYSPOWER_VOLTAGE_SCALE
 
 /* Tone alarm output */
