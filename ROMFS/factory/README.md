@@ -2,9 +2,25 @@
 
 #### eMMC
 
+Command is `sh /etc/extras/emmc`.
+
+Very first looks like
 ```sh
 nsh> sh /etc/extras/emmc
 ---
+test -e /fs/microsd
+mkfatfs /dev/mmcsd0
+mount -t vfat /dev/mmcsd0 /fs/microsd
+===
+OK
+nsh>
+```
+
+Then
+```sh
+nsh> sh /etc/extras/emmc
+---
+test -e /fs/microsd
 umount /fs/microsd
 mkfatfs /dev/mmcsd0
 mount -t vfat /dev/mmcsd0 /fs/microsd

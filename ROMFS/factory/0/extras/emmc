@@ -2,8 +2,12 @@ set R FAIL
 
 echo ---
 
-echo umount /fs/microsd
-umount /fs/microsd
+echo test -e /fs/microsd
+if test -e /fs/microsd
+then
+	echo umount /fs/microsd
+	umount /fs/microsd
+fi
 
 echo mkfatfs /dev/mmcsd0
 if mkfatfs /dev/mmcsd0
