@@ -1,86 +1,42 @@
 # Factory checks
 
-#### eMMC
+## General convention
 
-Command is `sh /etc/extras/emmc`.
+All the scripts put `---` at the start and `===` at the end,
+following `OK` or `FAIL` for binary checks.
 
-Very first looks like
-```sh
-nsh> sh /etc/extras/emmc
----
-test -e /fs/microsd
-mkfatfs /dev/mmcsd0
-mount -t vfat /dev/mmcsd0 /fs/microsd
-===
-OK
-nsh>
+
+## AIRFMU checks
+
+* [BL600](#bl600)
+* [eMMC](#emmc)
+* [FRAM](#fram)
+* [IO chip](#io-chip)
+
+
+## ALMAIN checks
+
+* [BT740](#bt740)
+* [eMMC](#emmc)
+* [FRAM](#fram)
+* [GPS](#gps)
+
+
+## Alfabetical list
+
+* [BL600](#bl600)
+* [BT740](#bt740)
+* [eMMC](#emmc)
+* [FRAM](#fram)
+* [GPS](#gps)
+* [IO chip](#io-chip)
+
+
+### BL600
+
+Command is `sh /etc/extras/bl600`.
+
 ```
-
-Then
-```sh
-nsh> sh /etc/extras/emmc
----
-test -e /fs/microsd
-umount /fs/microsd
-mkfatfs /dev/mmcsd0
-mount -t vfat /dev/mmcsd0 /fs/microsd
-===
-OK
-nsh>
-```
-
-
-#### FRAM
-
-```sh
-nsh> sh /etc/extras/fram
----
-mtd start
-mtd erase
-Erasing /fs/mtd_params
-Erased 8192 bytes
-Erasing /fs/mtd_waypoints
-Erased 8192 bytes
-mtd status
-mtd: Flash Geometry:
-  blocksize:      512
-  erasesize:      512
-  neraseblocks:   32
-  No. partitions: 2
-  Partition size: 16 Blocks (8192 bytes)
-  TOTAL SIZE: 16 KiB
-===
-OK
-nsh>
-```
-
-
-#### IO chip
-
-```sh
-nsh> sh /etc/extras/px4io
----
-test -f /etc/extras/px4io-v2_default.bin
-px4io forceupdate 14662 /etc/extras/px4io-v2_default.bin
-px4io: px4io is not started, still attempting upgrade
-[PX4IO] using firmware from /etc/extras/px4io-v2_default.bin
-[PX4IO] bad sync 0xff,0xff
-[PX4IO] found bootloader revision: 4
-[PX4IO] erase...
-[PX4IO] programming 57372 bytes...
-[PX4IO] verify...
-[PX4IO] update complete
-px4io checkcrc /etc/extras/px4io-v2_default.bin
-CRCs match
-===
-OK
-nsh>
-```
-
-
-#### BL600
-
-```sh
 nsh> sh /etc/extras/bl600
 ---
 mobile mode at
@@ -97,7 +53,7 @@ nsh>
 ```
 
 
-#### BT740
+### BT740
 
 Here are two commands required:
 * `sh /etc/extras/settings`
@@ -138,13 +94,74 @@ nsh>
 ```
 
 
-#### GPS
+### eMMC
+
+Command is `sh /etc/extras/emmc`.
+
+Very first looks like
+
+```
+nsh> sh /etc/extras/emmc
+---
+test -e /fs/microsd
+mkfatfs /dev/mmcsd0
+mount -t vfat /dev/mmcsd0 /fs/microsd
+===
+OK
+nsh>
+```
+
+Being run for second time
+
+```
+nsh> sh /etc/extras/emmc
+---
+test -e /fs/microsd
+umount /fs/microsd
+mkfatfs /dev/mmcsd0
+mount -t vfat /dev/mmcsd0 /fs/microsd
+===
+OK
+nsh>
+```
+
+
+### FRAM
+
+Command is `sh /etc/extras/fram`.
+
+```
+nsh> sh /etc/extras/fram
+---
+mtd start
+mtd erase
+Erasing /fs/mtd_params
+Erased 8192 bytes
+Erasing /fs/mtd_waypoints
+Erased 8192 bytes
+mtd status
+mtd: Flash Geometry:
+  blocksize:      512
+  erasesize:      512
+  neraseblocks:   32
+  No. partitions: 2
+  Partition size: 16 Blocks (8192 bytes)
+  TOTAL SIZE: 16 KiB
+===
+OK
+nsh>
+```
+
+
+### GPS
 
 Here are two commands required:
 * `sh /etc/extras/settings`
 * `sh /etc/extras/gps`
 
-AIRFMU output (fast case):
+
+#### AIRFMU output, quick case
+
 ```
 nsh> sh /etc/extras/settings
 nsh> sh /etc/extras/gps
@@ -178,7 +195,9 @@ OK
 nsh>
 ```
 
-ALMAIN output (fast case):
+
+#### ALMAIN output, quick case
+
 ```
 nsh> sh /etc/extras/settings
 nsh> sh /etc/extras/gps
@@ -212,7 +231,8 @@ OK
 nsh>
 ```
 
-ALMAIN output (slow case):
+#### Slow case
+
 ```
 nsh> sh /etc/extras/settings
 nsh> sh /etc/extras/gps
@@ -283,6 +303,28 @@ gps: PASS
 gps stop
 gps: module lost
 gps: exiting
+===
+OK
+nsh>
+```
+
+### IO chip
+
+```
+nsh> sh /etc/extras/px4io
+---
+test -f /etc/extras/px4io-v2_default.bin
+px4io forceupdate 14662 /etc/extras/px4io-v2_default.bin
+px4io: px4io is not started, still attempting upgrade
+[PX4IO] using firmware from /etc/extras/px4io-v2_default.bin
+[PX4IO] bad sync 0xff,0xff
+[PX4IO] found bootloader revision: 4
+[PX4IO] erase...
+[PX4IO] programming 57372 bytes...
+[PX4IO] verify...
+[PX4IO] update complete
+px4io checkcrc /etc/extras/px4io-v2_default.bin
+CRCs match
 ===
 OK
 nsh>
