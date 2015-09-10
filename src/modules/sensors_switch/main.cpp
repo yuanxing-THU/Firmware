@@ -94,6 +94,49 @@ report_sensor_voltage()
 	return ok;
 }
 
+bool
+report_channel(unsigned channel, float scale)
+{
+	struct adc_msg_s adc[N_ADC_CHANNELS];
+	if (not read_adc(adc)) { return false; }
+
+	for (size_t i = 0; i < N_ADC_CHANNELS; ++i)
+		if (adc[i].am_channel == channel)
+		{
+			printf("channel %u raw 0x%03x value %.2f\n"
+				, channel
+				, adc[i].am_data
+				, double(adc[i].am_data * scale)
+			);
+			return true;
+		}
+
+	return false;
+}
+
+bool
+factory_adc_check()
+{
+#if CONFIG_ARCH_BOARD_AIRLEASH
+
+	return report_channel(
+			ADC_SYSPOWER_VOLTAGE_CHANNEL,
+			ADC_SYSPOWER_VOLTAGE_SCALE
+	);
+
+#else
+/*
+ * If you need to compile the stuff on some other board,
+ * add explicit
+ *
+ *     return false
+ *
+ * for the case.
+ */
+# error Unsupported board.
+#endif
+}
+
 } // end of namespace
 
 int
@@ -104,7 +147,7 @@ main(int argc, const char * const * const argv)
 		fprintf(stderr,
 			"Usage: %s command [...]\n"
 			"\n"
-			"Command is one of: on, off, status, 3ms."
+			"Command is one of: on, off, status, 3ms, factory-adc-check."
 			" Each could be repeated multiple times\n"
 			, argv[0]);
 		return 1;
@@ -137,6 +180,10 @@ main(int argc, const char * const * const argv)
 			ok = true;
 			printf("%s\n", argv[i]);
 			usleep(3000);
+		}
+		else if (streq(argv[i], "factory-adc-check"))
+		{
+			ok = factory_adc_check();
 		}
 		else { fprintf(stderr, "Unknown command: \"%s\"\n", argv[i]); }
 	}

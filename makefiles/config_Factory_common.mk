@@ -6,6 +6,12 @@ ROMFS_ROOT ?= $(PX4_BASE)/ROMFS/factory/0/
 MODULES += modules/i2c_exchange
 
 #
+# ADC
+#
+MODULES += drivers/stm32/adc
+MODULES += modules/sensors_switch
+
+#
 # Bluetooth21 BT740
 #
 MODULES += drivers/bluetooth21

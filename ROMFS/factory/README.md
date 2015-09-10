@@ -4,6 +4,8 @@
 
 All the scripts put `---` at the start and `===` at the end,
 following `OK` or `FAIL` for binary checks.
+When you need to analyze the output yourself,
+the output is either `ok, check the values` or `FAIL`.
 
 
 ## AIRFMU checks
@@ -16,6 +18,7 @@ following `OK` or `FAIL` for binary checks.
 
 ## ALMAIN checks
 
+* [ADC](#adc)
 * [BT740](#bt740)
 * [eMMC](#emmc)
 * [FRAM](#fram)
@@ -24,12 +27,40 @@ following `OK` or `FAIL` for binary checks.
 
 ## Alfabetical list
 
+* [ADC](#adc)
 * [BL600](#bl600)
 * [BT740](#bt740)
 * [eMMC](#emmc)
 * [FRAM](#fram)
 * [GPS](#gps)
 * [IO chip](#io-chip)
+
+
+### ADC
+
+Command is `sh /etc/extras/adc`.
+
+
+#### AirDog
+
+_TODO_.
+
+
+#### AirLeash
+
+Channel 2 gives you current board voltage as seen by ADC.
+
+```
+nsh> sh /etc/extras/adc
+---
+adc
+<adc> init done
+sensors_switch factory-adc-check
+channel 2 raw 0xaf8 value 4.11
+===
+ok, check the values.
+nsh>
+```
 
 
 ### BL600

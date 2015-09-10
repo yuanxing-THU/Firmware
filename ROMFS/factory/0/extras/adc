@@ -1,0 +1,16 @@
+set R FAIL
+
+echo ---
+
+echo adc
+adc
+
+echo sensors_switch factory-adc-check
+if sensors_switch factory-adc-check
+then
+	set R "ok, check the values."
+fi
+
+echo ===
+
+echo $R
