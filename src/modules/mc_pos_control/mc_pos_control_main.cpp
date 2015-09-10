@@ -2396,12 +2396,19 @@ MulticopterPositionControl::task_main()
 
 							} else {
 								/* preserve thrust Z component and lower XY, keeping altitude is more important than position */
-								float thrust_xy_max = sqrtf(_params.thr_max * _params.thr_max - thrust_sp(2) * thrust_sp(2));
 								float thrust_xy_abs = math::Vector<2>(thrust_sp(0), thrust_sp(1)).length();
-								float k = thrust_xy_max / thrust_xy_abs;
-								thrust_sp(0) *= k;
-								thrust_sp(1) *= k;
-								saturation_xy = true;
+								if (thrust_xy_abs > 0.0001f) {
+									float thrust_xy_max = sqrtf(_params.thr_max * _params.thr_max - thrust_sp(2) * thrust_sp(2));
+									float k = thrust_xy_max / thrust_xy_abs;
+									thrust_sp(0) *= k;
+									thrust_sp(1) *= k;
+									saturation_xy = true;
+								}
+								// XY component is minimal and Z is approximately max thrust
+								else {
+									thrust_sp(0) = 0.0f;
+									thrust_sp(1) = 0.0f;
+								}
 							}
 
 						} else {
