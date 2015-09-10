@@ -887,6 +887,7 @@ int commander_thread_main(int argc, char *argv[])
 	param_t _param_activity_on = param_find("A_ACTIVITY_ON");
 	param_t _param_eph_threshold = param_find("A_GPS_LOSS_EPH");
 	param_t _param_epv_threshold = param_find("A_GPS_LOSS_EPV");
+	param_t _param_gps_failsafe = param_find("A_GPS_FAILSAFE");
 
 	float eph_threshold = 5.0f;
 	float epv_threshold = 10.0f;
@@ -940,6 +941,7 @@ int commander_thread_main(int argc, char *argv[])
 	main_states_str[MAIN_STATE_EMERGENCY_LAND]			= "EMERGENCY_LAND";
 	main_states_str[MAIN_STATE_LAND]					= "LAND";
 	main_states_str[MAIN_STATE_AUTO_STANDBY]			= "AUTO_STANDBY";
+	main_states_str[MAIN_STATE_ATTITUDE_HOLD]			= "ATTITUDE_HOLD";
 
 	const char *arming_states_str[ARMING_STATE_MAX];
 	arming_states_str[ARMING_STATE_INIT]			= "INIT";
@@ -974,6 +976,7 @@ int commander_thread_main(int argc, char *argv[])
 	nav_states_str[NAVIGATION_STATE_CIRCLE_AROUND]    = "CIRCLE_AROUND";
 	nav_states_str[NAVIGATION_STATE_KITE_LITE]    = "AUTO_KITE_LITE";
 	nav_states_str[NAVIGATION_STATE_FRONT_FOLLOW]    = "AUTO_FRONT_FOLLOW";
+	nav_states_str[NAVIGATION_STATE_ATTITUDE_HOLD]	 = "ATTITUDE_HOLD";
 
 
 	/* pthread for slow low prio thread */
@@ -1273,6 +1276,7 @@ int commander_thread_main(int argc, char *argv[])
 	bool trg_epv_good;
 	// -1=not_inited, 0=invalid, 1=valid
 	int8_t gps_was_ok = -1;
+	bool use_gps_failsafe = false;
 
 	while (!thread_should_exit) {
  
@@ -1372,6 +1376,9 @@ int commander_thread_main(int argc, char *argv[])
 
 			param_get(_param_eph_threshold, &eph_threshold);
 			param_get(_param_epv_threshold, &epv_threshold);
+			int tmp;
+			param_get(_param_gps_failsafe, &tmp);
+			use_gps_failsafe = (tmp == 1);
 
 			param_get(_param_good_target_eph, &good_target_eph);
 			param_get(_param_good_target_epv, &good_target_epv);
@@ -2433,7 +2440,8 @@ int commander_thread_main(int argc, char *argv[])
 
 		/* now set navigation state according to failsafe and main state */
 		bool nav_state_changed = set_nav_state(&status, (bool)datalink_loss_enabled,
-						       mission_result.finished, mission_result.stay_in_failsafe, mavlink_fd);
+						       mission_result.finished, mission_result.stay_in_failsafe,
+						       mavlink_fd, use_gps_failsafe);
 
 
 
@@ -2931,6 +2939,18 @@ set_control_mode()
 		control_mode.flag_control_velocity_enabled = false;
 		control_mode.flag_control_termination_enabled = false;
 		break;
+
+	case NAVIGATION_STATE_ATTITUDE_HOLD:
+			control_mode.flag_control_manual_enabled = false;
+			control_mode.flag_control_auto_enabled = false;
+			control_mode.flag_control_rates_enabled = true;
+			control_mode.flag_control_attitude_enabled = true;
+			control_mode.flag_control_altitude_enabled = true;
+			control_mode.flag_control_climb_rate_enabled = true;
+			control_mode.flag_control_position_enabled = false;
+			control_mode.flag_control_velocity_enabled = false;
+			control_mode.flag_control_termination_enabled = false;
+			break;
 
 	case NAVIGATION_STATE_OFFBOARD:
 		control_mode.flag_control_manual_enabled = false;

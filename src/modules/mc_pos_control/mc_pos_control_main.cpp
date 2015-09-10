@@ -221,6 +221,8 @@ private:
         param_t yaw_dead_zone_r;
         param_t yaw_gradient_zone_r;
 
+        param_t rtl_alt;
+
 	}		_params_handles;		/**< handles for interesting parameters */
 
 	struct {
@@ -276,6 +278,8 @@ private:
 		math::Vector<3> sp_offs_max;
 
 		float pitch_lpf_cut;
+
+		float rtl_alt;
 	}		_params;
 
 	struct map_projection_reference_s _ref_pos;
@@ -292,6 +296,7 @@ private:
 	bool _reset_alt_sp;
 	bool _mode_auto;
     bool _mode_follow;
+    bool _mode_attitude_hold;
 	bool _reset_follow_offset;
     hrt_abstime landed_time;
 
@@ -649,6 +654,8 @@ MulticopterPositionControl::MulticopterPositionControl() :
     _params_handles.vel_control_z_p_up = param_find("MPC_CVEL_ZP_UP");
     _params_handles.vel_control_z_p_down = param_find("MPC_CVEL_ZP_DWN");
 
+    _params_handles.rtl_alt = param_find("RTL_RET_ALT");
+
 	/* fetch initial parameter values */
 	parameters_update(true);
 }
@@ -797,6 +804,8 @@ MulticopterPositionControl::parameters_update(bool force)
 
         param_get(_params_handles.vel_control_z_p_up, &_params.vel_control_z_p_up);
         param_get(_params_handles.vel_control_z_p_down, &_params.vel_control_z_p_down);
+
+        param_get(_params_handles.rtl_alt, &_params.rtl_alt);
 
 	}
 
@@ -1974,7 +1983,7 @@ MulticopterPositionControl::task_main()
 				control_offboard(dt);
 				_mode_auto = false;
 
-			} else {
+			} else if (_control_mode.flag_control_auto_enabled) {
 				/* AUTO modes*/
                 if (_pos_sp_triplet.current.type != SETPOINT_TYPE_VELOCITY) { // control_auto_vel is used where vel_sp is set
 
@@ -2001,10 +2010,32 @@ MulticopterPositionControl::task_main()
                 _mode_follow = false;
             }
 
+			if (_vstatus.nav_state == NAVIGATION_STATE_ATTITUDE_HOLD && !_mode_attitude_hold) {
+				_mode_attitude_hold = true;
+				_mode_auto = false;
+
+				// Choose highest of the altitudes, local altitude comparison is inverted
+				// TODO! [AK] Check if _pos_sp was valid before we've entered the mode
+				if (_home_valid && (_home_pos.z - _params.rtl_alt < _pos_sp(2))) {
+					_pos_sp(2) = _home_pos.z - _params.rtl_alt;
+				}
+				if (_pos(2) < _pos_sp(2)) {
+					_pos_sp(2) = _pos(2);
+				}
+
+				// Advice the next mode to reset the setpoints on activation
+				_reset_pos_sp = true;
+				_reset_alt_sp = true;
+			}
+			else if (_mode_attitude_hold && _vstatus.nav_state != NAVIGATION_STATE_ATTITUDE_HOLD) {
+				_mode_attitude_hold = false;
+			}
+
 			if (_control_mode.flag_control_point_to_target) {
 				point_to_target();
 			}
 
+			// TODO! [AK] Consider applying distance sensor correction in other cases (ie ATTITUDE_HOLD)
 			if ((_control_mode.flag_control_position_enabled || _control_mode.flag_control_follow_target)&&
                     (_vstatus.airdog_state == AIRD_STATE_IN_AIR)    ) {
 				/*
@@ -2524,8 +2555,8 @@ MulticopterPositionControl::task_main()
 						_att_sp.pitch_body = euler(1);
 						/* yaw already used to construct rot matrix, but actual rotation matrix can have different yaw near singularity */
 
-					} else if (!_control_mode.flag_control_manual_enabled) {
-						/* autonomous altitude control without position control (failsafe landing),
+					} else if (!_control_mode.flag_control_manual_enabled && _control_mode.flag_control_attitude_enabled) {
+						/* autonomous altitude control without position control (failsafe landing, gps loss failsafe),
 						 * force level attitude, don't change yaw */
 						R.from_euler(0.0f, 0.0f, _att_sp.yaw_body);
 

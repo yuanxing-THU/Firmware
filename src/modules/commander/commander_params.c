@@ -309,3 +309,8 @@ PARAM_DEFINE_FLOAT(A_GPS_LOSS_EPH, 4.5f);
  * @group airdog
  */
 PARAM_DEFINE_FLOAT(A_GPS_LOSS_EPV, 10.0f);
+
+/**
+ * On 1 will use GPS failsafe mode ATTITUDE_HOLD in case GPS is bad or lost
+ */
+PARAM_DEFINE_INT32(A_GPS_FAILSAFE, 1);

@@ -65,7 +65,7 @@ void airdog_state_transition(struct vehicle_status_s *current_state, airdog_stat
 
 transition_result_t hil_state_transition(hil_state_t new_state, int status_pub, struct vehicle_status_s *current_state, const int mavlink_fd);
 
-bool set_nav_state(struct vehicle_status_s *status, const bool data_link_loss_enabled, const bool mission_finished, const bool stay_in_failsafe, const int mavlink_fd);
+bool set_nav_state(struct vehicle_status_s *status, const bool data_link_loss_enabled, const bool mission_finished, const bool stay_in_failsafe, const int mavlink_fd, const bool use_gps_failsafe);
 
 int prearm_check(const struct vehicle_status_s *status, const int mavlink_fd);
 

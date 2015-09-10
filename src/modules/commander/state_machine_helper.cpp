@@ -408,6 +408,11 @@ main_state_transition(struct vehicle_status_s *status, main_state_t new_main_sta
 
 		break;
 
+	case MAIN_STATE_ATTITUDE_HOLD:
+		// TODO! [AK] Consider checking battery
+		ret = TRANSITION_CHANGED;
+		break;
+
 	case MAIN_STATE_MAX:
 	default:
 		break;
@@ -587,7 +592,7 @@ transition_result_t hil_state_transition(hil_state_t new_state, int status_pub, 
  * Check failsafe and main status and set navigation status for navigator accordingly
  */
 bool set_nav_state(struct vehicle_status_s *status, const bool data_link_loss_enabled, const bool mission_finished,
-		const bool stay_in_failsafe, const int mavlink_fd)
+		const bool stay_in_failsafe, const int mavlink_fd, const bool use_gps_failsafe)
 
 {
 	navigation_state_t nav_state_old = status->nav_state;
@@ -597,271 +602,289 @@ bool set_nav_state(struct vehicle_status_s *status, const bool data_link_loss_en
 	// There are more fallbacks, so assume fallback by default
 	status->nav_state_fallback = true;
 
-	/* evaluate main state to decide in normal (non-failsafe) mode */
-	switch (status->main_state) {
-	case MAIN_STATE_ACRO:
-	case MAIN_STATE_MANUAL:
-	case MAIN_STATE_ALTCTL:
-	case MAIN_STATE_POSCTL:
-	case MAIN_STATE_FOLLOW:
-		/* require RC for all manual modes */
-		if ((status->rc_signal_lost || status->rc_signal_lost_cmd) && armed) {
-			status->failsafe = true;
+	// Fallback in case of GPS loss for all modes that use GPS
+	if (use_gps_failsafe && !status->condition_global_position_valid
+			&& status->main_state != MAIN_STATE_ACRO
+			&& status->main_state != MAIN_STATE_MANUAL
+			&& status->main_state != MAIN_STATE_ALTCTL
+			&& status->main_state != MAIN_STATE_AUTO_STANDBY) {
+		status->nav_state = NAVIGATION_STATE_ATTITUDE_HOLD;
+		status->failsafe = true;
+	}
+	else {
+		/* evaluate main state to decide in normal (non-failsafe) mode */
+		switch (status->main_state) {
+		case MAIN_STATE_ACRO:
+		case MAIN_STATE_MANUAL:
+		case MAIN_STATE_ALTCTL:
+		case MAIN_STATE_POSCTL:
+		case MAIN_STATE_FOLLOW:
+			/* require RC for all manual modes */
+			if ((status->rc_signal_lost || status->rc_signal_lost_cmd) && armed) {
+				status->failsafe = true;
 
-			if (status->condition_global_position_valid && status->condition_home_position_valid) {
-				status->nav_state = NAVIGATION_STATE_AUTO_RCRECOVER;
-			} else if (status->condition_local_position_valid) {
-				status->nav_state = NAVIGATION_STATE_LAND;
-			} else if (status->condition_local_altitude_valid) {
-				status->nav_state = NAVIGATION_STATE_DESCEND;
+				// TODO! [AK] Check if these modes are working and required
+				if (status->condition_global_position_valid && status->condition_home_position_valid) {
+					status->nav_state = NAVIGATION_STATE_AUTO_RCRECOVER;
+				} else if (status->condition_local_position_valid) {
+					status->nav_state = NAVIGATION_STATE_LAND;
+				} else if (status->condition_local_altitude_valid) {
+					status->nav_state = NAVIGATION_STATE_DESCEND;
+				} else {
+					status->nav_state = NAVIGATION_STATE_TERMINATION;
+				}
+
 			} else {
-				status->nav_state = NAVIGATION_STATE_TERMINATION;
-			}
+				// Only intended nav modes follow, so no fallback
+				status->nav_state_fallback = false;
+				switch (status->main_state) {
+				case MAIN_STATE_ACRO:
+					status->nav_state = NAVIGATION_STATE_ACRO;
+					break;
 
-		} else {
-			// Only intended nav modes follow, so no fallback
+				case MAIN_STATE_MANUAL:
+					status->nav_state = NAVIGATION_STATE_MANUAL;
+					break;
+
+				case MAIN_STATE_ALTCTL:
+					status->nav_state = NAVIGATION_STATE_ALTCTL;
+					break;
+
+				case MAIN_STATE_POSCTL:
+					status->nav_state = NAVIGATION_STATE_POSCTL;
+					break;
+
+				// TODO! [AK] Consider falling back to Loiter in case signal is lost (might not work correctly in mc_pos)
+				case MAIN_STATE_FOLLOW:
+					status->nav_state = NAVIGATION_STATE_FOLLOW;
+					break;
+
+				default:
+					status->nav_state = NAVIGATION_STATE_MANUAL;
+					break;
+				}
+			}
+			break;
+		case MAIN_STATE_AUTO_STANDBY:
 			status->nav_state_fallback = false;
-			switch (status->main_state) {
-			case MAIN_STATE_ACRO:
-				status->nav_state = NAVIGATION_STATE_ACRO;
-				break;
-
-			case MAIN_STATE_MANUAL:
-				status->nav_state = NAVIGATION_STATE_MANUAL;
-				break;
-
-			case MAIN_STATE_ALTCTL:
-				status->nav_state = NAVIGATION_STATE_ALTCTL;
-				break;
-
-			case MAIN_STATE_POSCTL:
-				status->nav_state = NAVIGATION_STATE_POSCTL;
-				break;
-
-			// TODO! [AK] Consider falling back to Loiter in case signal is lost (might not work correctly in mc_pos)
-			case MAIN_STATE_FOLLOW:
-				status->nav_state = NAVIGATION_STATE_FOLLOW;
-				break;
-
-			default:
-				status->nav_state = NAVIGATION_STATE_MANUAL;
-				break;
-			}
-		}
-		break;
-	case MAIN_STATE_AUTO_STANDBY:
-		status->nav_state_fallback = false;
-		status->nav_state = NAVIGATION_STATE_AUTO_STANDBY;
-		break;
-	case MAIN_STATE_AUTO_MISSION:
-		/* go into failsafe
-		 * - if commanded to do so
-		 * - if we have an engine failure
-		 * - if either the datalink is enabled and lost as well as RC is lost
-		 * - if there is no datalink and the mission is finished */
-		if (status->engine_failure_cmd) {
-			status->nav_state = NAVIGATION_STATE_AUTO_LANDENGFAIL;
-		} else if (status->data_link_lost_cmd) {
-			status->nav_state = NAVIGATION_STATE_AUTO_RTGS;
-		} else if (status->gps_failure_cmd) {
-			status->nav_state = NAVIGATION_STATE_AUTO_LANDGPSFAIL;
-		} else if (status->rc_signal_lost_cmd) {
-			status->nav_state = NAVIGATION_STATE_AUTO_RTGS; //XXX
-		/* Finished handling commands which have priority , now handle failures */
-		} else if (status->gps_failure) {
-			status->nav_state = NAVIGATION_STATE_AUTO_LANDGPSFAIL;
-		} else if (status->engine_failure) {
-			status->nav_state = NAVIGATION_STATE_AUTO_LANDENGFAIL;
-		} else if (((status->data_link_lost && data_link_loss_enabled) && status->rc_signal_lost) ||
-		    (!data_link_loss_enabled && status->rc_signal_lost && mission_finished)) {
-			status->failsafe = true;
-
-			if (status->condition_global_position_valid && status->condition_home_position_valid) {
+			status->nav_state = NAVIGATION_STATE_AUTO_STANDBY;
+			break;
+		case MAIN_STATE_AUTO_MISSION:
+			/* go into failsafe
+			 * - if commanded to do so
+			 * - if we have an engine failure
+			 * - if either the datalink is enabled and lost as well as RC is lost
+			 * - if there is no datalink and the mission is finished */
+			if (status->engine_failure_cmd) {
+				status->nav_state = NAVIGATION_STATE_AUTO_LANDENGFAIL;
+			} else if (status->data_link_lost_cmd) {
 				status->nav_state = NAVIGATION_STATE_AUTO_RTGS;
-			} else if (status->condition_local_position_valid) {
-				status->nav_state = NAVIGATION_STATE_LAND;
-			} else if (status->condition_local_altitude_valid) {
-				status->nav_state = NAVIGATION_STATE_DESCEND;
-			} else {
-				status->nav_state = NAVIGATION_STATE_TERMINATION;
+			} else if (status->gps_failure_cmd) {
+				status->nav_state = NAVIGATION_STATE_AUTO_LANDGPSFAIL;
+			} else if (status->rc_signal_lost_cmd) {
+				status->nav_state = NAVIGATION_STATE_AUTO_RTGS; //XXX
+			/* Finished handling commands which have priority , now handle failures */
+			} else if (status->gps_failure) {
+				status->nav_state = NAVIGATION_STATE_AUTO_LANDGPSFAIL;
+			} else if (status->engine_failure) {
+				status->nav_state = NAVIGATION_STATE_AUTO_LANDENGFAIL;
+			} else if (((status->data_link_lost && data_link_loss_enabled) && status->rc_signal_lost) ||
+				(!data_link_loss_enabled && status->rc_signal_lost && mission_finished)) {
+				status->failsafe = true;
+
+				if (status->condition_global_position_valid && status->condition_home_position_valid) {
+					status->nav_state = NAVIGATION_STATE_AUTO_RTGS;
+				} else if (status->condition_local_position_valid) {
+					status->nav_state = NAVIGATION_STATE_LAND;
+				} else if (status->condition_local_altitude_valid) {
+					status->nav_state = NAVIGATION_STATE_DESCEND;
+				} else {
+					status->nav_state = NAVIGATION_STATE_TERMINATION;
+				}
+
+			/* also go into failsafe if just datalink is lost */
+			} else if (status->data_link_lost && data_link_loss_enabled) {
+				status->failsafe = true;
+
+				if (status->condition_global_position_valid && status->condition_home_position_valid) {
+					status->nav_state = NAVIGATION_STATE_AUTO_RTGS;
+				} else if (status->condition_local_position_valid) {
+					status->nav_state = NAVIGATION_STATE_LAND;
+				} else if (status->condition_local_altitude_valid) {
+					status->nav_state = NAVIGATION_STATE_DESCEND;
+				} else {
+					status->nav_state = NAVIGATION_STATE_TERMINATION;
+				}
+
+			/* don't bother if RC is lost and mission is not yet finished */
+			} else if (status->rc_signal_lost && !stay_in_failsafe) {
+
+				status->nav_state_fallback = false;
+				/* this mode is ok, we don't need RC for missions */
+				status->nav_state = NAVIGATION_STATE_AUTO_MISSION;
+			} else if (!stay_in_failsafe){
+				status->nav_state_fallback = false;
+				/* everything is perfect */
+				status->nav_state = NAVIGATION_STATE_AUTO_MISSION;
 			}
+			break;
 
-		/* also go into failsafe if just datalink is lost */
-		} else if (status->data_link_lost && data_link_loss_enabled) {
-			status->failsafe = true;
-
-			if (status->condition_global_position_valid && status->condition_home_position_valid) {
-				status->nav_state = NAVIGATION_STATE_AUTO_RTGS;
-			} else if (status->condition_local_position_valid) {
-				status->nav_state = NAVIGATION_STATE_LAND;
-			} else if (status->condition_local_altitude_valid) {
-				status->nav_state = NAVIGATION_STATE_DESCEND;
-			} else {
-				status->nav_state = NAVIGATION_STATE_TERMINATION;
-			}
-
-		/* don't bother if RC is lost and mission is not yet finished */
-		} else if (status->rc_signal_lost && !stay_in_failsafe) {
-
-			status->nav_state_fallback = false;
-			/* this mode is ok, we don't need RC for missions */
-			status->nav_state = NAVIGATION_STATE_AUTO_MISSION;
-		} else if (!stay_in_failsafe){
-			status->nav_state_fallback = false;
-			/* everything is perfect */
-			status->nav_state = NAVIGATION_STATE_AUTO_MISSION;
-		}
-		break;
-
-	case MAIN_STATE_LOITER:
-		/* go into failsafe on a engine failure */
-		if (status->engine_failure) {
-			status->nav_state = NAVIGATION_STATE_AUTO_LANDENGFAIL;
-		// TODO! [AK] Shouldn't it be target signal?
-		/* also go into failsafe if just datalink is lost */
-		} else if (status->data_link_lost && data_link_loss_enabled) {
-			status->failsafe = true;
-
-			if (status->condition_global_position_valid && status->condition_home_position_valid) {
-				status->nav_state = NAVIGATION_STATE_AUTO_RTGS;
-			} else if (status->condition_local_position_valid) {
-				status->nav_state = NAVIGATION_STATE_LAND;
-			} else if (status->condition_local_altitude_valid) {
-				status->nav_state = NAVIGATION_STATE_DESCEND;
-			} else {
-				status->nav_state = NAVIGATION_STATE_TERMINATION;
-			}
-
-		/* don't bother if RC is lost if datalink is connected */
-		} else if (status->rc_signal_lost) {
-
-			status->nav_state_fallback = false;
-			/* this mode is ok, we don't need RC for loitering */
-			status->nav_state = NAVIGATION_STATE_LOITER;
-		} else {
-			status->nav_state_fallback = false;
-			/* everything is perfect */
-			status->nav_state = NAVIGATION_STATE_LOITER;
-		}
-		break;
-
-	case MAIN_STATE_RTL:
-		/* require global position and home, also go into failsafe on an engine failure */
-
-		if (status->engine_failure) {
-			status->nav_state = NAVIGATION_STATE_AUTO_LANDENGFAIL;
-		} else if ((!status->condition_global_position_valid ||
-					!status->condition_home_position_valid)) {
-			status->failsafe = true;
-
-			if (status->condition_local_position_valid) {
-				status->nav_state = NAVIGATION_STATE_LAND;
-			} else if (status->condition_local_altitude_valid) {
-				status->nav_state = NAVIGATION_STATE_DESCEND;
-			} else {
-				status->nav_state = NAVIGATION_STATE_TERMINATION;
-			}
-		} else {
-			status->nav_state_fallback = false;
-			status->nav_state = NAVIGATION_STATE_RTL;
-		}
-		break;
-
-    case MAIN_STATE_EMERGENCY_RTL:
-		if (status->engine_failure) {
-			status->nav_state = NAVIGATION_STATE_AUTO_LANDENGFAIL;
-		} else if ((!status->condition_global_position_valid ||
-					!status->condition_home_position_valid)) {
-			status->failsafe = true;
-
-			if (status->condition_local_position_valid) {
-				status->nav_state = NAVIGATION_STATE_LAND;
-			} else if (status->condition_local_altitude_valid) {
-				status->nav_state = NAVIGATION_STATE_DESCEND;
-			} else {
-				status->nav_state = NAVIGATION_STATE_TERMINATION;
-			}
-		} else {
-			status->nav_state_fallback = false;
-			status->nav_state = NAVIGATION_STATE_RTL;
-		}
-        break;
-    case MAIN_STATE_EMERGENCY_LAND:
-    case MAIN_STATE_LAND:
-		status->nav_state_fallback = false;
-        status->nav_state = NAVIGATION_STATE_LAND;
-        break;
-
-	case MAIN_STATE_CABLE_PARK:
-	case MAIN_STATE_ABS_FOLLOW:
-	case MAIN_STATE_AUTO_PATH_FOLLOW:
-    case MAIN_STATE_CIRCLE_AROUND:
-    case MAIN_STATE_KITE_LITE:
-    case MAIN_STATE_FRONT_FOLLOW:
-
-		float target_visibility_timeout_1;
-		param_get(param_find("A_TRGT_VSB_TO_1"), &target_visibility_timeout_1);
-		if ((!status->condition_target_position_valid &&
-				hrt_absolute_time() - status->last_target_time > target_visibility_timeout_1 * 1000 * 1000)) {
-			// On first timeout when status.condition_target_position_valid is false go into aim-and-shoot
-			if (status->nav_state != NAVIGATION_STATE_LOITER && status->nav_state != NAVIGATION_STATE_AUTO_LANDENGFAIL) {
-				mavlink_log_info(mavlink_fd, "Target signal time-out, switching to Aim-and-shoot.");
-			}
-			// Ignore more complex Loiter fallbacks
+		case MAIN_STATE_LOITER:
+			/* go into failsafe on a engine failure */
 			if (status->engine_failure) {
 				status->nav_state = NAVIGATION_STATE_AUTO_LANDENGFAIL;
-			}
-			else {
+			// TODO! [AK] Shouldn't it be target signal?
+			/* also go into failsafe if just datalink is lost */
+			} else if (status->data_link_lost && data_link_loss_enabled) {
+				status->failsafe = true;
+
+				if (status->condition_global_position_valid && status->condition_home_position_valid) {
+					status->nav_state = NAVIGATION_STATE_AUTO_RTGS;
+				} else if (status->condition_local_position_valid) {
+					status->nav_state = NAVIGATION_STATE_LAND;
+				} else if (status->condition_local_altitude_valid) {
+					status->nav_state = NAVIGATION_STATE_DESCEND;
+				} else {
+					status->nav_state = NAVIGATION_STATE_TERMINATION;
+				}
+
+			/* don't bother if RC is lost if datalink is connected */
+			} else if (status->rc_signal_lost) {
+
+				status->nav_state_fallback = false;
+				/* this mode is ok, we don't need RC for loitering */
+				status->nav_state = NAVIGATION_STATE_LOITER;
+			} else {
+				status->nav_state_fallback = false;
+				/* everything is perfect */
 				status->nav_state = NAVIGATION_STATE_LOITER;
 			}
-        } else {
-			status->nav_state_fallback = false;
-			switch (status->main_state) {
-                case MAIN_STATE_CABLE_PARK:
-                    status->nav_state = NAVIGATION_STATE_CABLE_PARK;
-                    break;
-                case MAIN_STATE_ABS_FOLLOW:
-                    status->nav_state = NAVIGATION_STATE_ABS_FOLLOW;
-                    break;
-                case MAIN_STATE_AUTO_PATH_FOLLOW:
-                    status->nav_state = NAVIGATION_STATE_AUTO_PATH_FOLLOW;
-                    break;
-                case MAIN_STATE_KITE_LITE:
-                    status->nav_state = NAVIGATION_STATE_KITE_LITE;
-                    break;
-                case MAIN_STATE_CIRCLE_AROUND:
-                    status->nav_state = NAVIGATION_STATE_CIRCLE_AROUND;
-                    break;
-                case MAIN_STATE_FRONT_FOLLOW:
-                    status->nav_state = NAVIGATION_STATE_FRONT_FOLLOW;
-                    break;
-            }
+			break;
 
-        }
-        break;
+		case MAIN_STATE_RTL:
+			/* require global position and home, also go into failsafe on an engine failure */
 
-	case MAIN_STATE_OFFBOARD:
-		/* require offboard control, otherwise stay where you are */
-		if (status->offboard_control_signal_lost && !status->rc_signal_lost) {
-			status->failsafe = true;
+			if (status->engine_failure) {
+				status->nav_state = NAVIGATION_STATE_AUTO_LANDENGFAIL;
+			} else if ((!status->condition_global_position_valid ||
+						!status->condition_home_position_valid)) {
+				status->failsafe = true;
 
-			status->nav_state = NAVIGATION_STATE_POSCTL;
-		} else if (status->offboard_control_signal_lost && status->rc_signal_lost) {
-			status->failsafe = true;
-
-			if (status->condition_local_position_valid) {
-				status->nav_state = NAVIGATION_STATE_LAND;
-			} else if (status->condition_local_altitude_valid) {
-				status->nav_state = NAVIGATION_STATE_DESCEND;
+				if (status->condition_local_position_valid) {
+					status->nav_state = NAVIGATION_STATE_LAND;
+				} else if (status->condition_local_altitude_valid) {
+					status->nav_state = NAVIGATION_STATE_DESCEND;
+				} else {
+					status->nav_state = NAVIGATION_STATE_TERMINATION;
+				}
 			} else {
-				status->nav_state = NAVIGATION_STATE_TERMINATION;
+				status->nav_state_fallback = false;
+				status->nav_state = NAVIGATION_STATE_RTL;
 			}
-		} else {
+			break;
+
+		case MAIN_STATE_EMERGENCY_RTL:
+			if (status->engine_failure) {
+				status->nav_state = NAVIGATION_STATE_AUTO_LANDENGFAIL;
+			} else if ((!status->condition_global_position_valid ||
+						!status->condition_home_position_valid)) {
+				status->failsafe = true;
+
+				if (status->condition_local_position_valid) {
+					status->nav_state = NAVIGATION_STATE_LAND;
+				} else if (status->condition_local_altitude_valid) {
+					status->nav_state = NAVIGATION_STATE_DESCEND;
+				} else {
+					status->nav_state = NAVIGATION_STATE_TERMINATION;
+				}
+			} else {
+				status->nav_state_fallback = false;
+				status->nav_state = NAVIGATION_STATE_RTL;
+			}
+			break;
+		case MAIN_STATE_EMERGENCY_LAND:
+		case MAIN_STATE_LAND:
 			status->nav_state_fallback = false;
-			status->nav_state = NAVIGATION_STATE_OFFBOARD;
+			status->nav_state = NAVIGATION_STATE_LAND;
+			break;
+
+		case MAIN_STATE_CABLE_PARK:
+		case MAIN_STATE_ABS_FOLLOW:
+		case MAIN_STATE_AUTO_PATH_FOLLOW:
+		case MAIN_STATE_CIRCLE_AROUND:
+		case MAIN_STATE_KITE_LITE:
+		case MAIN_STATE_FRONT_FOLLOW:
+
+			float target_visibility_timeout_1;
+			param_get(param_find("A_TRGT_VSB_TO_1"), &target_visibility_timeout_1);
+			if ((!status->condition_target_position_valid &&
+					hrt_absolute_time() - status->last_target_time > target_visibility_timeout_1 * 1000 * 1000)) {
+				// On first timeout when status.condition_target_position_valid is false go into aim-and-shoot
+				if (status->nav_state != NAVIGATION_STATE_LOITER && status->nav_state != NAVIGATION_STATE_AUTO_LANDENGFAIL) {
+					mavlink_log_info(mavlink_fd, "Target signal time-out, switching to Aim-and-shoot.");
+				}
+				// Ignore more complex Loiter fallbacks
+				if (status->engine_failure) {
+					status->nav_state = NAVIGATION_STATE_AUTO_LANDENGFAIL;
+				}
+				else {
+					status->nav_state = NAVIGATION_STATE_LOITER;
+				}
+			} else {
+				status->nav_state_fallback = false;
+				switch (status->main_state) {
+					case MAIN_STATE_CABLE_PARK:
+						status->nav_state = NAVIGATION_STATE_CABLE_PARK;
+						break;
+					case MAIN_STATE_ABS_FOLLOW:
+						status->nav_state = NAVIGATION_STATE_ABS_FOLLOW;
+						break;
+					case MAIN_STATE_AUTO_PATH_FOLLOW:
+						status->nav_state = NAVIGATION_STATE_AUTO_PATH_FOLLOW;
+						break;
+					case MAIN_STATE_KITE_LITE:
+						status->nav_state = NAVIGATION_STATE_KITE_LITE;
+						break;
+					case MAIN_STATE_CIRCLE_AROUND:
+						status->nav_state = NAVIGATION_STATE_CIRCLE_AROUND;
+						break;
+					case MAIN_STATE_FRONT_FOLLOW:
+						status->nav_state = NAVIGATION_STATE_FRONT_FOLLOW;
+						break;
+				}
+
+			}
+			break;
+
+		case MAIN_STATE_OFFBOARD:
+			/* require offboard control, otherwise stay where you are */
+			if (status->offboard_control_signal_lost && !status->rc_signal_lost) {
+				status->failsafe = true;
+
+				status->nav_state = NAVIGATION_STATE_POSCTL;
+			} else if (status->offboard_control_signal_lost && status->rc_signal_lost) {
+				status->failsafe = true;
+
+				if (status->condition_local_position_valid) {
+					status->nav_state = NAVIGATION_STATE_LAND;
+				} else if (status->condition_local_altitude_valid) {
+					status->nav_state = NAVIGATION_STATE_DESCEND;
+				} else {
+					status->nav_state = NAVIGATION_STATE_TERMINATION;
+				}
+			} else {
+				status->nav_state_fallback = false;
+				status->nav_state = NAVIGATION_STATE_OFFBOARD;
+			}
+
+		case MAIN_STATE_ATTITUDE_HOLD:
+			status->nav_state_fallback = false;
+			status->nav_state = NAVIGATION_STATE_ATTITUDE_HOLD;
+			break;
+
+		default:
+			break;
 		}
-	default:
-		break;
 	}
 
 	return status->nav_state != nav_state_old;
