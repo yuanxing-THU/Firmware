@@ -2143,9 +2143,10 @@ MulticopterPositionControl::task_main()
                 }
 
 				/* use constant descend rate when landing, ignore altitude setpoint */
-				if (!_control_mode.flag_control_manual_enabled &&
-                        _pos_sp_triplet.current.valid &&
-                        _pos_sp_triplet.current.type == SETPOINT_TYPE_LAND) {
+				if (!_control_mode.flag_control_manual_enabled
+						&& _control_mode.flag_control_position_enabled
+						&& _pos_sp_triplet.current.valid
+						&& _pos_sp_triplet.current.type == SETPOINT_TYPE_LAND) {
                     /* In case we have sonar correction - use it */
                     if(_params.land_correction_on) {
                         float speed_corretion =  landing_speed_correction();
@@ -2159,7 +2160,10 @@ MulticopterPositionControl::task_main()
 				}
 
 				/* use constant ascend rate during take off */
-				if (!_control_mode.flag_control_manual_enabled && _pos_sp_triplet.current.valid && _pos_sp_triplet.current.type == SETPOINT_TYPE_TAKEOFF) {
+				if (!_control_mode.flag_control_manual_enabled
+						&& _control_mode.flag_control_position_enabled
+						&& _pos_sp_triplet.current.valid
+						&& _pos_sp_triplet.current.type == SETPOINT_TYPE_TAKEOFF) {
 					if (_pos(2) - _pos_sp(2) > 0) {
 						if (_vel_sp.data[2] < -_params.takeoff_speed){
 							_vel_sp.data[2] = -_params.takeoff_speed;
@@ -2308,8 +2312,10 @@ MulticopterPositionControl::task_main()
 					float tilt_max = _params.tilt_max_air;
 
 					/* adjust limits for landing mode */
-					if (!_control_mode.flag_control_manual_enabled && _pos_sp_triplet.current.valid &&
-					    _pos_sp_triplet.current.type == SETPOINT_TYPE_LAND) {
+					if (!_control_mode.flag_control_manual_enabled
+							&& _control_mode.flag_control_position_enabled
+							&& _pos_sp_triplet.current.valid
+							&& _pos_sp_triplet.current.type == SETPOINT_TYPE_LAND) {
 						/* limit max tilt and min lift when landing */
 						tilt_max = _params.tilt_max_land;
 
@@ -2319,8 +2325,10 @@ MulticopterPositionControl::task_main()
 					}
 
 					/* adjust limits for takeoff mode */
-					if (!_control_mode.flag_control_manual_enabled && _pos_sp_triplet.current.valid &&
-					    _pos_sp_triplet.current.type == SETPOINT_TYPE_TAKEOFF) {
+					if (!_control_mode.flag_control_manual_enabled
+							&& _control_mode.flag_control_position_enabled
+							&& _pos_sp_triplet.current.valid
+							&& _pos_sp_triplet.current.type == SETPOINT_TYPE_TAKEOFF) {
 						/* limit max tilt and min lift when landing */
 						tilt_max = _params.tilt_max_land;
 
