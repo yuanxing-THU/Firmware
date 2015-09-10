@@ -283,6 +283,7 @@ private:
 	bool _target_alt_start_valid;	/**< target start altitude valid flag */
 
     float _target_alt_on_follow_start;
+    float _drone_alt_on_follow_start;
 	bool _reset_pos_sp;
 	bool _reset_alt_sp;
 	bool _mode_auto;
@@ -520,7 +521,8 @@ MulticopterPositionControl::MulticopterPositionControl() :
 	_alt_start(0.0f),
 	_target_alt_start(0.0f),
 	_target_alt_start_valid(false),
-    _target_alt_on_follow_start(20.0f),
+    _target_alt_on_follow_start(0.0f),
+    _drone_alt_on_follow_start(0.0f),
 
 	_reset_pos_sp(true),
 	_reset_alt_sp(true),
@@ -1566,6 +1568,7 @@ MulticopterPositionControl::control_follow(float dt)
 
     if (!_mode_follow){
         _target_alt_on_follow_start = _tpos(2);
+        _drone_alt_on_follow_start = _pos(2);
     }
 
 	/* follow target, change offset from target instead of moving setpoint directly */
@@ -1634,17 +1637,29 @@ MulticopterPositionControl::control_follow(float dt)
 
 	_follow_offset = follow_offset_new;
 
-    float z_to_follow;
+    if (_control_mode.flag_control_offset_follow) {
 
-    if (_params.follow_rpt_alt) {
-        z_to_follow = _tpos(2);
+        if (_params.follow_rpt_alt) {
+
+            float target_alt_delta = _tpos(2) - _target_alt_on_follow_start;
+
+            _pos_sp(0) = _tpos(0) + _follow_offset(0);
+            _pos_sp(1) = _tpos(1) + _follow_offset(1);
+            _pos_sp(2) = _drone_alt_on_follow_start + _follow_offset(2) + target_alt_delta;
+
+        } else {
+
+            _pos_sp(0) = _tpos(0) + _follow_offset(0);
+            _pos_sp(1) = _tpos(1) + _follow_offset(1);
+            _pos_sp(2) = _drone_alt_on_follow_start + _follow_offset(2);
+ 
+        }
+
     } else {
-        z_to_follow = _target_alt_on_follow_start;
+        // Applies to manual follow
+        _pos_sp = _tpos + _follow_offset;
+    
     }
-
-    _pos_sp(0) = _tpos(0) + _follow_offset(0);
-    _pos_sp(1) = _tpos(1) + _follow_offset(1);
-    _pos_sp(2) = z_to_follow + _follow_offset(2);
 
 	/* feed forward manual setpoint move rate with weight vel_ff */
 	_vel_ff_sp_mv_r = _sp_move_rate.emult(_params.vel_ff);

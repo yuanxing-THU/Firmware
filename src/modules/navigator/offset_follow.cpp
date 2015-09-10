@@ -65,6 +65,8 @@ OffsetFollow::on_activation()
 
     _rotation_speed_ms = 0.0f;
 
+	_base_offset(2) = 0.0f;
+
     if (_vstatus->nav_state == NAVIGATION_STATE_CIRCLE_AROUND) {
 
         _rotation_speed_ms = NavigatorMode::parameters.offset_rot_speed_ch_cmd_step;
@@ -352,7 +354,7 @@ OffsetFollow::init_base_offset() {
             &_base_offset(1)
 	);
 
-	_base_offset(2) = target_pos->alt - global_pos->alt;
+	_base_offset(2) = 0.0f;
 
     _offset_sp_angle = atan2(_base_offset(1), _base_offset(0));
 
