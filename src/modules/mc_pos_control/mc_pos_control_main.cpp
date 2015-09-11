@@ -55,25 +55,25 @@
 #include <drivers/drv_hrt.h>
 #include <arch/board/board.h>
 #include <uORB/uORB.h>
-#include <uORB/topics/manual_control_setpoint.h>
-#include <uORB/topics/actuator_controls.h>
 #include <uORB/topics/actuator_armed.h>
-#include <uORB/topics/parameter_update.h>
-#include <uORB/topics/vehicle_local_position.h>
-#include <uORB/topics/position_setpoint_triplet.h>
-#include <uORB/topics/vehicle_global_velocity_setpoint.h>
-#include <uORB/topics/vehicle_local_position_setpoint.h>
-#include <uORB/topics/vehicle_rates_setpoint.h>
-#include <uORB/topics/vehicle_attitude_setpoint.h>
-#include <uORB/topics/vehicle_attitude.h>
-#include <uORB/topics/vehicle_control_mode.h>
-#include <uORB/topics/vehicle_command.h>
-#include <uORB/topics/vehicle_status.h>
-#include <uORB/topics/target_global_position.h>
-#include <uORB/topics/position_restriction.h>
-#include <uORB/topics/user_camera_offsets.h>
+#include <uORB/topics/actuator_controls.h>
 #include <uORB/topics/follow_offset.h>
 #include <uORB/topics/home_position.h>
+#include <uORB/topics/manual_control_setpoint.h>
+#include <uORB/topics/parameter_update.h>
+#include <uORB/topics/position_restriction.h>
+#include <uORB/topics/position_setpoint_triplet.h>
+#include <uORB/topics/target_global_position.h>
+#include <uORB/topics/user_camera_offsets.h>
+#include <uORB/topics/vehicle_attitude.h>
+#include <uORB/topics/vehicle_attitude_setpoint.h>
+#include <uORB/topics/vehicle_command.h>
+#include <uORB/topics/vehicle_control_mode.h>
+#include <uORB/topics/vehicle_global_velocity_setpoint.h>
+#include <uORB/topics/vehicle_local_position.h>
+#include <uORB/topics/vehicle_local_position_setpoint.h>
+#include <uORB/topics/vehicle_rates_setpoint.h>
+#include <uORB/topics/vehicle_status.h>
 #include <systemlib/param/param.h>
 #include <systemlib/err.h>
 #include <systemlib/systemlib.h>
@@ -186,6 +186,7 @@ private:
 		param_t tilt_max_air;
 		param_t land_speed_max;
         param_t land_speed_min;
+        param_t land_sensor_validation_dist;
         param_t safe_land_h;
         param_t regular_land_speed;
         param_t land_correction_on;
@@ -204,7 +205,6 @@ private:
         param_t sonar_correction_on;
         param_t sonar_min_dist;
         param_t sonar_smooth_coef;
-        param_t mc_allowed_down_sp;
         param_t pafol_mode;
         param_t accept_radius;
         param_t pitch_lpf_cut;
@@ -234,6 +234,7 @@ private:
 		float tilt_max_air;
 		float land_speed_max;
         float land_speed_min;
+        float land_sensor_validation_dist;
         float safe_land_h;
         float regular_land_speed;
 		float takeoff_speed;
@@ -257,7 +258,6 @@ private:
         bool sonar_correction_on;
         float sonar_min_dist;
         float sonar_smooth_coef;
-        float mc_allowed_down_sp;
         int pafol_mode;
         float accept_radius;
 
@@ -611,11 +611,12 @@ MulticopterPositionControl::MulticopterPositionControl() :
 	_params_handles.xy_vel_max	= param_find("MPC_XY_VEL_MAX");
 	_params_handles.xy_ff		= param_find("MPC_XY_FF");
 	_params_handles.tilt_max_air	= param_find("MPC_TILTMAX_AIR");
-	_params_handles.land_speed_max	= param_find("A_LAND_MAX_V");
-    _params_handles.land_speed_min  = param_find("A_LAND_MIN_V");
-    _params_handles.safe_land_h     = param_find("A_LAND_SAFE_H");
-    _params_handles.regular_land_speed = param_find("MPC_LAND_SPD");
-    _params_handles.land_correction_on = param_find("A_LAND_CORR_ON");
+	_params_handles.land_speed_max	= param_find("LAND_MAX_V");
+    _params_handles.land_speed_min  = param_find("LAND_MIN_V");
+    _params_handles.land_sensor_validation_dist  = param_find("LAND_SENS_VALID");
+    _params_handles.safe_land_h     = param_find("LAND_SAFE_H");
+    _params_handles.regular_land_speed = param_find("LAND_REG_V");
+    _params_handles.land_correction_on = param_find("LAND_CORR_ON");
 	_params_handles.takeoff_speed	= param_find("MPC_TAKEOFF_SPD");
 
     _params_handles.yaw_dead_zone_r = param_find("A_YAW_DEAD_Z_R");
@@ -644,7 +645,6 @@ MulticopterPositionControl::MulticopterPositionControl() :
     _params_handles.sonar_correction_on     = param_find("SENS_SON_ON");
     _params_handles.sonar_min_dist          = param_find("SENS_SON_MIN");
     _params_handles.sonar_smooth_coef       = param_find("SENS_SON_SMOT");
-    _params_handles.mc_allowed_down_sp      = param_find("MPC_ALLOWED_LAND");
     _params_handles.pafol_mode				= param_find("PAFOL_MODE");
 
     _params_handles.accept_radius = param_find("NAV_ACC_RAD");
@@ -706,6 +706,7 @@ MulticopterPositionControl::parameters_update(bool force)
 		_params.tilt_max_air = math::radians(_params.tilt_max_air);
 		param_get(_params_handles.land_speed_max, &_params.land_speed_max);
         param_get(_params_handles.land_speed_min, &_params.land_speed_min);
+        param_get(_params_handles.land_sensor_validation_dist, &_params.land_sensor_validation_dist);
         param_get(_params_handles.safe_land_h, &_params.safe_land_h);
         param_get(_params_handles.regular_land_speed, &_params.regular_land_speed);
         param_get(_params_handles.land_correction_on, &_params.land_correction_on);
@@ -787,8 +788,6 @@ MulticopterPositionControl::parameters_update(bool force)
         _params.sonar_min_dist = v;
         param_get(_params_handles.sonar_smooth_coef, &v);
         _params.sonar_smooth_coef = v;
-        param_get(_params_handles.mc_allowed_down_sp, &v);
-        _params.mc_allowed_down_sp = v;
 
 		_params.sp_offs_max = _params.vel_max.edivide(_params.pos_p) * 2.0f;
 
@@ -2653,7 +2652,7 @@ MulticopterPositionControl::start()
  */
 float MulticopterPositionControl::landing_speed_correction() {
 
-    float landing_coeff = _params.regular_land_speed/_params.land_speed_min;
+    float landing_coeff = _params.land_speed_max/_params.land_speed_min;
     if(_local_pos.dist_bottom_valid) {
         /* -- MATH MAGIC --
          * We use linear function for speed correction
@@ -2695,23 +2694,29 @@ float MulticopterPositionControl::landing_speed_correction() {
                 landing_coeff = _params.land_speed_max/_params.land_speed_min;
             }
         }
+        DOG_PRINT("[MC_POS] lid valid, current land speed %0.4f\n",
+                (double) (landing_coeff * _params.land_speed_min));;
     }
     else {
-       /*
-        * This section waits 1 second after sonar lowered speed to minimal
-        * and then triggers max landing speed back to stop motors faster
-        * If landing_coeff is equal to initial value, we are assuming sonar was never valid yet
-        * and regular_land_speed is close to land_speed_max
-        */
-        // 1.3 is accepted error for sonar invalidation
-        if (landing_coeff < 1.3f) {
-            if (landed_time == 0) {
-                landed_time = hrt_absolute_time();
-            }
-            else if ( (hrt_absolute_time() - landed_time) > 1000000) {
-                landing_coeff = _params.land_speed_max/_params.land_speed_min;
+        // Distance between home and current position = sqrt( (x_1 - x_2)^2 + (y_1 - y_2)^2 )
+        float dist_between_points = sqrtf(pow((_pos(0) - _home_pos.x),2) + pow((_pos(1) - _home_pos.y), 2));
+        float till_ground = _home_pos.z - _pos(2);
+        if (dist_between_points < 5.0f) // then use home altitude to validate lidar
+        {
+            if (till_ground < _params.land_sensor_validation_dist) // then use regular speed
+            {
+                landing_coeff = _params.regular_land_speed/_params.land_speed_min;
             }
         }
+        else 
+        {
+            landing_coeff = _params.regular_land_speed/_params.land_speed_min;
+        }
+        DOG_PRINT("[MC_POS] current land speed %0.4f between points %.4f till ground %.4f _pos(2) %.4f\n",
+                (double) (landing_coeff * _params.land_speed_min),
+                (double) dist_between_points,
+                (double) till_ground,
+                (double) _pos(2));
     }
     return landing_coeff;
 }

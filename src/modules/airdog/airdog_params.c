@@ -83,7 +83,7 @@ PARAM_DEFINE_FLOAT(AIRD_TRAJ_RAD, 5);
  * @author: Max Shvetsov <maxim.shvetsov@airdog.com>
  * @unit:   1 - on, 0 - off
  */
-PARAM_DEFINE_INT32(A_LAND_CORR_ON, 1);
+PARAM_DEFINE_INT32(LAND_CORR_ON, 1);
 
 /**
  * @descr:  Airdog param for custom landing with range finders
@@ -95,7 +95,7 @@ PARAM_DEFINE_INT32(A_LAND_CORR_ON, 1);
  * @min:    0.0f <- We can only disarm when sensors show 0.0 which is practically not measurable
  * @max     1.0f <- Note that vehicle should be able to survive safely drop from this distance
  */
-PARAM_DEFINE_FLOAT(A_LAND_SAFE_H, 0.3f);
+PARAM_DEFINE_FLOAT(LAND_SAFE_H, 0.3f);
 
 /**
  * @descr:  Airdog param for custom landing with range finders
@@ -107,7 +107,7 @@ PARAM_DEFINE_FLOAT(A_LAND_SAFE_H, 0.3f);
  * @min:    0.5f <- Practically should be higher. The minimum should be configured in A_LAND_MIN_V
  * @max     4.0f <- Unlimited, but HIGHLY not recommended to increase more than that
  */
-PARAM_DEFINE_FLOAT(A_LAND_MAX_V, 2.0f);
+PARAM_DEFINE_FLOAT(LAND_MAX_V, 2.0f);
 
 /**
  * @descr:  Airdog param for custom landing with range finders
@@ -119,7 +119,7 @@ PARAM_DEFINE_FLOAT(A_LAND_MAX_V, 2.0f);
  * @min:    0.1f
  * @max     1.0f
  */
-PARAM_DEFINE_FLOAT(A_LAND_MIN_V, 0.3f);
+PARAM_DEFINE_FLOAT(LAND_MIN_V, 0.3f);
 
 /**
  * @descr: Parameter overriding max pwm set in rc scripts. If set to 0, script value will be used

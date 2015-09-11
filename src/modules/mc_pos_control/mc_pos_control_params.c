@@ -67,12 +67,12 @@ PARAM_DEFINE_FLOAT(CAM_PITCH_STEP, 0.05f);
 PARAM_DEFINE_FLOAT(CAM_YAW_STEP, 0.05f);
 
 /**
- * Allowed landing speed
+ * Speed correction distance in case lidar detected invalid. Speed will be reseted to LAND_SPD_REG
  *
  * @min max unlimited
  * @group Multicopter Position Control
  * */
-PARAM_DEFINE_FLOAT(MPC_ALLOWED_LAND, 5.0f);
+PARAM_DEFINE_FLOAT(LAND_SENS_VALID, 5.0f);
 
 /**
  * Minimum thrust
@@ -239,7 +239,7 @@ PARAM_DEFINE_FLOAT(MPC_TILTMAX_LND, 15.0f);
  * @min 0.0
  * @group Multicopter Position Control
  */
-PARAM_DEFINE_FLOAT(MPC_LAND_SPD, 1.0f);
+PARAM_DEFINE_FLOAT(LAND_REG_V, 1.0f);
 
 /**
  * Takeoff ascend rate
