@@ -2,7 +2,8 @@
 
 #include <limits.h>
 
-#include "activity/activity_files.hpp"
+#include <activity/activity_files.hpp>
+#include <sdlog2/directory.h>
 
 #include "protocol.h"
 
@@ -16,6 +17,7 @@ enum FileCatalog : uint8_t
 	INVALID,
 	ACTIVITY,
 	PUBLIC,
+	LOGS,
 };
 
 FileCatalog
@@ -23,6 +25,7 @@ catalog(file_index_t index)
 {
 	if (index == 1) { return FileCatalog::PUBLIC; }
 	if ((index >> 16) == 0x0001) { return FileCatalog::ACTIVITY; }
+	if ((index >> 31) == 1) { return FileCatalog::LOGS; }
 	return FileCatalog::INVALID;
 }
 
@@ -68,6 +71,44 @@ is_activity_file_valid(const char tmp_path[], file_index_t index)
 
 
 /*
+ * Log files.
+ */
+
+void
+parse_log_index(file_index_t index, uint32_t & dir_no, uint32_t & file_no)
+{
+	index &= ~0x80000000;
+	dir_no = index >> 8;
+	file_no = index & 0xFF;
+}
+
+bool
+is_log_index_valid(file_index_t index)
+{
+	uint32_t dir_no, file_no;
+	parse_log_index(index, dir_no, file_no);
+	return (file_no < SDLOG2_FILE_KIND_MAX);
+}
+
+bool
+get_log_filename(file_index_t index, filename_buf_t & name)
+{
+	uint32_t dir_no, file_no;
+	parse_log_index(index, dir_no, file_no);
+
+	static_assert(sizeof name == PATH_MAX,
+			"sdlog2_filename requires PATHMAX");
+
+	char dir[PATH_MAX];
+	bool ok = file_no < SDLOG2_FILE_KIND_MAX
+		and sdlog2_dir_find_by_number(dir, dir_no, sdlog2_root)
+		and sdlog2_filename(name, dir, sdlog2_file_kind_t(file_no));
+
+	return ok;
+}
+
+
+/*
  * General files.
  */
 
@@ -85,6 +126,9 @@ get_filename(file_index_t index, filename_buf_t & name)
 		strncpy(name, "/fs/microsd/mobile/public.dat", sizeof name);
 		ok = index == 1;
 		break;
+	case FileCatalog::LOGS:
+		ok = get_log_filename(index, name);
+		break;
 	default:
 		ok = false;
 	}
@@ -101,7 +145,8 @@ bool
 is_file_index_valid(file_index_t index)
 {
 	FileCatalog c = catalog(index);
-	return ((c == FileCatalog::ACTIVITY) and is_activity_index_valid(index))
+	return (c == FileCatalog::ACTIVITY and is_activity_index_valid(index))
+		or (c == FileCatalog::LOGS and is_log_index_valid(index))
 		or (c != FileCatalog::INVALID);
 }
 
