@@ -77,15 +77,18 @@ daemon(int argc, char *argv[])
 }
 
 static bool
+maintenance_allowed()
+{
+	if (daemon_running) { fprintf(stderr, "Stop the daemon first.\n"); }
+	return not daemon_running;
+}
+
+static bool
 exec_all_AT(const char devname[], int argc, const char * const arg[], char buf[], size_t size)
 {
 	using namespace bl600;
 
-	if (daemon_running)
-	{
-		fprintf(stderr, "Stop the daemon first.\n");
-		return false;
-	}
+	if (not maintenance_allowed()) { return false; }
 
 	unique_file serial = open_serial(devname);
 	if (fileno(serial) == -1) { return false; }
@@ -280,6 +283,9 @@ main(int argc, const char *argv[])
 	else if (argc == 3 and streq(argv[1], "mode"))
 	{
 		using namespace bl600;
+
+		if (not maintenance_allowed()) { return 1; }
+
 		if (streq(argv[2], "at"))
 			mode_AT();
 		else if (streq(argv[2], "default"))
@@ -292,12 +298,14 @@ main(int argc, const char *argv[])
 	}
 	else if (argc > 3 and streq(argv[1], "at"))
 	{
-		bool ok = exec_all_AT(argv[2], argc - 3, argv + 3);
+		bool ok = maintenance_allowed()
+			and exec_all_AT(argv[2], argc - 3, argv + 3);
 		if (not ok) { return 1; }
 	}
 	else if ((argc == 3 or argc == 4) and streq(argv[1], "firmware-version"))
 	{
-		bool ok = version_firmware_check(argv[2]);
+		bool ok = maintenance_allowed()
+			and version_firmware_check(argv[2]);
 		if (not ok) { return 1; }
 	}
 	else
