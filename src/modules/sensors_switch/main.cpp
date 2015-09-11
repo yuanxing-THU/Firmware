@@ -124,6 +124,8 @@ factory_adc_check()
 			ADC_SYSPOWER_VOLTAGE_SCALE
 	);
 
+#elif CONFIG_ARCH_BOARD_AIRDOG_FMU
+    return false;
 #else
 /*
  * If you need to compile the stuff on some other board,
