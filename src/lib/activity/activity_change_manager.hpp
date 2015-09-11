@@ -62,17 +62,15 @@ class __EXPORT ActivityChangeManager {
         bool params_received();
         void set_waiting_for_params();
 
-        bool request_dog_params();
-
-        bool activity_param_messasges_on();
-        bool activity_param_messasges_off();
 
         void init(int _activity);
        
     private:
 
         bool init_activity_config(); 
+
         bool send_params_to_dog();
+        bool init_activity_param_sndr();
 
         ParamChangeManager params[ALLOWED_PARAM_COUNT];
 

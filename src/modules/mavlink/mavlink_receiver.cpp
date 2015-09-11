@@ -411,9 +411,9 @@ MavlinkReceiver::handle_message_activity_params(mavlink_message_t *msg)
     mavlink_activity_params_t mav_activity_params;
     mavlink_msg_activity_params_decode(msg, &mav_activity_params);
 
-    if (mav_activity_params.timestamp > _activity_params_update_ts) {
+    if (mav_activity_params.timestamp != _activity_params_update_ts) {
 
-        fprintf(stderr, "New activity params!");
+        fprintf(stderr, "Mavlink receiver: New activity params!");
         
         _activity_params_update_ts = mav_activity_params.timestamp;
 
@@ -422,7 +422,7 @@ MavlinkReceiver::handle_message_activity_params(mavlink_message_t *msg)
 
         for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++){
             activity_params.values[i] = mav_activity_params.values[i];
-            fprintf(stderr, "%.2f : %.2f\n", (double)i, (double)activity_params.values[i]);
+            fprintf(stderr, "Param: %f : %.2f\n", (double)i, (double)activity_params.values[i]);
         } 
 
         orb_advertise(ORB_ID(activity_params), &activity_params);

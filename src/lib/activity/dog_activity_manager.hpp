@@ -36,6 +36,8 @@ class __EXPORT DogActivityManager {
 
         bool send_params_to_leash();
 
+        bool init_activity_param_sndr();
+
         bool apply_params();
 
         bool process_virtual_params();

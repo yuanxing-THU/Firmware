@@ -28,6 +28,8 @@ DogActivityManager::DogActivityManager(int activity) :
     _write_params_on_flag(true) 
 {
 
+    init_activity_param_sndr();
+
     init_allowed_params();
     Activity::Files::clear_file_state();
 
@@ -62,6 +64,7 @@ DogActivityManager::check_file_state(){
     if (hrt_absolute_time() - _last_file_state_check_time > 1000000) {
 
         _last_file_state_check_time = hrt_absolute_time();
+
 
         if (Activity::Files::get_file_state()) {
 
@@ -160,8 +163,22 @@ DogActivityManager::process_received_params(){
 }
 
 bool
-DogActivityManager::send_params_to_leash(){
+DogActivityManager::init_activity_param_sndr(){
 
+    _activity_params_sndr.type = ACTIVITY_PARAMS_SNDR_OFF;
+
+    if (_activity_params_sndr_pub >  0) {
+        orb_publish(ORB_ID(activity_params_sndr), _activity_params_sndr_pub, &_activity_params_sndr);
+    } else {
+        _activity_params_sndr_pub = orb_advertise(ORB_ID(activity_params_sndr), &_activity_params_sndr);
+    }
+
+    return true;
+}
+
+
+bool
+DogActivityManager::send_params_to_leash(){ 
     _activity_params_sndr.type = ACTIVITY_PARAMS_SNDR_ON;
 
     if (_activity_params_sndr_pub >  0) {
@@ -258,10 +275,6 @@ bool
 DogActivityManager::is_inited() {
 
     check_file_state();
-
-    if (_inited)
-        send_params_to_leash();
-
     return _inited;
 
 }

@@ -15,6 +15,7 @@ ActivityChangeManager::ActivityChangeManager() :
     cur_param_id(0),
     params_up_to_date(false),
     activity_params_sub(-1){
+        init_activity_param_sndr();
 }
 
 ActivityChangeManager::ActivityChangeManager(int _activity) :
@@ -25,12 +26,14 @@ ActivityChangeManager::ActivityChangeManager(int _activity) :
     activity_params_sub(-1)
 {
 
-        if (!allowed_params_inited) init_allowed_params();
-        if (!activity_config_list_inited) init_activity_config_list();
+    init_activity_param_sndr();
 
-        init_activity_config();
-        
-        activity_params_sub = orb_subscribe(ORB_ID(activity_params));
+    if (!allowed_params_inited) init_allowed_params();
+    if (!activity_config_list_inited) init_activity_config_list();
+
+    init_activity_config();
+    
+    activity_params_sub = orb_subscribe(ORB_ID(activity_params));
 
 }
 
@@ -429,17 +432,21 @@ ActivityChangeManager::cancel_params(){
 bool
 ActivityChangeManager::send_params_to_dog(){
 
-    activity_params_sndr_s activity_params_sndr;
-    activity_params_sndr.type = ACTIVITY_PARAMS_SNDR_ON;
-
-    int activity_params_sndr_pub = orb_advertise(ORB_ID(activity_params_sndr), &activity_params_sndr);
-
-    if (activity_params_sndr_pub <= 0){
-        printf("Failed to publish activity params sender to orb.\n");
-        return false;
-    }
+    activity_params_sndr_s sndr;
+    sndr.type = ACTIVITY_PARAMS_SNDR_ON;
+    orb_advertise(ORB_ID(activity_params_sndr), &sndr);
+    return true;
 
     params_up_to_date = false;
+}
+
+bool 
+ActivityChangeManager::init_activity_param_sndr() {
+
+    activity_params_sndr_s sndr;
+    sndr.type = ACTIVITY_PARAMS_SNDR_OFF;
+    orb_advertise(ORB_ID(activity_params_sndr), &sndr);
+    return true;
 }
 
 bool 
@@ -465,27 +472,6 @@ ActivityChangeManager::params_received() {
     }
 
     return params_up_to_date;
-}
-
-bool 
-ActivityChangeManager::activity_param_messasges_on() {
-
-    activity_params_sndr_s sndr;
-    sndr.type = ACTIVITY_PARAMS_SNDR_OFF;
-    orb_advertise(ORB_ID(activity_params_sndr), &sndr);
-
-    return true;
-}
-
-
-bool 
-ActivityChangeManager::activity_param_messasges_off() {
-
-    activity_params_sndr_s sndr;
-    sndr.type = ACTIVITY_PARAMS_SNDR_ON;
-    orb_advertise(ORB_ID(activity_params_sndr), &sndr);
-
-    return true;
 }
 
 bool

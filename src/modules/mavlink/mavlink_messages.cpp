@@ -2416,11 +2416,6 @@ protected:
         _activity_sndr_time(0),
         _activity_params_time(0)
 	{
-        
-		struct activity_params_sndr_s activity_params_sndr;
-        activity_params_sndr.type = ACTIVITY_PARAMS_SNDR_OFF;
-        orb_advertise(ORB_ID(activity_params_sndr), &activity_params_sndr);
-
     }
 
 	void send(const hrt_abstime t)
@@ -2431,19 +2426,22 @@ protected:
 
 		_activity_params_sndr_sub->update(&_activity_sndr_time, &activity_params_sndr);
 
-        if (activity_params_sndr.type == ACTIVITY_PARAMS_SNDR_ON) {
+        if (activity_params_sndr.type == ACTIVITY_PARAMS_SNDR_ON && _activity_sndr_time != 0) {
 
             _activity_params_sub->update(&_activity_params_time, &activity_params);
 
-                mavlink_activity_params_t msg;
-                msg.timestamp = _activity_sndr_time;
+                if (_activity_params_time != 0) {
 
-                for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++) {
-                    msg.values[i] = activity_params.values[i];
+                    mavlink_activity_params_t msg;
+                    msg.timestamp = _activity_sndr_time;
+
+                    for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++) {
+                        msg.values[i] = activity_params.values[i];
+                    }
+
+                    _mavlink->send_message(MAVLINK_MSG_ID_ACTIVITY_PARAMS, &msg);
+
                 }
-
-                _mavlink->send_message(MAVLINK_MSG_ID_ACTIVITY_PARAMS, &msg);
-
         }
 	}
 };
