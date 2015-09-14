@@ -38,9 +38,9 @@ __EXPORT bool calibrate_gyroscope(int mavlink_fd=0, const unsigned int sample_co
  * poll_timeout_gap - gap in ms between orb publishing interval and timeout on poll requests. Default 5
  * @return true if calibration was successful, false otherwise
  */
-__EXPORT bool calibrate_magnetometer(int mavlink_fd=0, unsigned int sample_count=6000,
+__EXPORT bool calibrate_magnetometer(int mavlink_fd=0, unsigned int sample_count=3000,
 							unsigned int max_error_count=200,
-							unsigned int total_time=60000,
+							unsigned int total_time=30000,
 							int poll_timeout_gap=5);
 
 /* Starts accelerometer calibration procedure.
