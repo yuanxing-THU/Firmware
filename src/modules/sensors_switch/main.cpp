@@ -126,6 +126,8 @@ factory_adc_check()
 
 #elif CONFIG_ARCH_BOARD_AIRDOG_FMU
     return false;
+#elif CONFIG_ARCH_BOARD_PX4FMU_V2
+    return false;
 #else
 /*
  * If you need to compile the stuff on some other board,
