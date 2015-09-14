@@ -609,11 +609,20 @@ check_version_firmware()
 
 	log_info("BT required version: x.x.x.%u.\n", required_build);
 
-	bool ok = ( fileno(raw_dev) > -1
-		and required_build <= 0xFFFF
-		and check_module_firmware(service_io, required_build)
-		and module_factory_default(service_io, 0xbf)
-	);
+	bool ok = fileno(raw_dev) > -1;
+
+	if (ok)
+	{
+		ok = required_build <= 0xFFFF;
+		if (ok)
+			ok = check_module_firmware(service_io, required_build);
+		else
+			log_err("Invalid A_BT_MIN_BUILD value: 0x%08x.\n",
+					required_build);
+
+		// Switch to AT mode to ease factory firmware, just in case.
+		module_factory_default(service_io, 0xbf);
+	}
 
 	return ok ? 0 : 1;
 }
