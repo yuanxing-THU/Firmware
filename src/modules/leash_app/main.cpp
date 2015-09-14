@@ -78,7 +78,7 @@ int main(int argc, const char * const * const argv)
             deamon_task = task_spawn_cmd("leash_app",
                                          SCHED_DEFAULT,
                                          SCHED_PRIORITY_DEFAULT - 30,
-                                         3000,
+                                         5000,
                                          app_main_thread,
                                          (const char **)argv);
         }

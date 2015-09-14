@@ -1501,7 +1501,8 @@ Mavlink::task_main(int argc, char *argv[])
 	struct vehicle_status_s status;
 	status_sub->update(&status_time, &status);
 
-    configure_stream("ACTIVITY_PARAMS", 1.0f);
+    configure_stream("ACTIVITY_PARAMS", 10.0f);
+    configure_stream("ACTIVITY_PARAMS_REQUEST", 1.0f);
 
 	/* add default streams depending on mode */
 

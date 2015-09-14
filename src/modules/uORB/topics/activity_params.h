@@ -7,45 +7,41 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <activity/activity_lib_constants.h>
 #include "../uORB.h"
 
 typedef enum { 
-    ACTIVITY_PARAMS_RECEIVED = 0,
-    ACTIVITY_PARAMS_SAVED,
-    ACTIVITY_PARAMS_PROCESSED,
-    ACTIVITY_PARAMS_SET_FROM_FILE,
-    ACTIVITY_PARAMS_ERROR
+    ACTIVITY_PARAMS_DEFAULT = 0,
+    ACTIVITY_PARAMS_REMOTE,
+    ACTIVITY_PARAMS_LOCAL,
+    ACTIVITY_PARAMS_REQUEST
 } activity_params_type;
 
 struct activity_params_s {
-
     uint8_t type;
-    float values[32];
-    uint64_t ts;
-
+    float values[Activity::ALLOWED_PARAM_COUNT];
 };
 
 ORB_DECLARE(activity_params);
-
-
-typedef enum {
-    ACTIVITY_PARAMS_SNDR_OFF = 0,
-    ACTIVITY_PARAMS_SNDR_ON = 1,
-} activity_params_sndr_type;
-
-struct activity_params_sndr_s {
-    activity_params_sndr_type type;
-};
-
-ORB_DECLARE(activity_params_sndr);
 
 typedef enum {
     ACTIVITY_REQUEST_PARAMS = 0,
     ACTIVITY_REQUEST_FAILED
 } activity_request_type;
 
-struct activity_request_sndr_s {
+struct activity_request_s {
     activity_request_type type;
 };
+ORB_DECLARE(activity_request);
 
-ORB_DECLARE(activity_request_sndr);
+
+struct activity_remote_t_s {
+    uint64_t ts; 
+};
+ORB_DECLARE(activity_remote_t);
+
+
+struct activity_received_t_s {
+    uint64_t ts; 
+};
+ORB_DECLARE(activity_received_t);

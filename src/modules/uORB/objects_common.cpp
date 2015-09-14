@@ -304,5 +304,7 @@ ORB_DEFINE(follow_offset, struct follow_offset_s);
 
 #include "topics/activity_params.h"
 ORB_DEFINE(activity_params, struct activity_params_s);
-ORB_DEFINE(activity_params_sndr, struct activity_params_sndr_s);
-ORB_DEFINE(activity_request_sndr, struct activity_request_sndr_s);
+ORB_DEFINE(activity_request, struct activity_request_s);
+ORB_DEFINE(activity_remote_t, struct activity_remote_t_s);
+ORB_DEFINE(activity_received_t, struct activity_received_t_s);
+

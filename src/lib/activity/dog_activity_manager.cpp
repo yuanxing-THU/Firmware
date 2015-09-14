@@ -24,11 +24,9 @@ DogActivityManager::DogActivityManager(int activity) :
     _last_file_state_check_time(0),
     _received_activity_params_sub(-1),
     _last_params_received_process(0),
-    _activity_params_sndr_pub(-1),
     _write_params_on_flag(true) 
 {
 
-    init_activity_param_sndr();
 
     init_allowed_params();
     Activity::Files::clear_file_state();
@@ -107,9 +105,6 @@ DogActivityManager::set_activity(int32_t activity){
     if (!process_virtual_params())
         return false;
 
-    if (!send_params_to_leash())
-         return false;
-
     if (_write_params_on_flag) {
         if (!apply_params())
             return false;
@@ -131,7 +126,7 @@ DogActivityManager::check_received_params() {
 
         orb_copy(ORB_ID(activity_params), _received_activity_params_sub, &activity_params);
 
-        if (activity_params.type == ACTIVITY_PARAMS_RECEIVED ) {
+        if (activity_params.type == ACTIVITY_PARAMS_REMOTE ) {
             process_received_params();
         }
     }
@@ -155,38 +150,6 @@ DogActivityManager::process_received_params(){
 
     }
 
-    if (!send_params_to_leash())
-        return false;
-
-    return true;
-
-}
-
-bool
-DogActivityManager::init_activity_param_sndr(){
-
-    _activity_params_sndr.type = ACTIVITY_PARAMS_SNDR_OFF;
-
-    if (_activity_params_sndr_pub >  0) {
-        orb_publish(ORB_ID(activity_params_sndr), _activity_params_sndr_pub, &_activity_params_sndr);
-    } else {
-        _activity_params_sndr_pub = orb_advertise(ORB_ID(activity_params_sndr), &_activity_params_sndr);
-    }
-
-    return true;
-}
-
-
-bool
-DogActivityManager::send_params_to_leash(){ 
-    _activity_params_sndr.type = ACTIVITY_PARAMS_SNDR_ON;
-
-    if (_activity_params_sndr_pub >  0) {
-        orb_publish(ORB_ID(activity_params_sndr), _activity_params_sndr_pub, &_activity_params_sndr);
-    } else {
-        _activity_params_sndr_pub = orb_advertise(ORB_ID(activity_params_sndr), &_activity_params_sndr);
-    }
-
     return true;
 }
         
@@ -202,7 +165,7 @@ DogActivityManager::process_virtual_params() {
 
 	orb_unsubscribe(activity_params_sub);
 
-    activity_params_processed.type = ACTIVITY_PARAMS_PROCESSED;
+    activity_params_processed.type = ACTIVITY_PARAMS_LOCAL;
 
     for (int i=0;i<ALLOWED_PARAM_COUNT;i++)
         activity_params_processed.values[i] = activity_params_read.values[i];

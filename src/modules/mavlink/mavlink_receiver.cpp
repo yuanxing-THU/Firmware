@@ -129,6 +129,8 @@ MavlinkReceiver::MavlinkReceiver(Mavlink *parent) :
 	_manual_pub(-1),
 	_target_pos_pub(-1),
 	_external_trajectory_pub(-1),
+    _activity_params_pub(-1),
+    _activity_request_pub(-1),
 	_control_mode_sub(orb_subscribe(ORB_ID(vehicle_control_mode))),
 	_hil_frames(0),
 	_old_timestamp(0),
@@ -137,8 +139,11 @@ MavlinkReceiver::MavlinkReceiver(Mavlink *parent) :
 	_hil_local_proj_ref{},
 	_airdog_status_pub(-1),
 	_airdog_status{},
-	_target_gps_raw_pub(-1),
-    _activity_params_update_ts(0)
+    _activity_remote_t_pub(-1),
+    _activity_remote_t{},
+    _activity_received_t_pub(-1),
+    _activity_received_t{},
+	_target_gps_raw_pub(-1)
 {
 
 	// make sure the FTP server is started
@@ -411,24 +416,75 @@ MavlinkReceiver::handle_message_activity_params(mavlink_message_t *msg)
     mavlink_activity_params_t mav_activity_params;
     mavlink_msg_activity_params_decode(msg, &mav_activity_params);
 
-    if (mav_activity_params.timestamp != _activity_params_update_ts) {
 
-        fprintf(stderr, "Mavlink receiver: New activity params!");
-        
-        _activity_params_update_ts = mav_activity_params.timestamp;
+    if (mav_activity_params.type == ACTIVITY_PARAMS_REQUEST) {
 
-        activity_params_s activity_params;
-        activity_params.type = ACTIVITY_PARAMS_RECEIVED; 
+        activity_request_s activity_request;
+        activity_request.type = ACTIVITY_REQUEST_PARAMS;
 
-        for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++){
-            activity_params.values[i] = mav_activity_params.values[i];
-            fprintf(stderr, "Param: %f : %.2f\n", (double)i, (double)activity_params.values[i]);
-        } 
+        if (_activity_request_pub < 0) {
+            _activity_request_pub = orb_advertise(ORB_ID(activity_request), &activity_request);
 
-        orb_advertise(ORB_ID(activity_params), &activity_params);
-
+        } else {
+            orb_publish(ORB_ID(activity_request), _activity_request_pub, &activity_request);
+        }
     }
 
+
+    if (mav_activity_params.type == ACTIVITY_PARAMS_REMOTE) {
+
+        int st = mav_activity_params.param_starting_idx;
+        int en = mav_activity_params.param_ending_idx;
+
+        int it = 0;
+
+        for (int param_idx = st; param_idx <= en; param_idx++) {
+
+            _activity_params_ts[param_idx] = mav_activity_params.ts;
+            _activity_params_val[param_idx] = mav_activity_params.values[it];
+        
+            it++;
+        }
+
+
+        bool params_ready = true;
+        for (int param_idx = 0; param_idx < Activity::ALLOWED_PARAM_COUNT; param_idx++){
+
+            if (_activity_params_ts[param_idx] != mav_activity_params.ts)
+                params_ready = false;
+            
+        }
+
+        if (params_ready) {
+
+            activity_params_s activity_params;
+            activity_params.type = ACTIVITY_PARAMS_REMOTE; 
+
+            for (int param_idx=0; param_idx<Activity::ALLOWED_PARAM_COUNT; param_idx++){
+                activity_params.values[param_idx] = _activity_params_val[param_idx];
+            } 
+
+
+            orb_advertise(ORB_ID(activity_params), &activity_params);
+
+            if (_activity_params_pub < 0) {
+                _activity_params_pub = orb_advertise(ORB_ID(activity_params), &activity_params);
+            } else {
+                orb_publish(ORB_ID(activity_params), _activity_params_pub, &activity_params);
+            }
+
+
+            activity_received_t_s activity_received_t;
+            activity_received_t.ts = mav_activity_params.ts;
+
+            if (_activity_received_t_pub < 0) {
+                _activity_received_t_pub = orb_advertise(ORB_ID(activity_received_t), &activity_received_t);
+            } else {
+                orb_publish(ORB_ID(activity_received_t), _activity_received_t_pub, &activity_received_t);
+            }
+
+        }
+    }
 }
 
 void
@@ -1186,12 +1242,22 @@ MavlinkReceiver::handle_combo_message(mavlink_message_t *msg)
 
         // save additional airdog status field
         // publishing will happen in internal_heartbeat_handle
+        
         _airdog_status.battery_remaining = msg_combo.STS_battery_remaining;
-        _airdog_status.activity = msg_combo.STS_activity;
         _airdog_status.error_code = msg_combo.HRT_error_code;
         _airdog_status.error_stamp = msg_combo.HRT_error_stamp;
 
 		internal_heartbeat_handle(msg_hrt, msg);
+
+        _activity_remote_t.ts = msg_combo.activity_t;
+
+        if (_activity_remote_t_pub < 0) {
+            _activity_remote_t_pub = orb_advertise(ORB_ID(activity_remote_t), &_activity_remote_t);
+
+        } else {
+            orb_publish(ORB_ID(activity_remote_t), _activity_remote_t_pub, &_activity_remote_t);
+        }
+
 	}
 	if (msg_combo.fresh_messages & MAVLINK_COMBO_MESSAGE_GPOS) {
 		mavlink_global_position_int_t msg_gpos = {

@@ -44,7 +44,7 @@ class __EXPORT ParamConfig {
         ParamConfig& operator = (const ParamConfig &a);
         ParamConfig(const ParamConfig &a);
         const char * get_name();
-        param_target_device get_target_device();
+        int get_target_device();
         const char * get_param_name();
         const char * get_display_name();
 

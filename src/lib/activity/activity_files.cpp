@@ -480,8 +480,6 @@ activity_file_to_orb(uint8_t activity) {
         activity_params.values[(int)param_id] = param_val;
     }
 
-    activity_params.ts = hrt_absolute_time();
-
     fclose(activity_file);
 
     int activity_params_pub = orb_advertise(ORB_ID(activity_params), &activity_params);

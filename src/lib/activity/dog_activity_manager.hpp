@@ -34,10 +34,6 @@ class __EXPORT DogActivityManager {
 
         bool process_received_params();
 
-        bool send_params_to_leash();
-
-        bool init_activity_param_sndr();
-
         bool apply_params();
 
         bool process_virtual_params();
@@ -57,8 +53,6 @@ class __EXPORT DogActivityManager {
         int _activity_params_sndr_pub; 
 
         bool _write_params_on_flag;
-
-        activity_params_sndr_s _activity_params_sndr;
 
 };
 }

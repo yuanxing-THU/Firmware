@@ -70,7 +70,6 @@ class __EXPORT ActivityChangeManager {
         bool init_activity_config(); 
 
         bool send_params_to_dog();
-        bool init_activity_param_sndr();
 
         ParamChangeManager params[ALLOWED_PARAM_COUNT];
 

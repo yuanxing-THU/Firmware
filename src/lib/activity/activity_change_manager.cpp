@@ -15,7 +15,6 @@ ActivityChangeManager::ActivityChangeManager() :
     cur_param_id(0),
     params_up_to_date(false),
     activity_params_sub(-1){
-        init_activity_param_sndr();
 }
 
 ActivityChangeManager::ActivityChangeManager(int _activity) :
@@ -25,8 +24,6 @@ ActivityChangeManager::ActivityChangeManager(int _activity) :
     params_up_to_date(false),
     activity_params_sub(-1)
 {
-
-    init_activity_param_sndr();
 
     if (!allowed_params_inited) init_allowed_params();
     if (!activity_config_list_inited) init_activity_config_list();
@@ -394,8 +391,7 @@ ActivityChangeManager::save_params(){
 
     activity_params_s activity_params;
 
-    activity_params.type = ACTIVITY_PARAMS_SAVED;
-    activity_params.ts = hrt_absolute_time();
+    activity_params.type = ACTIVITY_PARAMS_LOCAL;
 
     for (int i=0;i<ALLOWED_PARAM_COUNT;i++) {
         activity_params.values[i] = params[i].saved_value;
@@ -429,26 +425,6 @@ ActivityChangeManager::cancel_params(){
 
 }
 
-bool
-ActivityChangeManager::send_params_to_dog(){
-
-    activity_params_sndr_s sndr;
-    sndr.type = ACTIVITY_PARAMS_SNDR_ON;
-    orb_advertise(ORB_ID(activity_params_sndr), &sndr);
-    return true;
-
-    params_up_to_date = false;
-}
-
-bool 
-ActivityChangeManager::init_activity_param_sndr() {
-
-    activity_params_sndr_s sndr;
-    sndr.type = ACTIVITY_PARAMS_SNDR_OFF;
-    orb_advertise(ORB_ID(activity_params_sndr), &sndr);
-    return true;
-}
-
 bool 
 ActivityChangeManager::params_received() {
 
@@ -464,7 +440,7 @@ ActivityChangeManager::params_received() {
             activity_params_s activity_params;
             orb_copy(ORB_ID(activity_params), activity_params_sub, &activity_params);
 
-            if (activity_params.type == ACTIVITY_PARAMS_RECEIVED) {
+            if (activity_params.type == ACTIVITY_PARAMS_REMOTE) {
                 process_received_params(activity_params);
                 params_up_to_date = true;
             }

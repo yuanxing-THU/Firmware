@@ -5,7 +5,7 @@ const char ACTIVITY_FILE_DIR[PATH_MAX] = "/fs/microsd/activity";
 const int MAX_STR_LEN = 64;
 const int MAX_PATH_LEN = 256;
 
-const int ALLOWED_PARAM_COUNT = 18;
+const int ALLOWED_PARAM_COUNT = 55;
 const int ACTIVITIES_COUNT = 10;
 
 enum PARAM_LIMIT_KIND { 

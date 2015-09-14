@@ -2223,6 +2223,9 @@ private:
 	uint64_t _home_time;
 	MavlinkOrbSubscription *_gps_sub;
 	uint64_t _gps_time;
+    MavlinkOrbSubscription *_activity_params_sub;
+	uint64_t _activity_params_time;
+	uint64_t _last_local_activity_params_time;
 
         // Calibration variables
 #if IS_FMU
@@ -2250,6 +2253,9 @@ protected:
 			_home_time(0),
 			_gps_sub(_mavlink->add_orb_subscription(ORB_ID(vehicle_gps_position))),
 			_gps_time(0),
+			_activity_params_sub(_mavlink->add_orb_subscription(ORB_ID(activity_params))),
+			_activity_params_time(0),
+            _last_local_activity_params_time(0),
                         // Calibration inits
 #if IS_FMU
                         _calibrator_sub(_mavlink->add_orb_subscription(ORB_ID(calibrator))),
@@ -2268,8 +2274,9 @@ protected:
 		struct vehicle_global_position_s pos;
 		struct home_position_s home;
 		struct vehicle_gps_position_s gps;
+        struct activity_params_s activity_params;
 		trajectory_s report;
-                struct vehicle_command_s cmd;
+        struct vehicle_command_s cmd;
 #if IS_FMU
                 struct calibrator_s calibrator;
 #endif
@@ -2280,6 +2287,18 @@ protected:
 			/* if topic update failed fill it with defaults */
 			memset(&status, 0, sizeof(status));
 		}
+
+		msg.STS_battery_remaining = (uint8_t)(100.0f * status.battery_remaining);
+
+        _activity_params_sub->update(&_activity_params_time, &activity_params);
+
+
+        if (activity_params.type == ACTIVITY_PARAMS_LOCAL) {
+            _last_local_activity_params_time = _activity_params_time;
+        }
+
+        msg.activity_t = _last_local_activity_params_time;
+        
 
 		if (!_pos_sp_triplet_sub->update(&pos_sp_triplet)) {
 			/* if topic update failed fill it with defaults */
@@ -2299,8 +2318,6 @@ protected:
 		updated |= _home_sub->update(&_home_time, &home);
 		updated |= _gps_sub->update(&_gps_time, &gps);
 
-		msg.STS_battery_remaining = (uint8_t)(100.0f * status.battery_remaining);
-        msg.STS_activity = status.activity;
 
 		if (_pos_time != 0 && updated) {
 			msg.fresh_messages |= MAVLINK_COMBO_MESSAGE_GPOS;
@@ -2399,11 +2416,13 @@ public:
 
 private:
 
-	MavlinkOrbSubscription *_activity_params_sndr_sub;
 	MavlinkOrbSubscription *_activity_params_sub;
+    MavlinkOrbSubscription *_activity_request_sub;
 
-	uint64_t _activity_sndr_time;
-	uint64_t _activity_params_time;
+	uint64_t activity_params_time;
+	uint64_t activity_request_time;
+
+    int snd_param_idx;
 
 	/* do not allow top copying this class */
 	MavlinkStreamActivityParams(const MavlinkStreamActivityParams &);
@@ -2411,10 +2430,11 @@ private:
 
 protected:
 	explicit MavlinkStreamActivityParams(Mavlink *mavlink) : MavlinkStream(mavlink),
-		_activity_params_sndr_sub(_mavlink->add_orb_subscription(ORB_ID(activity_params_sndr))),
 		_activity_params_sub(_mavlink->add_orb_subscription(ORB_ID(activity_params))),
-        _activity_sndr_time(0),
-        _activity_params_time(0)
+        _activity_request_sub(_mavlink->add_orb_subscription(ORB_ID(activity_request))),
+        activity_params_time(0),
+        activity_request_time(0),
+        snd_param_idx(-1)
 	{
     }
 
@@ -2422,28 +2442,121 @@ protected:
 	{
 
 		struct activity_params_s activity_params;
-		struct activity_params_sndr_s activity_params_sndr;
+        struct activity_request_s activity_request;
 
-		_activity_params_sndr_sub->update(&_activity_sndr_time, &activity_params_sndr);
+        _activity_params_sub->update(&activity_params_time, &activity_params);
 
-        if (activity_params_sndr.type == ACTIVITY_PARAMS_SNDR_ON && _activity_sndr_time != 0) {
+        int max_params_in_msg = 25; // TODO: Change to proper value ( constant ? )
 
-            _activity_params_sub->update(&_activity_params_time, &activity_params);
 
-                if (_activity_params_time != 0) {
+        if (_activity_request_sub->update(&activity_request_time, &activity_request) && activity_request_time != 0 && activity_params_time != 0) {
+            snd_param_idx = 0;
+        }
 
-                    mavlink_activity_params_t msg;
-                    msg.timestamp = _activity_sndr_time;
 
-                    for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++) {
-                        msg.values[i] = activity_params.values[i];
-                    }
+        if (snd_param_idx != -1) {
 
+            mavlink_activity_params_t msg;
+
+            msg.ts = activity_params_time;
+            msg.type = ACTIVITY_PARAMS_REMOTE;
+
+            msg.param_starting_idx = snd_param_idx;
+
+            int param_in_msg = 0;
+
+            for (;snd_param_idx < Activity::ALLOWED_PARAM_COUNT; snd_param_idx++ ) {
+
+                msg.values[param_in_msg] = activity_params.values[snd_param_idx];
+
+                param_in_msg++;
+
+                if (param_in_msg == max_params_in_msg || snd_param_idx == Activity::ALLOWED_PARAM_COUNT - 1) {
+                    msg.param_ending_idx = snd_param_idx;
                     _mavlink->send_message(MAVLINK_MSG_ID_ACTIVITY_PARAMS, &msg);
-
+                    break;
                 }
+            } 
+
+            if (snd_param_idx == Activity::ALLOWED_PARAM_COUNT - 1) 
+                snd_param_idx = -1;
+
         }
 	}
+
+};
+
+
+class MavlinkStreamActivityParamsRequest : public MavlinkStream
+{
+public:
+	const char *get_name() const
+	{
+		return MavlinkStreamActivityParamsRequest::get_name_static();
+	}
+
+	static const char *get_name_static()
+	{
+		return "ACTIVITY_PARAMS_REQUEST";
+	}
+
+	uint8_t get_id()
+	{
+		return MAVLINK_MSG_ID_ACTIVITY_PARAMS;
+	}
+
+	static MavlinkStream *new_instance(Mavlink *mavlink)
+	{
+		return new MavlinkStreamActivityParamsRequest(mavlink);
+	}
+
+	unsigned get_size()
+	{
+		return MAVLINK_MSG_ID_ACTIVITY_PARAMS_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES;
+	}
+
+private:
+
+    MavlinkOrbSubscription *_activity_remote_t_sub;
+    MavlinkOrbSubscription *_activity_received_t_sub;
+
+	uint64_t activity_remote_t_time;
+	uint64_t activity_received_t_time;
+
+	/* do not allow top copying this class */
+	MavlinkStreamActivityParamsRequest(const MavlinkStreamActivityParamsRequest &);
+	MavlinkStreamActivityParamsRequest& operator = (const MavlinkStreamActivityParamsRequest &);
+
+protected:
+	explicit MavlinkStreamActivityParamsRequest(Mavlink *mavlink) : MavlinkStream(mavlink),
+        _activity_remote_t_sub(_mavlink->add_orb_subscription(ORB_ID(activity_remote_t))),
+        _activity_received_t_sub(_mavlink->add_orb_subscription(ORB_ID(activity_received_t))),
+        activity_remote_t_time(0),
+        activity_received_t_time(0)
+	{
+    }
+
+	void send(const hrt_abstime t)
+	{
+        struct activity_remote_t_s activity_remote_t;
+        struct activity_received_t_s activity_received_t;
+
+        _activity_remote_t_sub->update(&activity_remote_t_time, &activity_remote_t);
+        _activity_received_t_sub->update(&activity_received_t_time, &activity_received_t);
+
+        if (activity_remote_t_time != 0) {
+
+            if (activity_remote_t.ts != 0 && activity_received_t.ts != activity_remote_t.ts) {
+
+                mavlink_activity_params_t msg;
+                msg.type = ACTIVITY_PARAMS_REQUEST;
+                _mavlink->send_message(MAVLINK_MSG_ID_ACTIVITY_PARAMS, &msg);
+
+            }
+
+        }
+	}
+
 };
 
 StreamListItem * const streams_list[] = {
@@ -2477,6 +2590,7 @@ StreamListItem * const streams_list[] = {
 	new StreamListItem(&MavlinkStreamDistanceSensor::new_instance, &MavlinkStreamDistanceSensor::get_name_static),
 	new StreamListItem(&MavlinkStreamTrajectory::new_instance, &MavlinkStreamTrajectory::get_name_static),
     new StreamListItem(&MavlinkStreamActivityParams::new_instance, &MavlinkStreamActivityParams::get_name_static),
+    new StreamListItem(&MavlinkStreamActivityParamsRequest::new_instance, &MavlinkStreamActivityParamsRequest::get_name_static),
 	new StreamListItem(&MavlinkStreamHRT_GPOS_TRAJ_COMMAND::new_instance, &MavlinkStreamHRT_GPOS_TRAJ_COMMAND::get_name_static),
 };
 

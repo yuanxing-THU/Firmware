@@ -120,8 +120,6 @@ bool modify_receive_fake_activity_params();
 bool print_activity_params_orb_content();
 bool fill_activity_files();
 bool send_switch_activity(int activity);
-bool send_activity_params_orb();
-
 
 void sendAirDogCommnad(enum VEHICLE_CMD command, float param1, float param2, float param3, float param4, double param5, double param6, float param7);
 
@@ -186,7 +184,6 @@ main(int argc, char const * const * argv)
         } else if (streq(argv[2], "clear_file_state")) {
             Activity::Files::clear_file_state();
         } else if (streq(argv[2], "send_orb")) {
-            send_activity_params_orb();
         }
         else if (streq(argv[2], "switch_cmd")){
             if (argc == 4)
@@ -327,8 +324,7 @@ modify_receive_fake_activity_params() {
     int activity_params_sub = orb_subscribe(ORB_ID(activity_params));
 	orb_copy(ORB_ID(activity_params), activity_params_sub, &activity_params);
 
-    activity_params.type = ACTIVITY_PARAMS_RECEIVED; 
-    activity_params.ts = hrt_absolute_time();
+    activity_params.type = ACTIVITY_PARAMS_REMOTE; 
 
     for (int i=1;i<Activity::ALLOWED_PARAM_COUNT;i++)
         activity_params.values[i]+=1.0f;
@@ -343,8 +339,7 @@ init_receive_fake_activity_params() {
 
     activity_params_s activity_params;
 
-    activity_params.type = ACTIVITY_PARAMS_RECEIVED; 
-    activity_params.ts = hrt_absolute_time();
+    activity_params.type = ACTIVITY_PARAMS_REMOTE; 
 
     for (int i=0;i<Activity::ALLOWED_PARAM_COUNT;i++)
         activity_params.values[i]=1.0f;
@@ -436,12 +431,4 @@ void sendAirDogCommnad(enum VEHICLE_CMD command,
     {
         to_vehicle_command = orb_advertise(ORB_ID(vehicle_command), &vehicle_command);
     }
-}
-
-bool send_activity_params_orb(){
-
-    activity_params_sndr_s activity_params_sndr;
-    activity_params_sndr.type = ACTIVITY_PARAMS_SNDR_ON;
-    orb_advertise(ORB_ID(activity_params_sndr), &activity_params_sndr);
-
 }

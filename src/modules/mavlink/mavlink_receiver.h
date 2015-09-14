@@ -77,6 +77,8 @@
 #include <uORB/topics/airdog_status.h>
 #include <uORB/topics/external_trajectory.h>
 #include <uORB/topics/target_gps_raw.h>
+#include <uORB/topics/activity_params.h>
+#include <activity/activity_lib_constants.h>
 
 #include "mavlink_ftp.h"
 
@@ -178,6 +180,8 @@ private:
 	orb_advert_t _manual_pub;
 	orb_advert_t _target_pos_pub;
 	orb_advert_t _external_trajectory_pub;
+	orb_advert_t _activity_params_pub;
+    orb_advert_t _activity_request_pub;
 	int _control_mode_sub;
 	int _hil_frames;
 	uint64_t _old_timestamp;
@@ -186,8 +190,17 @@ private:
 	struct map_projection_reference_s _hil_local_proj_ref;
 	orb_advert_t _airdog_status_pub;
 	struct airdog_status_s _airdog_status;
+
+    orb_advert_t _activity_remote_t_pub;
+    struct activity_remote_t_s _activity_remote_t;
+
+    orb_advert_t _activity_received_t_pub;
+    struct activity_received_t_s _activity_received_t;
+
+    uint64_t _activity_params_ts[Activity::ALLOWED_PARAM_COUNT];
+    float _activity_params_val[Activity::ALLOWED_PARAM_COUNT];
+
 	orb_advert_t _target_gps_raw_pub;
-    uint64_t _activity_params_update_ts;
 
 	/* do not allow copying this class */
 	MavlinkReceiver(const MavlinkReceiver&);
