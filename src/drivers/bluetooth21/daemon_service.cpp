@@ -612,6 +612,7 @@ check_version_firmware()
 	bool ok = ( fileno(raw_dev) > -1
 		and required_build <= 0xFFFF
 		and check_module_firmware(service_io, required_build)
+		and module_factory_default(service_io, 0xbf)
 	);
 
 	return ok ? 0 : 1;
