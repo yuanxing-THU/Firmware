@@ -1,0 +1,76 @@
+#!nsh
+
+# MAG selection
+set MAG_started no
+if hmc5883spi start
+# Prever SPI over I2C.
+then
+	set MAG_started yes
+	echo "Mag OK" >> $LOG_FILE
+else
+	echo "Mag FAILED" >> $LOG_FILE
+fi
+
+if [ $MAG_started = yes ]
+then
+	if ms5611 start
+	then
+		echo "Baro OK" >> $LOG_FILE
+	fi
+	if adc start
+	then
+		echo "ADC OK" >> $LOG_FILE
+	fi
+
+	if param compare SENS_DISABLE_MPU 1
+	then
+		if l3gd20 start
+		then
+		fi
+
+		if lsm303d start
+		then
+		fi
+	else
+		if mpu6000 start
+		then
+		fi
+	fi
+	echo "Gyro, Acc OK" >> $LOG_FILE
+
+	if param compare SENS_SON_ON 1
+	then
+        if pwm_input start full
+        then
+            echo "[init] Using LIDAR-Lite Laser Ranging Module"
+        else
+            echo "Error starting range finders"
+        fi
+	fi
+	echo "Sonar OK" >> $LOG_FILE
+
+	#
+	# Start the sensor collection task.
+	# IMPORTANT: this also loads param offsets
+	# ALWAYS start this task before the
+	# preflight_check.
+	#
+	if sensors start
+	then
+		echo "sensors app OK" >> $LOG_FILE
+	    if preflight_check --fail-on-error
+	    then
+	    	echo "Preflight OK" >> $LOG_FILE
+	    else
+	    	echo "Preflight FAILED" >> $LOG_FILE
+	        tone_alarm error #Follows default preflight check tune
+	    fi
+	else
+		echo "sensors app FAILED" >> $LOG_FILE
+	    #In case sensors app returned an error, although it usually doesn't
+	    tone_alarm error
+	fi
+else
+	echo "[error] There is NO MAGnetometer!"
+	tone_alarm error
+fi

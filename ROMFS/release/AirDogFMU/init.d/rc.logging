@@ -1,0 +1,24 @@
+#!nsh
+#
+# Initialize logging services.
+#
+
+if [ -d /fs/microsd ]
+then
+	echo "Start sdlog2 at 200Hz"
+	set SDLOG_SWITCHES "-r 200 -b 11"
+	if param compare SDLOG_ON_BOOT 1
+	then
+		set SDLOG_SWITCHES "${SDLOG_SWITCHES} -e"
+	else
+		set SDLOG_SWITCHES "${SDLOG_SWITCHES} -t -a"
+	fi
+	if param compare SDLOG_M_SAT -1
+	then
+		# Nothing to do here
+	else
+		set SDLOG_SWITCHES "${SDLOG_SWITCHES} -x"
+	fi
+
+	sdlog2 start $SDLOG_SWITCHES
+fi

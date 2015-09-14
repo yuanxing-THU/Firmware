@@ -172,15 +172,15 @@ class uploader(object):
         PROG_MULTI_MAX  = 60            # protocol max is 255, must be multiple of 4
         READ_MULTI_MAX  = 60            # protocol max is 255, something overflows with >= 64
 
+	DM_REBOOT	= b"\x05rt"
         NSH_INIT        = bytearray(b'\x0d\x0d\x0d')
-        NSH_REBOOT_BL   = b"reboot -b\n"
         NSH_REBOOT      = b"reboot\n"
         MAVLINK_REBOOT_ID1 = bytearray(b'\xfe\x21\x72\xff\x00\x4c\x00\x00\x80\x3f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf6\x00\x01\x00\x00\x48\xf0')
         MAVLINK_REBOOT_ID0 = bytearray(b'\xfe\x21\x45\xff\x00\x4c\x00\x00\x80\x3f\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf6\x00\x00\x00\x00\xd7\xac')
 
-        def __init__(self, portname, baudrate, interCharTimeout=0.001, timeout=0.5):
+        def __init__(self, portname, baudrate, timeout=0.5):
                 # open the port, keep the default timeout short so we can poll quickly
-                self.port = serial.Serial(portname, baudrate)
+                self.port = serial.Serial(portname, baudrate, timeout=timeout)
                 self.otp = b''
                 self.sn = b''
 
@@ -423,10 +423,11 @@ class uploader(object):
                 self.port.close()
 
         def send_reboot(self):
+		time.sleep(1.2)
                 try:
-                    # try reboot via NSH first
-                    self.__send(uploader.NSH_INIT)
-                    self.__send(uploader.NSH_REBOOT_BL)
+                    # try desktop/mobile protocol
+		    self.__send(uploader.DM_REBOOT)
+                    # then try reboot via NSH first
                     self.__send(uploader.NSH_INIT)
                     self.__send(uploader.NSH_REBOOT)
                     # then try MAVLINK command
@@ -529,7 +530,7 @@ while True:
                 except RuntimeError as ex:
 
                         # print the error
-                        print("ERROR: %s" % ex.args)
+                        print("ERROR: %s" % repr(ex.args))
 
                 finally:
                         # always close the port

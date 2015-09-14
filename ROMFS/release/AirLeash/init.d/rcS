@@ -1,0 +1,243 @@
+#!nsh
+
+#
+# Default to auto-start mode.
+#
+set TUNE_OUT_ERROR ML<<CP4CP4CP4CP4CP4
+
+set GPS yes
+set GPS_FAKE no
+
+set SENSORS_OK unknown
+
+set EXIT_ON_END no
+
+#
+# Alarms are always useful.
+#
+tone_alarm start
+
+# Try to mount the microSD card.
+# Alarms are always useful.
+#
+echo "[init] Looking for microSD..."
+if mount -t vfat /dev/mmcsd0 /fs/microsd
+then
+        set LOG_FILE /fs/microsd/bootlog.txt
+        echo "[init] microSD mounted: /fs/microsd"
+else
+        set LOG_FILE /dev/null
+        echo "[init] No microSD card found"
+        tone_alarm "MBT200 O2f#8d8g#8<b8p"
+fi
+
+#
+# Start the ORB (first app to start)
+#
+uorb start
+
+#
+# Load parameters
+#
+if mtd start
+then
+	param select /fs/mtd_params
+
+	if param load
+	then
+		echo "[param] Loaded: $PARAM_FILE"
+	else
+		echo "[param] FAILED loading $PARAM_FILE"
+		if param reset
+		then
+		fi
+
+		tone_alarm $TUNE_OUT_ERROR
+		usleep 100000 # 0.1s
+		tone_alarm $TUNE_OUT_ERROR
+		usleep 100000 # 0.1s
+		tone_alarm $TUNE_OUT_ERROR
+		usleep 100000 # 0.1s
+		tone_alarm $TUNE_OUT_ERROR
+		usleep 100000 # 0.1s
+		tone_alarm $TUNE_OUT_ERROR
+		usleep 100000 # 0.1s
+		tone_alarm $TUNE_OUT_ERROR
+		usleep 100000 # 0.1s
+		tone_alarm $TUNE_OUT_ERROR
+		usleep 100000 # 0.1s
+		tone_alarm $TUNE_OUT_ERROR
+		usleep 100000 # 0.1s
+		tone_alarm $TUNE_OUT_ERROR
+	fi
+fi
+
+#
+# Set DO_AUTOCONFIG flag to use it in AUTOSTART scripts
+#
+if param compare SYS_AUTOCONFIG 1
+then
+	echo "AirLeash does not support SYS_AUTOCONFIG."
+fi
+
+if param compare MAV_SYS_ID 1
+then
+	param set MAV_SYS_ID 4
+fi
+
+#
+# Telemetry module
+#
+
+unset MAVLINK_TTY
+
+if param compare A_TELEMETRY_MODE 0
+then
+	set MAVLINK_TTY /dev/ttyS0
+fi
+
+if param compare A_TELEMETRY_MODE 1
+then
+	set BT_MODE "one-connect"
+	if param compare A_BT_SVC_MODE 0
+	then
+		if param compare A_BT_CONNECT_TO -1
+		then
+			set BT_MODE "listen"
+		fi
+	fi
+	if bluetooth21 start /dev/ttyS0 $BT_MODE
+	then
+		set MAVLINK_TTY /dev/bt1
+	fi
+fi
+
+#
+# MAVLink
+#
+if [ x$MAVLINK_TTY = x ]
+then
+	echo MAVLink NOT started.
+else
+	if param compare AIRD_LEASH_MODE 0
+	then
+		#Default leash
+		mavlink start -d $MAVLINK_TTY -m custom
+		usleep 1000
+		mavlink stream -r 18 -d $MAVLINK_TTY -s GLOBAL_POSITION_INT
+		usleep 1000
+		mavlink stream -r 0.1 -d $MAVLINK_TTY -s GPS_RAW_INT
+	fi
+
+	if param compare AIRD_LEASH_MODE 1
+	then
+		#Trainer leash
+		mavlink start -d $MAVLINK_TTY -m custom
+	fi
+
+	if param compare AIRD_LEASH_MODE 2
+	then
+		#Follow path leash
+		trajectory_calculator start
+		mavlink start -d $MAVLINK_TTY -m target
+		usleep 1000
+		mavlink stream -r 0.1 -d $MAVLINK_TTY -s GPS_RAW_INT
+	fi
+
+	if param compare AIRD_LEASH_MODE 3
+	then
+		#GPS test leash
+		mavlink start -d $MAVLINK_TTY -m custom
+		usleep 1000
+		mavlink stream -r 10 -d $MAVLINK_TTY -s GLOBAL_POSITION_INT
+		usleep 1000
+		mavlink stream -r 10 -d $MAVLINK_TTY -s GPS_RAW_INT
+	fi
+
+	if param compare AIRD_LEASH_MODE 4
+	then
+		#Combo message leash. Make sure MAV_MINIMALISTIC is 2.
+		param set MAV_MINIMALISTIC 2
+		trajectory_calculator start
+		mavlink start -d $MAVLINK_TTY -r 3000 -m custom
+		usleep 1000
+		mavlink stream -r 15 -d $MAVLINK_TTY -s HRT_GPOS_TRAJ_COMMAND
+	fi
+
+	if param compare AIRD_LEASH_MODE 5
+	then
+		#Parameter-controlled mavlink
+		param set MAV_MINIMALISTIC 3
+		trajectory_calculator start
+		mavlink start -d $MAVLINK_TTY -r 3000 -m parameter
+	fi
+fi
+
+#
+# Sensors, GPS, estimators and commander
+#
+if [ $GPS == yes ]
+then
+	echo "[init] Start GPS"
+	if [ $GPS_FAKE == yes ]
+	then
+		echo "[init] Faking GPS"
+		gps start -d /dev/ttyS1 -f
+	else
+		gps start -d /dev/ttyS1
+	fi
+fi
+
+sh /etc/init.d/rc.sensors
+
+if [ $SENSORS_OK = yes ]
+then
+	if param compare ATT_EST_EDITION 0
+	then
+		attitude_estimator_ekf start
+	else
+		if param compare ATT_EST_EDITION 1
+		then
+			attitude_estimator_q start
+		else
+			echo "WARNING!!! NO ATTITUDE ESTIMATOR SELECTED!"
+		fi
+	fi
+	position_estimator_inav start
+fi
+
+# commander required for calibration
+commander start
+
+leash start
+indication start
+
+if param compare SDLOG_ON_BOOT 1
+then
+	sdlog2 start -b 11 -r 200 -e
+else
+	echo "Currently sdlog on leash supports only ON_BOOT mode"
+fi
+
+leash_display start
+leash_app start
+
+#
+# Start CDC/ACM serial driver
+#
+if sercon
+then
+	echo "[init] USB interface connected"
+
+	sleep 5
+
+	desktop start /dev/ttyACM0
+else
+	echo "Failed to start usb sercon."
+fi
+
+if [ $EXIT_ON_END == yes ]
+then
+	echo "[init] Exit from nsh"
+	exit
+fi

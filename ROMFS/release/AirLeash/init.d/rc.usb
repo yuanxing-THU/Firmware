@@ -1,0 +1,30 @@
+#!nsh
+#
+# USB MAVLink start
+#
+
+# Disable external mavlink to free some memory
+mavlink stop-all
+usleep 100000
+
+mavlink start -r 20000 -d /dev/ttyACM0 -x
+
+# Enable a number of interesting streams we want via USB
+if mavlink stream -d /dev/ttyACM0 -s PARAM_VALUE -r 200
+then
+fi
+usleep 100000
+if mavlink stream -d /dev/ttyACM0 -s HIGHRES_IMU -r 10
+then
+fi
+usleep 100000
+if mavlink stream -d /dev/ttyACM0 -s VFR_HUD -r 5
+then
+fi
+usleep 100000
+if mavlink stream -d /dev/ttyACM0 -s ATTITUDE -r 10
+then
+fi
+
+# Exit shell to make it available to MAVLink
+exit

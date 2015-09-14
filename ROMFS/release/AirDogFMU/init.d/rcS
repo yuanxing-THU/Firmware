@@ -1,0 +1,510 @@
+#!nsh
+
+#
+# Default to auto-start mode.
+#
+set MODE autostart
+
+set RC_FILE /fs/microsd/etc/rc.txt
+set CONFIG_FILE /fs/microsd/etc/config.txt
+set EXTRAS_FILE /fs/microsd/etc/extras.txt
+set LOG_FILE /dev/null
+#set ENABLE_LOG_FILE yes
+
+set TUNE_OUT_ERROR ML<<CP4CP4CP4CP4CP4
+
+set FAILSAFE none
+set GPS yes
+set GPS_FAKE no
+
+set FMU_MODE pwm
+set PWM_DISARMED none
+set PWM_MAX none
+set PWM_MIN none
+set PWM_OUTPUTS none
+set PWM_RATE none
+
+set MIXER FMU_quad_x
+set VEHICLE_TYPE mc
+set MAV_TYPE 2
+
+# Custom AirDogIO firmware unstable
+#set IO_FILE /etc/extras/AirDogIO_default.bin
+# Explicitly set IO_FILE to v2
+set IO_FILE /etc/extras/px4io-v2_default.bin
+
+#set ALWAYS_DEBUG_MODE yes
+
+if [ notset$ALWAYS_DEBUG_MODE = notset ]
+then
+	if debug_button_pressed
+	then
+		set DEBUG_MODE yes
+	else
+		set DEBUG_MODE no
+	fi
+else
+	set DEBUG_MODE yes
+fi
+
+#
+# Try to mount the microSD card.
+#
+echo "[init] Looking for microSD..."
+if mount -t vfat /dev/mmcsd0 /fs/microsd
+then
+	if [ notset$ENABLE_LOG_FILE = notsetyes ]
+	then
+		set LOG_FILE /fs/microsd/bootlog.txt
+		echo "-----------------------------------" >> $LOG_FILE
+	fi
+	echo "[init] microSD mounted: /fs/microsd"
+	# Start playing the startup tune
+	tone_alarm start
+else
+	set LOG_FILE /dev/null
+	echo "[init] No microSD card found"
+	# Play general_error on repeat
+	tone_alarm "MBT200 O2f#8d8g#8<b8p"
+fi
+
+# Do IO checks as early as possible while IO chip is in bootloader mode
+set IO_PRESENT no
+if test -e $IO_FILE
+then
+	## Uncomment these lines to force IO update in any case
+	# px4io forceupdate 14662 $IO_FILE
+	# usleep 2000000
+
+	if px4io checkcrc $IO_FILE
+	then
+		echo "[init] PX4IO CRC OK"
+		echo "PX4IO CRC OK" >> $LOG_FILE
+
+		set IO_PRESENT yes
+	else
+		echo "[init] Trying to update"
+		echo "PX4IO Trying to update" >> $LOG_FILE
+
+		tone_alarm MLL32CP8MB
+
+		if px4io forceupdate 14662 $IO_FILE
+		then
+			usleep 500000
+			if px4io checkcrc $IO_FILE
+			then
+				echo "[init] PX4IO CRC OK, update successful"
+				echo "PX4IO CRC OK after updating" >> $LOG_FILE
+				tone_alarm MLL8CDE
+
+				set IO_PRESENT yes
+			else
+				echo "[init] ERROR: PX4IO update failed"
+				echo "PX4IO update failed" >> $LOG_FILE
+				tone_alarm $TUNE_OUT_ERROR
+			fi
+		else
+			echo "[init] ERROR: PX4IO update failed"
+			echo "PX4IO update failed" >> $LOG_FILE
+			tone_alarm $TUNE_OUT_ERROR
+		fi
+	fi
+else
+	# Allow running without IO firmware while debug because
+	# debug firmware with IO firmware does not fit in 1Mb.
+	set IO_PRESENT $DEBUG_MODE
+fi
+
+if [ $DEBUG_MODE = yes ]
+then
+	set EXIT_ON_END no
+	tone_alarm MFO3L4ABCABC
+else
+	set EXIT_ON_END yes
+fi
+
+#
+# Look for an init script on the microSD card.
+# Disable autostart if the script found.
+#
+if [ -f $RC_FILE ]
+then
+	echo "[init] Executing init script: $RC_FILE"
+	sh $RC_FILE
+	set MODE custom
+else
+	echo "[init] Init script not found: $RC_FILE"
+fi
+
+if [ $MODE == autostart ]
+then
+	echo "[init] AUTOSTART mode"
+	echo "Autostart mode" >> $LOG_FILE
+
+	#
+	# Start the ORB (first app to start)
+	#
+	if uorb start
+	then
+		echo "uorb OK" >> $LOG_FILE
+	else
+		echo "uorb FAILED. ABORTING."
+		exit
+	fi
+
+	#
+	# Load parameters
+	#
+	set PARAM_FILE /fs/microsd/params
+	if mtd start
+	then
+		set PARAM_FILE /fs/mtd_params
+		echo "mtd OK" >> $LOG_FILE
+	else
+		echo "mtd FAILED" >> $LOG_FILE
+	fi
+
+	param select $PARAM_FILE
+	if param load
+	then
+		echo "[param] Loaded: $PARAM_FILE"
+		echo "param OK" >> $LOG_FILE
+	else
+		echo "[param] FAILED loading $PARAM_FILE"
+		echo "param FAILED" >> $LOG_FILE
+		if param reset
+		then
+		fi
+	fi
+
+	#
+	# Set DO_AUTOCONFIG flag to use it in AUTOSTART scripts
+	#
+	if param compare SYS_AUTOCONFIG 1
+	then
+		# We can't be sure the defaults haven't changed, so
+		# if someone requests a re-configuration, we do it
+		# cleanly from scratch (except autostart / autoconfig)
+		param reset_nostart
+		set DO_AUTOCONFIG yes
+	else
+		set DO_AUTOCONFIG no
+	fi
+
+	#
+	# Set parameters and env variables for selected AUTOSTART
+	#
+	if param compare SYS_AUTOSTART 0
+	then
+		echo "[init] No autostart"
+	else
+		echo "Entering autostart" >> $LOG_FILE
+		sh /etc/init.d/rc.autostart
+		echo "Autostart OK" >> $LOG_FILE
+	fi
+
+	#
+	# Override parameters from user configuration file
+	#
+	if [ -f $CONFIG_FILE ]
+	then
+		echo "[init] Config: $CONFIG_FILE"
+		sh $CONFIG_FILE
+	else
+		echo "[init] Config not found: $CONFIG_FILE"
+	fi
+
+	#
+	# If autoconfig parameter was set, reset it and save parameters
+	#
+	if [ $DO_AUTOCONFIG == yes ]
+	then
+		param set SYS_AUTOCONFIG 0
+		param save
+	fi
+
+	#
+	# Start the datamanager (and do not abort boot if it fails)
+	#
+	if dataman start
+	then
+		echo "dataman OK" >> $LOG_FILE
+	else
+		echo "dataman FAILED" >> $LOG_FILE
+	fi
+
+	if param compare A_QLOG_WRITE 1
+	then
+		#
+		# Start the Quick_log file writer thread
+		#
+		if qlog start
+		then
+			echo "Quick_log OK" >> $LOG_FILE
+		else
+			echo "Quick_log FAILED" >> $LOG_FILE
+		fi
+	fi
+
+	#
+	# Start the Commander (needs to be this early for in-air-restarts)
+	#
+	if commander start
+	then
+		echo "commander OK" >> $LOG_FILE
+	else
+		echo "commander FAILED" >> $LOG_FILE
+	fi
+
+	if [ $IO_PRESENT == yes ]
+	then
+		if px4io start
+		then
+			echo "[init] PX4IO started"
+			echo "PX4IO started" >> $LOG_FILE
+			sh /etc/init.d/rc.io
+		else
+			echo "[init] ERROR: PX4IO start failed"
+			echo "PX4IO start failed" >> $LOG_FILE
+			tone_alarm $TUNE_OUT_ERROR
+		fi
+	fi
+
+	#
+	# Telemetry module
+	#
+
+	unset MAVLINK_TTY
+	unset TELEM_TTY
+
+	echo "Telemetry select" >> $LOG_FILE
+	if param compare A_TELEMETRY_MODE 0
+	then
+		set TELEM_TTY /dev/ttyS1
+		set MAVLINK_TTY /dev/ttyS1
+	fi
+	if param compare A_TELEMETRY_MODE 1
+	then
+		set TELEM_TTY /dev/ttyS1
+	fi
+	if param compare A_TELEMETRY_MODE 2
+	then
+		echo
+		echo Turning OFF BL600
+		gpio_tool set pb12=0
+		echo
+		set TELEM_TTY /dev/ttyS2
+	fi
+	if param compare A_TELEMETRY_MODE 3
+	then
+		echo Turning OFF BL600
+		gpio_tool set pb12=0
+		set TELEM_TTY /dev/ttyS2
+		set MAVLINK_TTY /dev/ttyS2
+	fi
+	if param compare A_TELEMETRY_MODE 4
+	then
+		echo Turning OFF BL600
+		gpio_tool set pb12=0
+	fi
+	echo "Telemetry select OK" >> $LOG_FILE
+
+	if [ x$TELEM_TTY = x ]
+	then
+		echo NO Telemetry.
+	else
+		echo Telemetry port $TELEM_TTY
+		if [ x$MAVLINK_TTY = x ]
+		then
+			# if MAVLINK_TTY not set and TELEM_TTY is set.
+			echo bluetooth21 start $TELEM_TTY listen
+			if bluetooth21 start $TELEM_TTY listen
+			then
+				set MAVLINK_TTY /dev/bt1
+			fi
+		fi
+	fi
+	echo "Telemetry start OK" >> $LOG_FILE
+
+	#
+	# MAVLink
+	#
+
+	if [ x$MAVLINK_TTY = x ]
+	then
+		echo MAVLink NOT started.
+	else
+		if param compare MAV_MINIMALISTIC 1
+		then
+			set MAVLINK_MODE "-m airdog"
+		else
+			if param compare MAV_MINIMALISTIC 2
+			then
+				set MAVLINK_MODE "-m custom"
+			else
+				if param compare MAV_MINIMALISTIC 3
+				then
+					set MAVLINK_MODE "-m parameter"
+				else
+					# set MAVLINK_MODE "" produces new line on substitution.
+					unset MAVLINK_MODE
+				fi
+			fi
+		fi
+		echo mavlink start $MAVLINK_MODE -r 3000 -d $MAVLINK_TTY
+		mavlink start $MAVLINK_MODE -r 3000 -d $MAVLINK_TTY
+
+		if param compare MAV_MINIMALISTIC 2
+		then
+			# Enable combo messages instead of heartbeats
+			usleep 30000
+			echo mavlink stream -d $MAVLINK_TTY -r 2 -s HRT_GPOS_TRAJ_COMMAND
+			mavlink stream -d $MAVLINK_TTY -r 2 -s HRT_GPOS_TRAJ_COMMAND
+		fi
+	fi
+	echo "Mavlink start OK" >> $LOG_FILE
+
+	#
+	# mobile
+	#
+
+	if [ $TELEM_TTY != /dev/ttyS2 ]
+	then
+		if mobile start /dev/ttyS2
+		then
+			echo "mobile OK" >> $LOG_FILE
+		else
+			echo "mobile failed" >> $LOG_FILE
+		fi
+	fi
+
+	#
+	# Sensors, Logging, GPS
+	#
+	sh /etc/init.d/rc.sensors
+	echo "Sensors OK" >> $LOG_FILE
+
+	#
+	# Start logging in all modes, including HIL
+	#
+	sh /etc/init.d/rc.logging
+	echo "Logging OK" >> $LOG_FILE
+
+	if [ $GPS == yes ]
+	then
+		echo "[init] Start GPS"
+		if [ $GPS_FAKE == yes ]
+		then
+			echo "[init] Faking GPS"
+			gps start -f
+		else
+			if param compare SDLOG_M_SAT -1
+			then
+				gps start
+			else
+				gps start -s
+			fi
+		fi
+	fi
+	echo "GPS OK" >> $LOG_FILE
+
+	echo "[init] Vehicle type: MULTICOPTER"
+
+	# Still no MAV_TYPE found
+	if [ $MAV_TYPE == none ]
+	then
+		echo "Unknown MAV_TYPE"
+	else
+		param set MAV_TYPE $MAV_TYPE
+	fi
+
+	# Load mixer and configure outputs
+	sh /etc/init.d/rc.interface
+	echo "Interface OK" >> $LOG_FILE
+
+	sh /etc/init.d/rc.mc_apps
+	echo "MC_apps OK" >> $LOG_FILE
+
+	#
+	# Start the navigator
+	#
+	if navigator start
+	then
+		echo "Navigator OK" >> $LOG_FILE
+	else
+		echo "Navigator FAILED. Aborting!" >> $LOG_FILE
+		exit
+	fi
+
+    if param compare A_DO_FRAME_BUTT 1
+    then
+		#start frame button driver
+		frame_button start
+
+		#
+		# Start the BGC module
+		#
+		if bgc start
+		then
+			echo "BGC OK" >> $LOG_FILE
+		else
+			echo "BGC FAILED" >> $LOG_FILE
+		fi
+	fi
+
+	# Start any custom addons
+	if [ -f $EXTRAS_FILE ]
+	then
+		echo "[init] Starting addons script: $EXTRAS_FILE"
+		sh $EXTRAS_FILE
+	else
+		echo "[init] No addons script: $EXTRAS_FILE"
+	fi
+
+	if param compare SYS_ACT 1
+	then
+		echo "Dron is activated"
+	else
+		echo "Dron is not activated"
+		commander error 1
+	fi
+
+	indication start
+
+	if param compare A_QLOG_CHECK 1
+	then
+		#
+		# Check the quick_log files for any non-empty & valids logs
+		#
+		if qlog check
+		then
+			echo "Quick_log check OK" >> $LOG_FILE
+		else
+			echo "Quick_log check FAILED" >> $LOG_FILE
+		fi
+	fi
+
+	#
+	# Start CDC/ACM serial driver
+	#
+	if sercon
+	then
+		echo "[init] USB interface connected"
+		echo "sercon OK" >> $LOG_FILE
+
+		sleep 5
+
+		desktop start /dev/ttyACM0
+	else
+		echo "Failed to start usb sercon."
+		echo "sercon FAILED" >> $LOG_FILE
+	fi
+
+	if [ $EXIT_ON_END == yes ]
+	then
+		echo "[init] Exit from nsh"
+		exit
+	fi
+
+# End of autostart
+fi

@@ -73,6 +73,14 @@ MODULES		+= modules/spi_exchange
 #MODULES		+= drivers/mkblctrl
 
 #
+# Mobile
+#
+MODULES += lib/activity
+MODULES += lib/airdog/hwinfo
+MODULES += lib/stm32f4
+MODULES += modules/mobile
+
+#
 # System commands
 #
 MODULES		+= systemcmds/bl_update
