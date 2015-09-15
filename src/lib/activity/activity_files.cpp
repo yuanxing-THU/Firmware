@@ -168,7 +168,7 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
         
         int part = 0;
 
-        for (int i=0;line[i]!='\n' && file_ok;i++) {
+        for (int i=0;line[i]!='\n' && line[i]!='\0' && file_ok;i++) {
 
             switch (part) {
                 case 0:
