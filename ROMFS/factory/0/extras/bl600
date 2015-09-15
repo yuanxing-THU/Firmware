@@ -8,7 +8,23 @@ then
 	echo mobile firmware-version /dev/ttyS2
 	if mobile firmware-version /dev/ttyS2
 	then
-		set R OK
+		echo
+		echo Check VSP brigde mode.
+		echo
+
+		echo mobile mode default
+		if mobile mode default
+		then
+			echo "!mobile firmware-version /dev/ttyS2"
+			if mobile firmware-version /dev/ttyS2
+			then
+				echo
+				echo Unable to switch to VSP brigde mode.
+				echo
+			else
+				set R OK
+			fi
+		fi
 	fi
 fi
 
