@@ -99,7 +99,10 @@ ParamChangeManager::get_display_value(char * buffer, const int buffer_len){
             return true;
         case PARAM_LIMIT_KIND::INTERVAL:
         case PARAM_LIMIT_KIND::VALUES_FLOAT:
-            snprintf(buffer, buffer_len, "%.2f %s", (double)value, ALLOWED_PARAMS[p_id].units);
+            snprintf(buffer, buffer_len, "%6.2f %s", (double)value, ALLOWED_PARAMS[p_id].units);
+            return true;
+        case PARAM_LIMIT_KIND::INTERVAL_HP:
+            snprintf(buffer, buffer_len, "%6.4f %s", (double)value, ALLOWED_PARAMS[p_id].units);
             return true;
         case PARAM_LIMIT_KIND::VALUES_STR:
 
@@ -199,6 +202,7 @@ ParamChangeManager::get_next_value(char * buffer, int buffer_len){
 
     switch ( config->limit_kind ){
         case PARAM_LIMIT_KIND::INTERVAL:
+        case PARAM_LIMIT_KIND::INTERVAL_HP:
             move_interval(1);
         break;
         case PARAM_LIMIT_KIND::VALUES_INT: 
@@ -216,6 +220,7 @@ ParamChangeManager::get_prev_value(char * buffer, int buffer_len){
 
     switch ( config->limit_kind ){
         case PARAM_LIMIT_KIND::INTERVAL:
+        case PARAM_LIMIT_KIND::INTERVAL_HP:
             move_interval(-1);
         break;
         case PARAM_LIMIT_KIND::VALUES_INT: 
@@ -404,10 +409,7 @@ ActivityChangeManager::save_params(){
         return false;
     }
 
-    send_params_to_dog();
-
     return true;
-
 }
 
 int
