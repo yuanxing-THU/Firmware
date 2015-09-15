@@ -277,6 +277,9 @@ private:
 		math::Vector<3> vel_max;
 		math::Vector<3> sp_offs_max;
 
+        float xy_vel_max;
+        float z_vel_max;
+
 		float pitch_lpf_cut;
 
 		float rtl_alt;
@@ -775,8 +778,10 @@ MulticopterPositionControl::parameters_update(bool force)
 		param_get(_params_handles.xy_vel_max, &v);
 		_params.vel_max(0) = v;
 		_params.vel_max(1) = v;
+        _params.xy_vel_max = v;
 		param_get(_params_handles.z_vel_max, &v);
 		_params.vel_max(2) = v;
+        _params.z_vel_max = v;
 		param_get(_params_handles.xy_ff, &v);
 		v = math::constrain(v, 0.0f, 1.0f);
 		_params.vel_ff(0) = v;
@@ -2138,20 +2143,27 @@ MulticopterPositionControl::task_main()
                     math::Vector<3> pos_err = _pos_sp - _pos;
 
                     _vel_sp = pos_err.emult(_params.pos_p) + _vel_ff;
-                    for (int i=0;i<3;i++)
-                    {
-                        if ( fabsf(_vel_sp(i)) > _params.vel_max(i) )
-                        {
-                            if (_vel_sp(i) > 0.0f)
-                            {
-                                _vel_sp(i) = _params.vel_max(i);
-                            }
-                            else
-                            {
-                                _vel_sp(i) = - _params.vel_max(i);
-                            }
-                        }
+
+                    math::Vector<2> vel_sp_xy(_vel_sp(0), _vel_sp(1));
+                    float vel_sp_z = _vel_sp(2);
+
+                    if (vel_sp_xy.length() > _params.xy_vel_max) {
+                        vel_sp_xy.normalize();
+                        vel_sp_xy *= _params.xy_vel_max;
                     }
+
+                    if (vel_sp_z > _params.z_vel_max) {
+                        vel_sp_z = _params.z_vel_max;
+                    }
+
+                    if (vel_sp_z < -_params.z_vel_max){
+                        vel_sp_z = -_params.z_vel_max;
+                    }
+
+                    _vel_sp(0) = vel_sp_xy(0);
+                    _vel_sp(1) = vel_sp_xy(1);
+                    _vel_sp(2) = vel_sp_z;
+
 
                     if (_control_mode.flag_control_follow_restricted) {
                         if (_valid_vel_correction)
