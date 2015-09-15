@@ -6,6 +6,7 @@
 #include <uORB/topics/activity_params.h>
 
 #include "allowed_params.hpp"
+#include "activity_config_list.hpp"
 
 #include "activity_lib_constants.h"
 #include "activity_files.hpp"
@@ -29,6 +30,8 @@ DogActivityManager::DogActivityManager(int activity) :
 
 
     init_allowed_params();
+    init_activity_config_list();
+
     Activity::Files::clear_file_state();
 
     _received_activity_params_sub = orb_subscribe(ORB_ID(activity_params));
