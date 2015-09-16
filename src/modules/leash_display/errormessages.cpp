@@ -18,12 +18,12 @@ const char *getErrorMessageText(int errorCode, const char **pTitle)
 
         case MAV_VERSION_TIMEOUT:
             title = "CONNECTION";
-            result = "Please update\nyour software";
+            result = "Please refer to\nuser manual";
             break;
 
         case MAV_VERSION_MISTMATCH:
             title = "CONNECTION";
-            result = "Please refer to\nuser manual";
+            result = "Please update\nyour software";
             break;
 
         case PMC_ERROR:
