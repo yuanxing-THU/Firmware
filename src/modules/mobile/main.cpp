@@ -62,13 +62,12 @@ daemon(int argc, char *argv[])
 	auto f = make_it_blocking< 1000/*ms*/ >(log);
 
 	FileWriteState write_state;
-	StatusOverall status;
 
 	daemon_running = true;
 	fprintf(stderr, "%s started.\n", argv[0]);
 
 	while (daemon_should_run)
-		process_one_command(f, write_state, status);
+		process_one_command(f, write_state);
 
 	fprintf(stderr, "%s stopped.\n", argv[0]);
 	daemon_running = false;

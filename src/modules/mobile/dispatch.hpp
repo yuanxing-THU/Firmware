@@ -90,11 +90,8 @@ dump_unknown_command(command_id_t cmd)
 
 template <typename Device>
 void
-process_one_command(
-	Device & f,
-	FileWriteState & receive_file,
-	const StatusOverall & status
-) {
+process_one_command(Device & f, FileWriteState & receive_file)
+{
 	command_id_t cmd;
 	bool ok = wait_enq(f);
 	if (not ok) { return; }
