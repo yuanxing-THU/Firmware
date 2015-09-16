@@ -126,7 +126,7 @@ process_one_command(Device & f, FileWriteState & receive_file)
 		handle< CMD_INFO_CERT >(f);
 		break;
 	case CMD_STATUS_OVERALL:
-		handle< CMD_STATUS_OVERALL >(f, status);
+		handle< CMD_STATUS_OVERALL >(f);
 		break;
 	case CMD_ACTIVATION_READ:
 		handle< CMD_ACTIVATION_READ >(f);
