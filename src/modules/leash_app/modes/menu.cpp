@@ -384,7 +384,7 @@ Base* Menu::doEvent(int orbId)
         }
         else
         {
-            nextMode = switchEntry(entries[currentEntry].next);
+            nextMode = switchEntry(entries[currentEntry].prev);
         }
     }
     else if (key_pressed(BTN_UP))
