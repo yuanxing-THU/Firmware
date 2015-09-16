@@ -49,4 +49,4 @@ PARAM_DEFINE_INT32(ATT_MAG_DECL_A, 1);		///< automatic GPS based magnetic declin
 //PARAM_DEFINE_INT32(ATT_ACC_COMP, 2);		///< acceleration compensation
 PARAM_DEFINE_FLOAT(ATT_BIAS_MAX, 0.05f);		///< gyro bias limit, rad/s
 
-PARAM_DEFINE_INT32(ATT_EST_EDITION, 0); // Which estimator to use: 0 - ekf, 1 - quaternion
+PARAM_DEFINE_INT32(ATT_EST_EDITION, 1); // Which estimator to use: 0 - ekf, 1 - quaternion

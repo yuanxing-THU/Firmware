@@ -10,7 +10,7 @@
  * @max 1000
  * @group PathFollow
  */
-PARAM_DEFINE_INT32(PAFOL_BUFF_SIZE, 500);
+PARAM_DEFINE_INT32(PAFOL_BUFF_SIZE, 60);
 
 
 /**
