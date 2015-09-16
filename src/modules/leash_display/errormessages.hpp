@@ -2,5 +2,5 @@
 
 #include "../commander/commander_error.h"
 
-extern const char *getErrorMessageText(int errorCode);
+extern const char *getErrorMessageText(int errorCode, const char **title);
 

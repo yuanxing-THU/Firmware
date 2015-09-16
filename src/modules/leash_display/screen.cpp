@@ -604,6 +604,8 @@ void Screen::showInfo(int info, int error, int leashBattery)
 {
     const int rowCount = 4;
     struct TextInfo text[rowCount];
+    const char *title = nullptr;
+    char buffer2[20]; // buffer for error title
     char buffer[60]; // buffer for error message
 
 
@@ -753,10 +755,20 @@ void Screen::showInfo(int info, int error, int leashBattery)
             break;
 
         case INFO_ERROR:
-            text[0].text = "Error";
-            text[0].font = &Font::LucideGrandeMed;
+            const char *errorText = getErrorMessageText(error, &title);
 
-            const char *errorText = getErrorMessageText(error);
+            if (title == nullptr)
+            {
+                title = "Error";
+            }
+
+            snprintf(buffer2, sizeof(buffer2), "%d %s", error, title);
+            buffer2[sizeof(buffer2) - 1] = 0;
+
+            text[0].text = buffer2;
+            text[0].font = Font::LucideGrandeMed.getTextWidth(buffer2) <= 126 ?
+                        &Font::LucideGrandeMed :
+                        &Font::LucideGrandeSmall;
 
             if (errorText == nullptr)
             {
