@@ -72,7 +72,7 @@ handle(Device & dev, Args & ... args)
 {
 	request_data_type< CMD > req;
 	errcode_t r = fetch(req, dev, args...);
-	fprintf(stderr, "CMD 0x%04x error code 0x%02x.\n", CMD, r);
+	dbg("CMD 0x%04x error code 0x%02x.\n", CMD, r);
 	reply_command_result(dev, r, CMD);
 	if (r == ERRCODE_OK) { reply(req, dev, args...); }
 }

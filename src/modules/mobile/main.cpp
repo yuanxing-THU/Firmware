@@ -58,7 +58,11 @@ daemon(int argc, char *argv[])
 		return 1;
 	}
 
+#ifdef ENABLE_DOG_DEBUG
 	DevLog log (fileno(d), 2, "uart read  ", "uart write ");
+#else
+	auto & log = d;
+#endif
 	auto f = make_it_blocking< 1000/*ms*/ >(log);
 
 	FileWriteState write_state;
@@ -92,8 +96,11 @@ exec_all_AT(const char devname[], int argc, const char * const arg[], char buf[]
 	unique_file serial = open_serial(devname);
 	if (fileno(serial) == -1) { return false; }
 
+#ifdef ENABLE_DOG_DEBUG
+	DevLog log (fileno(serial), 2, "at read  ", "at write ");
+#else
 	auto & log = serial;
-	//DevLog log (fileno(serial), 2, "at read  ", "at write ");
+#endif
 	auto & dev = log;
 
 	for (int i = 0; i < argc; ++i )

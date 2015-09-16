@@ -155,7 +155,11 @@ reply(Request< CMD_READ_BLOCK >, ReadBlockRequest req, Device & dev)
 
 	if (ok)
 	{
+#ifdef ENABLE_DOG_DEBUG
 		DevLog flog { fileno(f), 2, "read file  ", "write file " };
+#else
+		auto & flog = f;
+#endif
 		auto frag = make_fragment< O_RDONLY >( flog, FILE_BLOCK_SIZE );
 		base64::ReadEncodeWrite<40 /*bytes buffer*/> b64;
 		ok = copy(b64, frag, dev);
@@ -266,7 +270,11 @@ fetch_decode_save_base64(Device & in, file_size_t bin_size, File & out)
 	base64::ReadVerifyDecodeWrite<40 /*bytes buffer*/> b64decode;
 	auto src = make_fragment< O_RDONLY >(in, b64_size);
 	//auto dst = make_fragment< O_WRONLY >(out, bin_size);
+#ifdef ENABLE_DOG_DEBUG
 	DevLog log { fileno(out), 2, "read file  ", "write file " };
+#else
+	auto & log = out;
+#endif
 	auto dst = make_fragment< O_WRONLY >(log, bin_size);
 
 	ssize_t s = copy_verbose(b64decode, src, dst);
