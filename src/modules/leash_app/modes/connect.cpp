@@ -12,6 +12,8 @@
 
 #include "../../mavlink/mavlink_defines.h"
 
+#include <commander/commander_error.h>
+
 #define _BLUETOOTH21_BASE       0x2d00
 
 #define PAIRING_ON          _IOC(_BLUETOOTH21_BASE, 0)
@@ -26,6 +28,8 @@ ModeConnect::ModeConnect(State Current) :
     currentState(Current),
     startTime(0)
 {
+    printf("ModeConnect create: %d\n", (int)Current);
+
     if (Current == State::PAIRING)
     {
         forcing_pairing = true;
@@ -155,13 +159,13 @@ Base* ModeConnect::doEvent(int orbId)
 
             if ((int)now -(int)startTime > MAVLINK_CHECK_INTERVAL)
             {
-                DisplayHelper::showInfo(INFO_COMMUNICATION_FAILED);
+                DisplayHelper::showInfo(INFO_ERROR, MAV_VERSION_TIMEOUT);
             }
         }
         else if (v != AIRDOG_MAVLINK_VERSION)
         {
             // invalid mavlink version
-            DisplayHelper::showInfo(INFO_COMMUNICATION_FAILED);
+            DisplayHelper::showInfo(INFO_ERROR, MAV_VERSION_MISTMATCH);
         }
         else
         {

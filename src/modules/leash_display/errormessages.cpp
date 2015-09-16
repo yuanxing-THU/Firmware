@@ -10,9 +10,20 @@ const char *getErrorMessageText(int errorCode, const char **pTitle)
         case COMMANDER_ERROR_OK:
             result = "OK";
             break;
+
         case COMMANDER_ERROR_NOT_ACTIVATED:
             title = "ATTENTION";
             result = "Please activate\nyour Airdog\nvia mobile app";
+            break;
+
+        case MAV_VERSION_TIMEOUT:
+            title = "CONNECTION";
+            result = "Please update\nyour software";
+            break;
+
+        case MAV_VERSION_MISTMATCH:
+            title = "CONNECTION";
+            result = "Please refer to\nuser manual";
             break;
 
         case PMC_ERROR:

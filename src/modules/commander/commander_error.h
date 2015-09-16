@@ -9,6 +9,9 @@ enum commander_error_code
     COMMANDER_ERROR_OK                     = 0,
     COMMANDER_ERROR_NOT_ACTIVATED          = 1,
     
+    MAV_VERSION_TIMEOUT                    = 2,
+    MAV_VERSION_MISTMATCH                  = 3,
+
     PMC_ERROR                              = 10,
     PMC_ERROR_INITIAL_TILT                 = 11,
     PMC_ERROR_TOO_MUCH_VIBRATION           = 12,
@@ -37,3 +40,4 @@ __EXPORT int commander_set_error(int error_code);
 #ifdef __cplusplus
 }
 #endif
+

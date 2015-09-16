@@ -743,17 +743,6 @@ void Screen::showInfo(int info, int error, int leashBattery)
             text[2].font = &Font::LucideGrandeSmall;
             break;
 
-        case INFO_COMMUNICATION_FAILED:
-            text[0].text = "Communication";
-            text[0].font = &Font::LucideGrandeSmall;
-            text[1].text = "Error";
-            text[1].font = &Font::LucideGrandeSmall;
-            text[2].text = "Please update";
-            text[2].font = &Font::LucideGrandeTiny;
-            text[3].text = "your software";
-            text[3].font = &Font::LucideGrandeTiny;
-            break;
-
         case INFO_ERROR:
             const char *errorText = getErrorMessageText(error, &title);
 
