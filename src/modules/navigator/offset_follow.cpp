@@ -362,7 +362,7 @@ OffsetFollow::init_base_offset() {
     R_phi.from_euler(0.0f, 0.0f, -_offset_sp_angle);
     _base_offset = R_phi * _base_offset;
 
-    _base_offset(0) = NavigatorMode::parameters.offset_initial_distance;
+    _base_offset(0) = NavigatorMode::parameters.airdog_init_pos_dst;
 
     _radius = sqrt(_base_offset(0) * _base_offset(0) + _base_offset(1) * _base_offset(1));
 

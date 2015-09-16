@@ -84,7 +84,8 @@ void PathFollow::on_activation() {
     _follow_path_startup = true;
 
 	_mavlink_fd = _navigator->get_mavlink_fd();
-    _optimal_distance = NavigatorMode::parameters.pafol_optimal_dist;
+    _optimal_distance = NavigatorMode::parameters.airdog_init_pos_dst;
+    
 
     _last_passed_point.y = _drone_local_pos.y;
     _last_passed_point.x = _drone_local_pos.x;
