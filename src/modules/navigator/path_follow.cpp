@@ -34,6 +34,7 @@ PathFollow::PathFollow(Navigator *navigator, const char *name):
         _drone_is_going_backwards(false),
 		_desired_speed(0.0f),
 		_optimal_distance(0.0f),
+        _optimal_distance_inited(false),
         _fp_i(0.0f),
         _fp_p(0.0f),
         _fp_d(0.0f),
@@ -84,8 +85,11 @@ void PathFollow::on_activation() {
     _follow_path_startup = true;
 
 	_mavlink_fd = _navigator->get_mavlink_fd();
-    _optimal_distance = NavigatorMode::parameters.airdog_init_pos_dst;
-    
+
+    if (!_optimal_distance_inited) {
+        _optimal_distance = NavigatorMode::parameters.airdog_init_pos_dst;
+        _optimal_distance_inited = true;
+    }
 
     _last_passed_point.y = _drone_local_pos.y;
     _last_passed_point.x = _drone_local_pos.x;

@@ -103,6 +103,8 @@ private:
 	float _desired_speed;
     // Distances to use when following
 	float _optimal_distance;
+
+    bool _optimal_distance_inited;
     // Distances to use when following
 	float _break_distance;
 

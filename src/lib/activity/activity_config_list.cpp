@@ -204,7 +204,7 @@ init_activity_config_list(){
             ParamConfig("V_REACTION",         VALUES_STR,    DOG,    2,      -1,    -1,   -1,   {0,1,2}            ),
             ParamConfig("FOL_RPT_ALT",        VALUES_STR,    DOG,    1,      -1,    -1,   -1,   {0,1}              ),
             ParamConfig("SENS_SON_MIN",       INTERVAL,      DOG,    5.0f,    3,    20, 0.5f,   {}                 ),
-            ParamConfig("PAFOL_OPT_D",        INTERVAL,      DOG,    12.0f,   5,    40,    1,   {}                 ),
+            ParamConfig("PAFOL_OPT_D",        INVISIBLE,      DOG,    12.0f,   5,    40,    1,   {}                 ),
             ParamConfig("AIRD_TRAJ_RAD",      INVISIBLE,     ALL,    5.0f,    3,    20,    1,   {}                 ),
             ParamConfig("FOL_LPF_XY",         INVISIBLE,     DOG,    1.0f,    0,    2, 0.05f,   {}                 ),
             ParamConfig("FOL_VEL_FF_XY",      INVISIBLE,     DOG,    0.7f,    0,    2, 0.05f,   {}                 ),
@@ -230,7 +230,7 @@ init_activity_config_list(){
             ParamConfig("MPC_XY_VEL_P",       INVISIBLE,     DOG,    0.1f,    0,     6,  0.05f,    {}                 ),
             ParamConfig("MPC_Z_FF",           INVISIBLE,     DOG,    0.3f,    0,     1,  0.05f,    {}                 ),
             ParamConfig("MPC_Z_P",            INVISIBLE,     DOG,    1.1f,    0,     6,  0.05f,    {}                 ),
-            ParamConfig("MPC_Z_VEL_D",         INVISIBLE,     DOG,    0.01f,   0,     5,  0.01f,   {}                 ),
+            ParamConfig("MPC_Z_VEL_D",        INVISIBLE,     DOG,    0.01f,   0,     5,  0.01f,   {}                 ),
             ParamConfig("MPC_Z_VEL_I",        INVISIBLE,     DOG,    0.05f,   0,     5,  0.01f,   {}                 ),
             ParamConfig("MPC_Z_VEL_MAX",      INVISIBLE,     DOG,    0.5f,    1,     6,   0.5f,   {}                 ),
             ParamConfig("MPC_Z_VEL_P",        INVISIBLE,     DOG,    0.28f,   0,     5,  0.01f,   {}               ),
@@ -281,7 +281,6 @@ init_activity_config_list(){
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}               ),
                 ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                 ),
                 ParamConfig("SENS_SON_MIN",       INTERVAL,    DOG,    7.0f,    3,    20, 0.5f,   {}                  ),
-                ParamConfig("PAFOL_OPT_D",        INTERVAL,    DOG,    10.0f,   5,    40,    1,   {}                  ),
             });
 
     ACTIVITY_CONFIG_LIST[3] = ActivityConfig(
@@ -306,7 +305,6 @@ init_activity_config_list(){
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,       -1,    -1,   -1,   {0,1}              ),
                 ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    1,       -1,    -1,   -1,   {1}                ),
                 ParamConfig("SENS_SON_MIN",       INTERVAL,    DOG,    7.0f,     3,    20, 0.5f,   {}                 ),
-                ParamConfig("PAFOL_OPT_D",        INTERVAL,    DOG,    10.0f,    5,    40,    1,   {}                 ),
             });
 
     ACTIVITY_CONFIG_LIST[5] = ActivityConfig(
@@ -329,7 +327,6 @@ init_activity_config_list(){
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}              ),
                 ParamConfig("RTL_RET_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
                 ParamConfig("SENS_SON_MIN",       INTERVAL,    DOG,    7.0f,    3,    20, 0.5f,   {}                 ),
-                ParamConfig("PAFOL_OPT_D",        INTERVAL,    DOG,    10.0f,   5,    40,    1,   {}                 ),
                 ParamConfig("AIRD_TRAJ_RAD",      INVISIBLE,   ALL,    6.0f,    3,    20,    1,   {}                 ),
             });
 
@@ -343,7 +340,6 @@ init_activity_config_list(){
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}               ),
                 ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                 ),
                 ParamConfig("SENS_SON_MIN",       INTERVAL,    DOG,    7.0f,    3,    20, 0.5f,   {}                  ),
-                ParamConfig("PAFOL_OPT_D",        INTERVAL,    DOG,    10.0f,   5,    40,    1,   {}                  ),
             });
 
     ACTIVITY_CONFIG_LIST[8] = ActivityConfig(
@@ -368,7 +364,6 @@ init_activity_config_list(){
                 ParamConfig("V_REACTION",         VALUES_STR,   DOG,    2,      -1,    -1,   -1,   {0,1,2}            ),
                 ParamConfig("FOL_RPT_ALT",        VALUES_STR,   DOG,    1,      -1,    -1,   -1,   {0,1}              ),
                 ParamConfig("SENS_SON_MIN",       INTERVAL,     DOG,    5.0f,    3,    20, 0.5f,   {}                 ),
-                ParamConfig("PAFOL_OPT_D",        INTERVAL,     DOG,    12.0f,   5,    40,    1,   {}                 ),
                 ParamConfig("AIRD_TRAJ_RAD",      INTERVAL,     ALL,    5.0f,    3,    20,    1,   {}                 ),
                 ParamConfig("FOL_LPF_XY",         INTERVAL,     DOG,    1.0f,    0,    2, 0.05f,   {}                 ),
                 ParamConfig("FOL_VEL_FF_XY",      INTERVAL,     DOG,    0.7f,    0,    2, 0.05f,   {}                 ),
@@ -398,7 +393,6 @@ init_activity_config_list(){
                 ParamConfig("MPC_Z_VEL_I",        INTERVAL,     DOG,    0.05f,   0,     5,  0.01f,   {}                 ),
                 ParamConfig("MPC_Z_VEL_MAX",      INTERVAL,     DOG,    0.5f,    1,     6,   0.5f,   {}                 ),
                 ParamConfig("MPC_Z_VEL_P",        INTERVAL,     DOG,    0.28f,   0,     5,  0.01f,   {}               ),
-                ParamConfig("PAFOL_GT_AC_DST",    INTERVAL,     DOG,    2,       1,    10,    1,   {}                 ),
                 ParamConfig("SDLOG_ON_BOOT",      VALUES_STR,   DOG,    1,      -1,    -1,   -1,   {0,1}              ),
                 ParamConfig("SENS_SON_ON",        VALUES_STR,   DOG,    0,      -1,    -1,   -1,   {0,1}              ),
                 ParamConfig("UBX_ENABLE_SBAS",    VALUES_STR,   DOG,    1,      -1,    -1,   -1,   {0,1}              ),
