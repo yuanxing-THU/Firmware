@@ -117,7 +117,7 @@ exec_all_AT(const char devname[], int argc, const char * const arg[], char buf[]
 static bool
 exec_all_AT(const char devname[], int argc, const char * const arg[])
 {
-	char buf[32];
+	char buf[64];
 	memset(buf, 0, sizeof buf);
 	return exec_all_AT(devname, argc, arg, buf, sizeof buf);
 }
@@ -220,6 +220,58 @@ version_firmware_check(const char devname[])
 	return ok;
 }
 
+
+static bool
+set_license(const char devname[], const char mac[], const char license[])
+{
+	if (strlen(mac) != 12)
+	{
+		fprintf(stderr, "Invalid MAC-12 '%s'.\n", mac);
+		return 1;
+	}
+	if (strlen(license) != 20)
+	{
+		fprintf(stderr, "Invalid LICENCE-20 '%s'.\n", license);
+		return 1;
+	}
+
+	const char * const at_i_14[] = { "AT I 14", nullptr };
+	const char prefix_14[] = "10\t14\t01 ";
+
+	char * p;
+	char buf[64];
+	memset(buf, 0, sizeof buf);
+
+	bool ok = exec_all_AT(devname, 1, at_i_14, buf, sizeof buf);
+
+	if (ok)
+	{
+		p = strstr(buf, prefix_14);
+		dbg("reply mac: %s.\n", p);
+		ok = p != nullptr;
+	}
+
+	if (ok)
+	{
+		p += strlen(prefix_14);
+		p[12] = '\0';
+		ok = strcasecmp(p, mac) == 0;
+		dbg("mac matches %i.\n", ok);
+	}
+
+	if (ok)
+	{
+		char at_lic[32];
+		int n = snprintf(at_lic, sizeof at_lic, "at+lic \"%s\"", license);
+		ok = n == 29;
+		dbg("cmd '%s' length %i -> %i.\n", at_lic, n, ok);
+		const char * const exec_at_lic[] = { at_lic, nullptr };
+		ok = ok and exec_all_AT(devname, 1, exec_at_lic, buf, sizeof buf);
+	}
+
+	return ok;
+}
+
 static inline bool
 streq(const char a[], const char b[]) { return std::strcmp(a, b) == 0; }
 
@@ -233,6 +285,7 @@ usage(const char name[])
 	fprintf(stderr, "\t%s mode at|default\n", name);
 	fprintf(stderr, "\t%s at TTY command [command...]\n", name);
 	fprintf(stderr, "\t%s firmware-version TTY\n", name);
+	fprintf(stderr, "\t%s set-license TTY MAC-12 LICENCE-20\n", name);
 	fprintf(stderr, "\n");
 }
 
@@ -308,10 +361,16 @@ main(int argc, const char *argv[])
 			and exec_all_AT(argv[2], argc - 3, argv + 3);
 		if (not ok) { return 1; }
 	}
-	else if ((argc == 3 or argc == 4) and streq(argv[1], "firmware-version"))
+	else if (argc == 3 and streq(argv[1], "firmware-version"))
 	{
 		bool ok = maintenance_allowed()
 			and version_firmware_check(argv[2]);
+		if (not ok) { return 1; }
+	}
+	else if (argc == 5 and streq(argv[1], "set-license"))
+	{
+		bool ok = maintenance_allowed()
+			and set_license(argv[2], argv[3], argv[4]);
 		if (not ok) { return 1; }
 	}
 	else
