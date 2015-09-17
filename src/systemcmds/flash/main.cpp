@@ -255,11 +255,15 @@ usage(const char name[], const char stamp_command[])
 		, "Usage:\n"
 		  "\t%s show-board-id\n"
 		  "\t%s otp-stamp-info\n"
-		  "\t%s [burn] %s board-id key-id sign-128-hex\n"
-		  "\nWArning: %s destroys OTP even *without* burn!\n"
+		  "\t%s debug|spot|burn %s board-id key-id sign-128-hex\n"
+		  "\n"
+		  "Warning: %s destroys OTP with spot and with burn!\n"
+		  "         To try %s without touching OTP use debug.\n"
+		  "\n"
 		, name
 		, name
 		, name, stamp_command
+		, stamp_command
 		, stamp_command
 	);
 }
@@ -275,18 +279,18 @@ main(const int argc, const char * const argv[])
 			FactoryStamp::VERSION_TAG_CURRENT);
 
 	bool ok, usage_ok;
-	if ((argc == 5 and streq(argv[1], stamp_command))
-	or (argc == 6 and streq(argv[2], stamp_command))
-	) {
+	if (argc == 6 and streq(argv[2], stamp_command))
+	{
 		FactoryStamp stamp;
 
-		const unsigned burn = argc == 6 and streq(argv[1], "burn");
+		const bool do_burn = streq(argv[1], "burn");
+		const bool do_spot = do_burn or streq(argv[1], "spot");
+		usage_ok = do_spot or streq(argv[1], "debug");
 
-		usage_ok = argc == 6 or not burn;
 		ok = usage_ok
-			and check_board_id(argv[2 + burn])
-			and parse_stamp_content(argv + 3 + burn, stamp)
-			and write_otp_stamp(stamp, burn);
+			and check_board_id(argv[3])
+			and parse_stamp_content(argv + 4, stamp)
+			and (not do_spot or write_otp_stamp(stamp, do_burn));
 	}
 	else if (argc == 2 and streq(argv[1], "otp-stamp-info"))
 	{
