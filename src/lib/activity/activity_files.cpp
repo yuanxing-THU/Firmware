@@ -139,10 +139,8 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
     float param_val;
 
     bool param_appeared[ALLOWED_PARAM_COUNT];
-    bool param_required[ALLOWED_PARAM_COUNT];
 
     memset(param_appeared, 0, sizeof(param_appeared));
-    memset(param_required, 1, sizeof(param_required));
 
     FILE * activity_params_file = fopen(pathname, "r");
 
@@ -162,13 +160,14 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
         // 1. Check every line is in the proper format int_number:float_number
         //
         // Validate if each line is on format:
-        // " [0]number[1]:[2]number[3].[4]number[5]" 
+        // " [0]number[1]:[2]-[3]number[4].[5]number[6]" 
         // number given AFTER every part
         // line can end after part 3 or part 5 (floating point is optional)
         
         int part = 0;
+        int i;
 
-        for (int i=0;line[i]!='\n' && line[i]!='\0' && file_ok;i++) {
+        for (i=0;line[i]!='\n' && line[i]!='\0' && file_ok;i++) {
 
             switch (part) {
                 case 0:
@@ -190,6 +189,20 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
                     }
                 break;
                 case 2:
+                    if (line[i]=='-') {
+
+                        part++;
+
+                    } else if (isdigit(line[i])) {
+                        part+=2;
+                    }
+                    else
+                    {
+                        printf("%s Error on line %i: Colon must be followed by [floating point] number\n", pathname, line_no);
+                        file_ok = false;
+                    }
+                break;
+                case 3:
                     if (isdigit(line[i]))
                         part++;
                     else
@@ -198,7 +211,7 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
                         file_ok = false;
                     }
                 break;
-                case 3:
+                case 4:
                     if (line[i] == '.') 
                         part++;
                     else if (!isdigit(line[i]))
@@ -207,7 +220,7 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
                         file_ok = false;
                     }
                 break;
-                case 4:
+                case 5:
                     if (isdigit(line[i])) {
                         part++;
                     }
@@ -216,39 +229,50 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
                         printf("%s Error on line %i: Colon must be followed by [floating point] number\n", pathname, line_no);
                         file_ok = false;
                     }
-                case 5:
+                break;
+                case 6:
                     if (!isdigit(line[i])){
                         printf("%s Error on line %i: Colon must be followed by [floating point] number\n", pathname, line_no);
                         file_ok = false;
                     }
+                break;
             }
         }
 
         if (!file_ok)
             break;
 
-        if (!(part == 3 || part == 5 )){
+        if (!(part == 4 || part == 6 )){
             printf("%s Error on line %i: Line must end with a number\n", pathname, line_no);
             file_ok = false;
             break;
         }
-
-
-        // 2. Check: every required param is showing up
 
         parse_activity_file_line(line, key_str, value_str);
 
         sscanf(key_str,"%f", &param_id);
         sscanf(value_str,"%f", &param_val);
 
-        if (param_id >= ALLOWED_PARAM_COUNT) {
-            printf("%s Error: Param number %f not allowed. \n", pathname, (double)param_id);
+        int param_idx = 0;
+        bool param_id_valid = false;
+
+        for (;param_idx < ALLOWED_PARAM_COUNT; param_idx++){
+            if (ALLOWED_PARAMS[param_idx].id == param_id) {
+                param_id_valid = true;
+                break;
+            }
+        }
+
+        if (!param_id_valid) {
+
+            printf("%s Error: Param id %f not valid.\n", pathname, (double)param_id);
             file_ok = false;
             break;
+        
         }
     
-        if (param_appeared[(int)param_id]){
-            printf("%s Error: Param number %f defined multiple times. \n", pathname, (double)param_id);
+        if (param_appeared[param_idx]){
+            printf("%s Error: Param with id %f defined multiple times. \n", pathname, (double)param_id);
             file_ok = false;
             break;
         }
@@ -267,9 +291,8 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
             }
         }
 
-        param_appeared[(int)param_id] = true;
+        param_appeared[param_idx] = true;
 
-        // TODO: 3. Check: values are in proper range 
     }
 
     fclose(activity_params_file);
@@ -277,13 +300,8 @@ validate_activity_params_file(uint8_t activity, const char pathname[]) {
     if (!file_ok) return false;
 
     for (int i=0;i<ALLOWED_PARAM_COUNT;i++) {
-        if (param_appeared[i] && !param_required[i]){
-            printf("%s Error: Param number %d must not appear in the file.\n", pathname, i);
-            return false;
-        }
-
-        if (!param_appeared[i] && param_required[i]){
-            printf("%s Error: Param number %d must appear in the file.\n", pathname, i);
+        if (!param_appeared[i]){
+            printf("%s Error: Param with id %d must not appear in the file.\n", pathname, ALLOWED_PARAMS[i].id);
             return false;
         }
     }
@@ -318,7 +336,9 @@ reset_activity_params_file(int activity) {
         else 
             default_value = pc->default_value;
 
-        fprintf(activity_file, "%i:%.6f\n", i, (double)default_value); 
+        int param_id = ALLOWED_PARAMS[i].id;
+
+        fprintf(activity_file, "%i:%.6f\n", param_id, (double)default_value); 
 
     }
 
@@ -418,7 +438,8 @@ activity_orb_to_file(){
     int activity = activity_params.values[0];
 
     for (int i=0;i<ALLOWED_PARAM_COUNT;i++) {
-        fprintf(tmp_file, "%i:%.6f\n", i, (double)activity_params.values[i]); 
+        int param_id = ALLOWED_PARAMS[i].id;
+        fprintf(tmp_file, "%i:%.6f\n", param_id, (double)activity_params.values[i]); 
     }
 
     fclose(tmp_file);
@@ -427,7 +448,6 @@ activity_orb_to_file(){
     get_path(activity, 0, new_file_path);
 
     unlink(new_file_path);
-
 
     if (rename(tmp_file_path, new_file_path) == 0) {
         printf("Successfully written %d params file.\n", activity);
@@ -476,8 +496,22 @@ activity_file_to_orb(uint8_t activity) {
 
         sscanf(key_str,"%f", &param_id);
         sscanf(value_str,"%f", &param_val);
+        
+        // TODO: Determine index in activity params
+        bool param_appeared = false;
+        int param_idx = 0;
+        
+        for (; param_idx < ALLOWED_PARAM_COUNT; param_idx++){
+            if (ALLOWED_PARAMS[param_idx].id == param_id)
+            {
+                param_appeared = true;
+                break;
+            }
+        }
 
-        activity_params.values[(int)param_id] = param_val;
+        if (!param_appeared) return false;
+        activity_params.values[param_idx] = param_val;
+
     }
 
     fclose(activity_file);
@@ -492,8 +526,8 @@ activity_file_to_orb(uint8_t activity) {
         printf("Pub successful\n");
     }
 
-
     return true;
+
 }
 
 

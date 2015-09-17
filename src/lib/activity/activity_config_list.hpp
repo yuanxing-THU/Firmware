@@ -29,6 +29,7 @@ class __EXPORT ParamConfig {
     public:
 
         int p_id; 
+        int p_idx;
         int limit_kind;
         float istart;
         float iend;
