@@ -96,11 +96,8 @@ exec_all_AT(const char devname[], int argc, const char * const arg[], char buf[]
 	unique_file serial = open_serial(devname);
 	if (fileno(serial) == -1) { return false; }
 
-#ifdef ENABLE_DOG_DEBUG
-	DevLog log (fileno(serial), 2, "at read  ", "at write ");
-#else
 	auto & log = serial;
-#endif
+	//DevLog log (fileno(serial), 2, "at read  ", "at write ");
 	auto & dev = log;
 
 	for (int i = 0; i < argc; ++i )
