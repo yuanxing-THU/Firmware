@@ -59,9 +59,11 @@ int
 ActivityChangeManager::getFollowValue()
 {
     int result = -1;
-    if (!strncmp(ALLOWED_PARAMS[1].name, "NAV_AFOL_MODE", 20)) // returns 0 if strings are equal
-    {
-        result = (int)params[1].saved_value;
+
+    for (int param_idx = 0;param_idx < ALLOWED_PARAM_COUNT; param_idx++){
+        if (strncmp(ALLOWED_PARAMS[param_idx].name, "NAV_AFOL_MODE", 20) == 0) {
+            result = (int)params[param_idx].saved_value;
+        }
     }
     return result;
 }
@@ -69,12 +71,16 @@ ActivityChangeManager::getFollowValue()
 int
 ActivityChangeManager::getLandValue()
 {
+
     int result = -1;
-    if (!strncmp(ALLOWED_PARAMS[2].name, "A_BSC_SAF_ACT", 20)) // returns 0 if strings are equal
-    {
-        result = (int)params[2].saved_value;
+
+    for (int param_idx = 0;param_idx < ALLOWED_PARAM_COUNT; param_idx++){
+        if (strncmp(ALLOWED_PARAMS[param_idx].name, "A_BSC_SAF_ACT", 20) == 0) {
+            result = (int)params[param_idx].saved_value;
+        }
     }
     return result;
+
 }
 
 
