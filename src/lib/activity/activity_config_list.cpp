@@ -215,8 +215,6 @@ init_activity_config_list(){
             ParamConfig("V_REACTION",         VALUES_STR,    DOG,    2,       -1,   -1,  -1,    {0,1,2}            ),
             ParamConfig("SENS_SON_MIN",       INTERVAL,      DOG,    5,       3,    20,  0.5f,  {}                 ),
             ParamConfig("AIRD_TRAJ_RAD",      INTERVAL,      ALL,    5,       3,    20,  1,     {}                 ),
-            ParamConfig("BAT_WARN_LVL",       INVISIBLE,     DOG,    0.2,     0,    1,   0.05f, {}                 ),
-            ParamConfig("BAT_CRIT_LVL",       INVISIBLE,     DOG,    0.1,     0,    1,   0.05f, {}                 ),
             ParamConfig("FOL_FF_GRAD_END",    INVISIBLE,     DOG,    150,     10,   200, 5,     {}                 ),
             ParamConfig("FOL_FF_GRAD_STRT",   INVISIBLE,     DOG,    20,      0,    150, 5,     {}                 ),
             ParamConfig("FOL_FF_GRAD_USE",    INVISIBLE,     DOG,    1,       -1,   -1,  -1,    {0,1}              ),
@@ -251,7 +249,7 @@ init_activity_config_list(){
             ParamConfig("NAV_CP_LAS_AL",      INVISIBLE,     DOG,    12,     -1,    -1,  -1,    {}                 ),
             ParamConfig("NAV_CP_LAS_LA",      INVISIBLE,     DOG,    0,      -1,    -1,  -1,    {}                 ),
             ParamConfig("NAV_CP_LAS_LO",      INVISIBLE,     DOG,    0,      -1,    -1,  -1,    {}                 ),
-            ParamConfig("BAT_WARN_LVL",       INVISIBLE,     DOG,    0.15,   -1,    -1,  -1,    {}                 ),
+            ParamConfig("BAT_FLAT_LVL",       INVISIBLE,     DOG,    0.15,   -1,    -1,  -1,    {}                 ),
         });
 
     ACTIVITY_CONFIG_LIST[0] = ActivityConfig(
@@ -270,8 +268,6 @@ init_activity_config_list(){
                 //           Param name           Type         Device  Default Istart Iend  Step  Values
                 ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    3,      -1,    -1,   -1,   {3}                ),
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                ),
-                ParamConfig("BAT_WARN_LVL",       INVISIBLE,   DOG,    0.3f,    0,    1, 0.05f,   {}                 ),
-                ParamConfig("BAT_CRIT_LVL",       INVISIBLE,   DOG,    0.15f,   0,    1, 0.05f,   {}                 ),
             });
 
     ACTIVITY_CONFIG_LIST[2] = ActivityConfig(
@@ -294,8 +290,6 @@ init_activity_config_list(){
                 ParamConfig("NAV_AFOL_MODE",      VALUES_STR,      DOG,    0,      -1,    -1,   -1,   {0}                ),
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,      DOG,    1,      -1,    -1,   -1,   {1}                ),
                 ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    0,      -1,    -1,   -1,   {0}                ),
-                ParamConfig("BAT_WARN_LVL",       INVISIBLE,   DOG,    0.3f,    0,    1, 0.05f,   {}                 ),
-                ParamConfig("BAT_CRIT_LVL",       INVISIBLE,   DOG,    0.15f,   0,    1, 0.05f,   {}                 ),
             });
 
     ACTIVITY_CONFIG_LIST[4] = ActivityConfig(
@@ -318,8 +312,6 @@ init_activity_config_list(){
                 ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    0,      -1,    -1,   -1,   {0,1,2,3,4}        ),
                 ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}              ),
                 ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    0,      -1,    -1,   -1,   {1}                ),
-                ParamConfig("BAT_WARN_LVL",       INVISIBLE,   DOG,    0.3f,    0,    1, 0.05f,   {}                 ),
-                ParamConfig("BAT_CRIT_LVL",       INVISIBLE ,  DOG,    0.15f,   0,    1, 0.05f,   {}                 ),
             });
 
     ACTIVITY_CONFIG_LIST[6] = ActivityConfig(
@@ -374,8 +366,6 @@ init_activity_config_list(){
                 ParamConfig("V_REACTION",         VALUES_STR,   DOG,    2,       -1,   -1,  -1,    {0,1,2}            ),
                 ParamConfig("SENS_SON_MIN",       INTERVAL,     DOG,    5,       3,    20,  0.5f,  {}                 ),
                 ParamConfig("AIRD_TRAJ_RAD",      INTERVAL,     ALL,    5,       3,    20,  1,     {}                 ),
-                ParamConfig("BAT_WARN_LVL",       INTERVAL,     DOG,    0.2,     0,    1,   0.05f, {}                 ),
-                ParamConfig("BAT_CRIT_LVL",       INTERVAL,     DOG,    0.1,     0,    1,   0.05f, {}                 ),
                 ParamConfig("FOL_FF_GRAD_END",    INTERVAL,     DOG,    150,     10,   200, 5,     {}                 ),
                 ParamConfig("FOL_FF_GRAD_STRT",   INTERVAL,     DOG,    20,      0,    150, 5,     {}                 ),
                 ParamConfig("FOL_FF_GRAD_USE",    VALUES_STR,   DOG,    1,       -1,   -1,  -1,    {0,1}              ),
@@ -404,7 +394,7 @@ init_activity_config_list(){
                 ParamConfig("UBX_GPS_MIN_CHN",    INTERVAL,     DOG,    8,       1,    16,  1,     {}                 ),
                 ParamConfig("INAV_W_Z_GPS_P",     INTERVAL_HP,  DOG,    0.001,   0,    1,   0.001f,{}                 ),
                 ParamConfig("INAV_W_Z_BARO",      INTERVAL,     DOG,    0.5,     0,    1,   0.05f, {}                 ),
-                ParamConfig("BAT_WARN_LVL",       INTERVAL,     DOG,    0.15,    0,    1,   0.05,  {}                 ),
+                ParamConfig("BAT_FLAT_LVL",       INTERVAL,     DOG,    0.15,    0,    1,   0.05,  {}                 ),
             });
 
     activity_config_list_inited = true;
