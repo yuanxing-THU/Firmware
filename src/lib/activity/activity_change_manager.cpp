@@ -263,8 +263,12 @@ ParamChangeManager::get_id(){
 
 bool
 ActivityChangeManager::get_display_name(char * buffer, const int buffer_len){
-   snprintf(buffer, buffer_len, "%s", ACTIVITY_CONFIG_LIST[activity].name); 
-   return true; 
+    if (activity >= 0 && activity < ACTIVITIES_COUNT) {
+        snprintf(buffer, buffer_len, "%s", ACTIVITY_CONFIG_LIST[activity].name);
+        return true;
+    } else {
+        return false;
+    }
 }
 
 ParamChangeManager *

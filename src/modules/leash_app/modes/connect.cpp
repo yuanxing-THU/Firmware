@@ -104,6 +104,11 @@ Base* ModeConnect::doEvent(int orbId)
 
             }
         }
+        else if (key_pressed(BTN_OK) && currentState == State::NOT_PAIRED)
+        {
+            // start pairing
+            setState(State::PAIRING);
+        }
     }
     else if (orbId == FD_MavlinkStatus && currentState == State::CHECK_MAVLINK)
     {
@@ -134,6 +139,8 @@ Base* ModeConnect::doEvent(int orbId)
             }
             else
             {
+                DataManager::instance()->activityManager.init();
+                DataManager::instance()->activityManager.params_received();
                 nextMode = new Acquiring_gps();
             }
         }
