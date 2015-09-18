@@ -25,18 +25,12 @@ namespace modes
 
 ModeConnect::ModeConnect(State Current) : 
     forcing_pairing(false),
-    currentState(Current),
     startTime(0)
 {
     printf("ModeConnect create: %d\n", (int)Current);
+    setState(Current);
 
-    if (Current == State::PAIRING)
-    {
-        forcing_pairing = true;
-        BTPairing();
-        DisplayHelper::showInfo(INFO_PAIRING);
-    }
-    else
+    if (Current != State::PAIRING)
     {
         doEvent(-1);
     }
@@ -46,19 +40,12 @@ ModeConnect::~ModeConnect() { }
 
 void ModeConnect::listenForEvents(bool awaitMask[])
 {
+    awaitMask[FD_BLRHandler] = 1;
+
     switch (currentState)
     {
-        case State::UNKNOWN:
-        case State::NOT_PAIRED:
-        case State::PAIRING:
-        case State::DISCONNECTED:
-        case State::CONNECTING:
-        case State::CONNECTED:
-            awaitMask[FD_BLRHandler] = 1;
-            break;
-
         case State::GETTING_ACTIVITIES:
-            awaitMask[FD_AirdogStatus] = 1;
+            awaitMask[FD_ActivityParams] = 1;
             break;
 
         case State::CHECK_MAVLINK:
@@ -82,49 +69,14 @@ Base* ModeConnect::doEvent(int orbId)
         if (currentState == State::PAIRING)
             forcing_pairing = false;
     }
-    else if (currentState != State::GETTING_ACTIVITIES)
-        getConState();
-
-    switch (currentState)
+    else if (currentState != State::GETTING_ACTIVITIES && orbId == FD_BLRHandler)
     {
-        case State::CONNECTING:
-        case State::CHECK_MAVLINK:
-            if (startTime == 0)
-                time(&startTime);
-            DisplayHelper::showInfo(INFO_CONNECTING_TO_AIRDOG);
-            break;
-        case State::GETTING_ACTIVITIES:
-            DisplayHelper::showInfo(INFO_GETTING_ACTIVITIES);
-            break;
-        case State::CONNECTED:
-            nextMode = new Acquiring_gps();
-            break;
-        case State::DISCONNECTED: 
-            DisplayHelper::showInfo(INFO_CONNECTION_LOST);
-            break;
-        case State::NOT_PAIRED:
-            DisplayHelper::showInfo(INFO_NOT_PAIRED);
-            break;
-        case State::PAIRING:
-            DisplayHelper::showInfo(INFO_PAIRING);
-            break;
-        default:
-            DisplayHelper::showInfo(INFO_FAILED);
-            break;
+        getConState();
     }
 
     if (orbId == FD_KbdHandler)
     {
-        if (key_pressed(BTN_OK)) 
-        {
-            if (currentState == State::NOT_PAIRED)
-            {
-                DOG_PRINT("[modes]{connection} start pairing!\n");
-                DisplayHelper::showInfo(INFO_NOT_PAIRED);
-                BTPairing(true);
-            }
-        }
-        else if (key_pressed(BTN_MODE)) 
+        if (key_pressed(BTN_MODE))
         {
             switch (currentState)
             {
@@ -170,10 +122,17 @@ Base* ModeConnect::doEvent(int orbId)
         else
         {
             // valid mavlink version
-            currentState = State::GETTING_ACTIVITIES;
+            if (DataManager::instance()->activityManager.isUpdateRequired())
+            {
+                setState(State::GETTING_ACTIVITIES);
+            }
+            else
+            {
+                nextMode = new Acquiring_gps();
+            }
         }
     }
-    if (currentState == State::GETTING_ACTIVITIES)
+    else if (orbId == FD_ActivityParams && currentState == State::GETTING_ACTIVITIES)
     {
         if (receiveActivityParams())
         {
@@ -193,14 +152,7 @@ bool ModeConnect::receiveActivityParams()
 {
     bool result = false;
 
-    DataManager *dm = DataManager::instance();
-    uint8_t cur_drone_activity = dm->airdog_status.activity;
-    if (cur_drone_activity != 0) //default activity, already got all in dm constructor
-    {
-        dm->activityManager.init(cur_drone_activity);
-    }
-
-    result = dm->activityManager.params_received();
+    result = DataManager::instance()->activityManager.params_received();
 
     return result;
 }
@@ -217,20 +169,20 @@ void ModeConnect::getConState()
             }
             else 
             {
-                currentState = State::CONNECTING;
+                setState(State::CONNECTING);
                 break;
             }
         case NO_PAIRED_DEVICES:
-            currentState = State::NOT_PAIRED;
+            setState(State::NOT_PAIRED);
             break;
         case PAIRING:
-            currentState = State::PAIRING;
+            setState(State::PAIRING);
             break;
         case CONNECTED:
-            currentState = State::CHECK_MAVLINK;
+            setState(State::CHECK_MAVLINK);
             break;
         default:
-            currentState = State::UNKNOWN;
+            setState(State::UNKNOWN);
             break;
     }
 }
@@ -247,6 +199,46 @@ void ModeConnect::BTPairing(bool start)
     }
 
     close(fd);
+}
+
+void ModeConnect::setState(State state)
+{
+    currentState = state;
+
+    switch (currentState)
+    {
+        case State::NOT_PAIRED:
+            DisplayHelper::showInfo(INFO_NOT_PAIRED);
+            break;
+
+        case State::PAIRING:
+            forcing_pairing = true;
+            BTPairing();
+            DisplayHelper::showInfo(INFO_PAIRING);
+            break;
+
+        case State::DISCONNECTED:
+            DisplayHelper::showInfo(INFO_CONNECTION_LOST);
+            break;
+
+        case State::CONNECTING:
+            DisplayHelper::showInfo(INFO_CONNECTING_TO_AIRDOG);
+            break;
+
+        case State::CHECK_MAVLINK:
+            time(&startTime);
+            DisplayHelper::showInfo(INFO_CONNECTING_TO_AIRDOG);
+            break;
+
+        case State::GETTING_ACTIVITIES:
+            DisplayHelper::showInfo(INFO_GETTING_ACTIVITIES);
+            DataManager::instance()->activityManager.init();
+            break;
+
+        default:
+            DisplayHelper::showInfo(INFO_FAILED);
+            break;
+    }
 }
 
 } //end of namespace modes

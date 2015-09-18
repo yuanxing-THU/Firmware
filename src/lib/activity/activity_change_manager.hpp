@@ -39,7 +39,6 @@ class __EXPORT ActivityChangeManager {
     public:
 
         ActivityChangeManager();
-        ActivityChangeManager(int _activity);
         ~ActivityChangeManager();
 
         bool get_display_name(char* buffer, int buffer_len);
@@ -62,8 +61,8 @@ class __EXPORT ActivityChangeManager {
         bool params_received();
         void set_waiting_for_params();
 
-
-        void init(int _activity);
+        bool isUpdateRequired();
+        void init();
        
     private:
 

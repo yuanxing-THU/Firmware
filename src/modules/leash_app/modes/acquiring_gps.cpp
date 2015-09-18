@@ -8,6 +8,7 @@
 
 #include "main.h"
 #include "menu.h"
+#include "connect.h"
 
 //TODO[AK] These constants taken from position_estimator_inav, should by parametrized I guess
 static const float min_eph_epv = 2.0f;	// min EPH/EPV, used for weight calculation
@@ -44,6 +45,7 @@ void Acquiring_gps::listenForEvents(bool awaitMask[])
     awaitMask[FD_LocalPos] = 1;
     awaitMask[FD_VehicleStatus] = 1;
     awaitMask[FD_DroneLocalPos] = 1;
+    awaitMask[FD_BLRHandler] = 1;
 }
 
 Base* Acquiring_gps::doEvent(int orbId)
@@ -80,8 +82,15 @@ Base* Acquiring_gps::doEvent(int orbId)
         drone_has_home = drone_has_gps;
         showGPSDisplay();
     }
+    else if (orbId == FD_BLRHandler)
+    {
+        if (dm->bt_handler.global_state == CONNECTING)
+        {
+            nextMode = new ModeConnect(ModeConnect::State::DISCONNECTED);
+        }
+    }
 
-    if (bothGotGPS())
+    if (nextMode == nullptr && bothGotGPS())
     {
         nextMode = new Main();
     }

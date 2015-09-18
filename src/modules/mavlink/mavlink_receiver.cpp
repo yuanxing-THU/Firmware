@@ -1811,6 +1811,8 @@ MavlinkReceiver::receive_thread(void *arg)
 
 	while (not _mavlink->_task_should_exit)
 	{
+		received_mavlink_version = 0;
+
 		r = read(uart_fd, buf, sizeof(buf));
 		if (r < 0)
 		{
@@ -1868,6 +1870,7 @@ MavlinkReceiver::receive_thread(void *arg)
 		/* Report to stats. */
 		rx_stats.total_bytes += r;
                 rx_stats.version = received_mavlink_version;
+
 		orb_publish(ORB_ID(mavlink_receive_stats), rx_stat_topic, &rx_stats);
 
 		_mavlink->count_rxbytes(r);

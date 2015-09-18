@@ -16,7 +16,6 @@ public:
         CONNECTING,
         CHECK_MAVLINK,
         GETTING_ACTIVITIES,
-        CONNECTED,
     };
 
     ModeConnect(State current = State::UNKNOWN);
@@ -39,6 +38,7 @@ private:
     void getConState();
     bool receiveActivityParams();
     void BTPairing(bool start = 1);
+    void setState(State state);
 };
 
 } //end of namespace modes

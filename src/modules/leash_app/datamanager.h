@@ -1,6 +1,7 @@
 #pragma once
 
 #include <uORB/uORB.h>
+#include <uORB/topics/activity_params.h>
 #include <uORB/topics/airdog_status.h>
 #include <uORB/topics/bt21_laird.h>
 #include <uORB/topics/bt_state.h>
@@ -20,7 +21,8 @@
 
 enum Orbs
 {
-    FD_AirdogStatus = 0,
+    FD_ActivityParams = 0,
+    FD_AirdogStatus,
     FD_BLRHandler,
     FD_BTLinkQuality,
     FD_Calibrator,
@@ -47,6 +49,7 @@ public:
     bool awaitMask[FD_Size];
     bool awaitResult[FD_Size];
 
+    struct activity_params_s activity_params;
     struct airdog_status_s airdog_status;
     struct bt_state_s bt_handler;
     struct calibrator_s calibrator;

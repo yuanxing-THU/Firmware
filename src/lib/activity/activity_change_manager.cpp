@@ -9,45 +9,49 @@
 
 namespace Activity {
 
-ActivityChangeManager::ActivityChangeManager() : 
-    activity(0),
-    param_count(ALLOWED_PARAM_COUNT),
-    cur_param_id(0),
-    params_up_to_date(false),
-    activity_params_sub(-1){
-}
-
-ActivityChangeManager::ActivityChangeManager(int _activity) :
-    activity(_activity),
+ActivityChangeManager::ActivityChangeManager() :
+    activity(-1),
     param_count(ALLOWED_PARAM_COUNT),
     cur_param_id(0),
     params_up_to_date(false),
     activity_params_sub(-1)
 {
-
     if (!allowed_params_inited) init_allowed_params();
     if (!activity_config_list_inited) init_activity_config_list();
 
-    init_activity_config();
-    
     activity_params_sub = orb_subscribe(ORB_ID(activity_params));
-
 }
 
 ActivityChangeManager::~ActivityChangeManager() {
    orb_unsubscribe(activity_params_sub);
 }
 
-void
-ActivityChangeManager::init(int _activity)
+bool ActivityChangeManager::isUpdateRequired()
 {
-    if (_activity != activity)
-    {
-        activity = _activity;
-        cur_param_id = 0;
-        params_up_to_date = false;
-        init_activity_config();
-    }
+    bool result = false;
+
+    int remote_sub = orb_subscribe(ORB_ID(activity_remote_t));
+    int received_sub = orb_subscribe(ORB_ID(activity_received_t));
+
+    activity_remote_t_s remote;
+    activity_received_t_s received;
+
+    orb_copy(ORB_ID(activity_remote_t), remote_sub, &remote);
+    orb_copy(ORB_ID(activity_received_t), received_sub, &received);
+
+    result = remote.ts == 0 || received.ts != remote.ts;
+
+    orb_unsubscribe(remote_sub);
+    orb_unsubscribe(received_sub);
+
+    return result;
+}
+
+void
+ActivityChangeManager::init()
+{
+    cur_param_id = 0;
+    params_up_to_date = false;
 }
 
 void

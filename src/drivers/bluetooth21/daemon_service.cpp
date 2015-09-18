@@ -274,7 +274,7 @@ synced_loop(MultiPlexer & mp, ServiceIO & service_io, ServiceState & svc)
 
 	while (should_run and not module_rebooted(svc.sync))
 	{
-
+		GLOBAL_BT_STATE oldState = svc.global_state;
 		wait_process_event(service_io);
 		set_xt_ready_mask(mp, svc.flow.xt_mask);
 
@@ -291,7 +291,7 @@ synced_loop(MultiPlexer & mp, ServiceIO & service_io, ServiceState & svc)
 
                         dbg("Pairing activated\n");
 
-                        svc.global_state = GLOBAL_BT_STATE::PAIRING;
+                        oldState = svc.global_state = GLOBAL_BT_STATE::PAIRING;
 
                         publish_bt_state(svc);
 
@@ -330,7 +330,11 @@ synced_loop(MultiPlexer & mp, ServiceIO & service_io, ServiceState & svc)
 
         }
 
-        publish_bt_state(svc);
+        // publish if state has been changed
+        if (oldState != svc.global_state)
+        {
+            publish_bt_state(svc);
+        }
 
 		dbg("Connections waiting %i, total count %u.\n"
 			, no_single_connection(svc.conn)

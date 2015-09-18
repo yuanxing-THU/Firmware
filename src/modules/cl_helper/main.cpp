@@ -114,7 +114,7 @@ void pairing_toggle() {
 
 }
 
-bool test_activity_manager(const int activity_number = 5);
+bool test_activity_manager();
 bool init_receive_fake_activity_params();
 bool modify_receive_fake_activity_params();
 bool print_activity_params_orb_content();
@@ -155,11 +155,6 @@ main(int argc, char const * const * argv)
     } else if (streq(argv[1], "activity")) {
 
         if (streq(argv[2], "test")) {
-            if (argc == 4)
-            {
-                const int activity = atoi(argv[3]);
-                test_activity_manager(activity);
-            }
             test_activity_manager();
         } else if (streq(argv[2], "receive_init")) {
             init_receive_fake_activity_params();
@@ -206,9 +201,9 @@ main(int argc, char const * const * argv)
 }
 
 bool
-test_activity_manager(const int activity_number){
+test_activity_manager(){
 
-    Activity::ActivityChangeManager A(activity_number);
+    Activity::ActivityChangeManager A;
 
     init_receive_fake_activity_params();
 

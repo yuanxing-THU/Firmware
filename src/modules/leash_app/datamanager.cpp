@@ -8,9 +8,10 @@
 DataManager* DataManager::_instance = nullptr;
 
 DataManager::DataManager() :
-    activityManager(0)
+    activityManager()
 {
     // get orbs id
+    orbId[FD_ActivityParams] = ORB_ID(activity_params);
     orbId[FD_AirdogStatus] = ORB_ID(airdog_status);
     orbId[FD_BLRHandler] = ORB_ID(bt_state);
     orbId[FD_BTLinkQuality] = ORB_ID(bt_link_status);
@@ -39,6 +40,7 @@ DataManager::DataManager() :
     // set addresses
     memset(orbData, 0, sizeof(orbData));
 
+    orbData[FD_ActivityParams] = &activity_params;
     orbData[FD_AirdogStatus] = &airdog_status;
     orbData[FD_BLRHandler] = &bt_handler;
     orbData[FD_BTLinkQuality] = &btLinkQuality;
