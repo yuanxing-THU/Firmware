@@ -185,8 +185,6 @@ update(hrt_abstime now)
             bt_global_state = bt_state.global_state;
         }
 
-        printf("bt_global_state %d\n", bt_global_state);
-
         if (bt_global_state == NO_PAIRED_DEVICES)
         {
             led_perform_actions(led_pattern_double_blink, LED_PATTERN_SIZE(led_pattern_double_blink));
