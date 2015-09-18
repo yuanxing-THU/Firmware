@@ -10,6 +10,7 @@ SRCS			= \
     modes/logo.cpp \
     modes/main.cpp \
     modes/menu.cpp \
+    modes/sensorcheck.cpp \
     modes/service.cpp \
     main.cpp  \
     uorb_functions.cpp  \

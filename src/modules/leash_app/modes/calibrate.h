@@ -18,7 +18,7 @@ enum class CalibrationDevice
 class Calibrate : public Base
 {
 public:
-    Calibrate(CalibrationDevice pDevice);
+    Calibrate(CalibrationDevice device, int returnEntry, int returnParam);
 
     virtual int getTimeout();
     virtual void listenForEvents(bool awaitMask[]);
@@ -26,6 +26,8 @@ public:
 
 private:
     CalibrationDevice device;
+     int returnEntry;
+     int returnParam;
 };
 
 }

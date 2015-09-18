@@ -12,7 +12,7 @@ namespace modes
 class Menu : public Base
 {
 public:
-    Menu();
+    Menu(int entry = 0, int param = 0);
 
     virtual int getTimeout();
     virtual void listenForEvents(bool awaitMask[]);
@@ -26,6 +26,7 @@ protected:
         MENUENTRY_IGNORE = -2,
         MENUENTRY_EXIT = -1,
         // Menu entries
+        MENUENTRY_NONE = 0,
 
         // Top level menu
         MENUENTRY_ACTIVITIES,

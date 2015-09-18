@@ -18,8 +18,10 @@
 namespace modes
 {
 
-Calibrate::Calibrate(CalibrationDevice pDevice) :
-    device(pDevice)
+Calibrate::Calibrate(CalibrationDevice device, int returnEntry, int returnParam) :
+    device(device),
+    returnEntry(returnEntry),
+    returnParam(returnParam)
 {
     switch (device)
     {
@@ -88,12 +90,12 @@ Base* Calibrate::doEvent(int orbId)
                     sendAirDogCommnad(VEHICLE_CMD_PREFLIGHT_CALIBRATION, 0, 0, 0, 0, 0, 0, 1);
                     break;
             }
-            nextMode = new Menu();
+            nextMode = new Menu(returnEntry, returnParam);
         }
         else if (key_pressed(BTN_OK) &&
                  CALIBRATOR_FINISH == DataManager::instance()->calibrator.status)
         {
-            nextMode = new Menu();
+            nextMode = new Menu(returnEntry, returnParam);
         }
     }
     else if (orbId == FD_Calibrator)

@@ -20,6 +20,19 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
 {
 // -------- Top level menu
 {
+    // Menu::MENUENTRY_NONE,
+    0,
+    0,
+    0,
+    nullptr,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+},
+{
     // Menu::MENUENTRY_ACTIVITIES,
     MENUTYPE_ACTIVITIES,
     0,
@@ -239,7 +252,7 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
 },
 };
 
-Menu::Menu() :
+Menu::Menu(int entry, int param) :
     current_activity(0),
     activity_param(nullptr)
 {
@@ -271,6 +284,29 @@ Menu::Menu() :
     }
     calibrateMode = CALIBRATE_NONE;
     previousEntry = -1;
+
+    if (entry != MENUENTRY_NONE)
+    {
+        newMode = entry;
+
+        switch(entry)
+        {
+            case MENUENTRY_COMPASS:
+            case MENUENTRY_ACCELS:
+            case MENUENTRY_GYRO:
+                calibrateMode = param;
+                if (calibrateMode == CALIBRATE_LEASH)
+                {
+                    previousEntry = MENUENTRY_CALIBRATION;
+                }
+                else if (calibrateMode == CALIBRATE_AIRDOG)
+                {
+                    previousEntry = MENUENTRY_AIRDOG_CALIBRATION;
+                }
+                break;
+        }
+    }
+
     switchEntry(newMode);
     showEntry();
 }
@@ -511,11 +547,11 @@ Base* Menu::makeAction()
         {
             if (calibrateMode == CALIBRATE_LEASH)
             {
-                nextMode = new Calibrate(CalibrationDevice::LEASH_GYRO);
+                nextMode = new Calibrate(CalibrationDevice::LEASH_GYRO, MENUENTRY_GYRO, CALIBRATE_LEASH);
             }
             else if (calibrateMode == CALIBRATE_AIRDOG)
             {
-                nextMode = new Calibrate(CalibrationDevice::AIRDOG_GYRO);
+                nextMode = new Calibrate(CalibrationDevice::AIRDOG_GYRO, MENUENTRY_GYRO, CALIBRATE_AIRDOG);
             }
             break;
         }
@@ -524,11 +560,11 @@ Base* Menu::makeAction()
         {
             if (calibrateMode == CALIBRATE_LEASH)
             {
-                nextMode = new Calibrate(CalibrationDevice::LEASH_ACCEL);
+                nextMode = new Calibrate(CalibrationDevice::LEASH_ACCEL, MENUENTRY_ACCELS, CALIBRATE_LEASH);
             }
             else if (calibrateMode == CALIBRATE_AIRDOG)
             {
-                nextMode = new Calibrate(CalibrationDevice::AIRDOG_ACCEL);
+                nextMode = new Calibrate(CalibrationDevice::AIRDOG_ACCEL, MENUENTRY_ACCELS, CALIBRATE_AIRDOG);
             }
             break;
         }
@@ -537,11 +573,11 @@ Base* Menu::makeAction()
         {
             if (calibrateMode == CALIBRATE_LEASH)
             {
-                nextMode = new Calibrate(CalibrationDevice::LEASH_MAGNETOMETER);
+                nextMode = new Calibrate(CalibrationDevice::LEASH_MAGNETOMETER, MENUENTRY_COMPASS, CALIBRATE_LEASH);
             }
             else if (calibrateMode == CALIBRATE_AIRDOG)
             {
-                nextMode = new Calibrate(CalibrationDevice::AIRDOG_MAGNETOMETER);
+                nextMode = new Calibrate(CalibrationDevice::AIRDOG_MAGNETOMETER, MENUENTRY_COMPASS, CALIBRATE_AIRDOG);
             }
             break;
         }

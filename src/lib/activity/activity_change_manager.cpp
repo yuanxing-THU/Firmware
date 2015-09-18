@@ -451,7 +451,7 @@ ActivityChangeManager::params_received() {
         bool updated = false;
         orb_check(activity_params_sub, &updated);
 
-        if (updated) {
+        if (updated || !isUpdateRequired()) {
 
             activity_params_s activity_params;
             orb_copy(ORB_ID(activity_params), activity_params_sub, &activity_params);
