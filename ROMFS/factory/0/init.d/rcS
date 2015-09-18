@@ -24,6 +24,11 @@ else
 	echo "[rcS] USB interface failed."
 fi
 
+if test -e /etc/extras/rcS
+then
+	sh /etc/extras/rcS &
+fi
+
 echo
 echo Welcome
 echo

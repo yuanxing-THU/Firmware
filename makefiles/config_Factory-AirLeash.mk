@@ -4,6 +4,7 @@
 
 MODULES += drivers/boards/AirLeash/$(CONFIG_BOARD_REVISION)
 MODULES += drivers/boards/AirLeash/kbd
+MODULES += modules/leash
 
 ROMFS_EXTRA_FILES += $(wildcard $(PX4_BASE)ROMFS/factory/AirLeash/*)
 

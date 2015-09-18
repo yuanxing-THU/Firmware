@@ -1,0 +1,6 @@
+if leash start
+then
+	echo "[init] modules/leash started."
+else
+	echo "[init] failed modules/leash."
+fi
