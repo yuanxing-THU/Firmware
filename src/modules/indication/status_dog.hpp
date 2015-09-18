@@ -80,13 +80,23 @@ static led_action_t led_pattern_circle[] =
     {LED_ACTION(LED_RL), 1, 0, 50},
 };
 
+static led_action_t led_pattern_double_blink[] =
+{
+    {LED_ACTION_ALL, 1, 0, 0},
+    {LED_ACTION_ALL, 1, LED_ON_INTENSITY, 100},
+    {LED_ACTION_ALL, 1, 0, 150},
+    {LED_ACTION_ALL, 1, LED_ON_INTENSITY, 100},
+    {LED_ACTION_ALL, 1, 0, 650},
+};
+
 static led_action_t *led_patters[] = {
     led_pattern_on,
     led_pattern_off,
     led_pattern_blink_all,
     led_pattern_blink_left_right,
     led_pattern_dimm_slowly_all,
-    led_pattern_circle
+    led_pattern_circle,
+    led_pattern_double_blink
 };
 
 static unsigned int led_patters_size[] = {
@@ -95,7 +105,8 @@ static unsigned int led_patters_size[] = {
     LED_PATTERN_SIZE(led_pattern_blink_all),
     LED_PATTERN_SIZE(led_pattern_blink_left_right),
     LED_PATTERN_SIZE(led_pattern_dimm_slowly_all),
-    LED_PATTERN_SIZE(led_pattern_circle)
+    LED_PATTERN_SIZE(led_pattern_circle),
+    LED_PATTERN_SIZE(led_pattern_double_blink)
 };
 
 int indication_led_action(int pattern, int repeat_count)
@@ -133,6 +144,11 @@ init()
 
     vehicle_status_sub = orb_subscribe(ORB_ID(vehicle_status));
     bt_state_sub = orb_subscribe(ORB_ID(bt_state));
+
+    // get current data
+    bt_state_s bt_state;
+    orb_copy(ORB_ID(bt_state), bt_state_sub, &bt_state);
+    bt_global_state = bt_state.global_state;
 }
 
 void
@@ -169,7 +185,14 @@ update(hrt_abstime now)
             bt_global_state = bt_state.global_state;
         }
 
-        if (bt_global_state == PAIRING)
+        printf("bt_global_state %d\n", bt_global_state);
+
+        if (bt_global_state == NO_PAIRED_DEVICES)
+        {
+            led_perform_actions(led_pattern_double_blink, LED_PATTERN_SIZE(led_pattern_double_blink));
+            actionPerformed = true;
+        }
+        else if (bt_global_state == PAIRING)
         {
             led_perform_actions(led_pattern_blink_all, LED_PATTERN_SIZE(led_pattern_blink_all));
             actionPerformed = true;
