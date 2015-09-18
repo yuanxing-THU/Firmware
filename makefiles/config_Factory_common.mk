@@ -1,11 +1,6 @@
 ROMFS_ROOT ?= $(PX4_BASE)/ROMFS/factory/0/
 
 #
-# Factory modules
-#
-MODULES += modules/i2c_exchange
-
-#
 # ADC
 #
 MODULES += drivers/stm32/adc
@@ -37,6 +32,12 @@ MODULES += systemcmds/flash
 # Debug / Security dangerous modules
 #
 MODULES += systemcmds/mem
+
+#
+# Generic tools
+#
+MODULES += modules/i2c_exchange
+MODULES += modules/gpio_tool
 
 #
 # Minimal required module set
