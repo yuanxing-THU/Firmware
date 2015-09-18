@@ -227,7 +227,7 @@ void ModeConnect::setState(State state)
 
         case State::CHECK_MAVLINK:
             time(&startTime);
-            DisplayHelper::showInfo(INFO_CONNECTING_TO_AIRDOG);
+            DisplayHelper::showInfo(INFO_ESTABLISHING_CONNECTION);
             break;
 
         case State::GETTING_ACTIVITIES:
