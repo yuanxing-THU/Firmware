@@ -3,6 +3,7 @@
 #include "allowed_params.hpp"
 #include <initializer_list>
 #include "activity_lib_constants.h"
+#include <systemlib/param/param.h>
 
 // These activities are predefined and should be referenced in all corresponding lists
 enum
@@ -37,10 +38,8 @@ class __EXPORT ParamConfig {
         int value_num;
         float * values = nullptr;
 
-        float default_value;
-
         ParamConfig ();
-        ParamConfig(const char * _name, int _limit_kind, int _target_device, float _default_value, float _istart, float _iend, float _step, std::initializer_list <float> _values);
+        ParamConfig(const char * _name, int _limit_kind, int _target_device, float _istart, float _iend, float _step, std::initializer_list <float> _values);
         ~ParamConfig();
         ParamConfig& operator = (const ParamConfig &a);
         ParamConfig(const ParamConfig &a);
@@ -73,12 +72,16 @@ class __EXPORT ActivityConfig
 
 }; 
 
+
 extern bool activity_config_list_inited;
 extern ActivityConfig ACTIVITY_CONFIG_LIST[ ACTIVITIES_COUNT+1 ];
 extern ActivityConfig ACTIVITY_CONFIG_BASE;
+extern ActivityConfig ACTIVITY_CONFIG_GOD;
 
 int init_activity_config_list();
 ParamConfig * get_activity_param_config(int activity, int param);
+
+extern float DEFAULT_VALUES[ACTIVITIES_COUNT][ALLOWED_PARAM_COUNT];
 
 // End of Activity namespace 
 }

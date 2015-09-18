@@ -22,6 +22,7 @@ class __EXPORT ParamChangeManager {
 
         // TODO: move those to private and handle trough constructor
         int p_id;
+        int p_idx;
         ParamConfig * config; 
 
         // TODO: move those to private and handle trough functions

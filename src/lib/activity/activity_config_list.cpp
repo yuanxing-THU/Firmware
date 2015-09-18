@@ -23,15 +23,15 @@ namespace Activity {
 bool activity_config_list_inited = false;
 ActivityConfig ACTIVITY_CONFIG_LIST[ ACTIVITIES_COUNT+1 ];
 ActivityConfig ACTIVITY_CONFIG_BASE;
+ActivityConfig ACTIVITY_CONFIG_GOD;
 
 ParamConfig::ParamConfig (){
     p_id = -1;
     limit_kind = -1;
     value_num = 0;
-    default_value = 0.0f;
 };
 
-ParamConfig::ParamConfig(const char * _name, int _limit_kind, int _target_device, float _default_value, float _istart, float _iend, float _step, std::initializer_list <float> _values) {
+ParamConfig::ParamConfig(const char * _name, int _limit_kind, int _target_device, float _istart, float _iend, float _step, std::initializer_list <float> _values) {
 
     p_id = -1;
     p_idx = -1;
@@ -43,15 +43,11 @@ ParamConfig::ParamConfig(const char * _name, int _limit_kind, int _target_device
         }
 
     if (p_id == -1) {
-
-        // TODO: change to proper debug output function
         printf("Parameter: %s with target device type %d not allowed.\n", _name, _target_device);
         fflush(stdout);
     }
 
     limit_kind = _limit_kind;
-
-    default_value = _default_value;
 
     istart = _istart;
     iend = _iend;
@@ -83,8 +79,6 @@ ParamConfig::operator = (const ParamConfig &a) {
 
     step = a.step;
     value_num = a.value_num;
-
-    default_value = a.default_value;
 
     delete [] values;
     values = new float[value_num];
@@ -171,21 +165,42 @@ ActivityConfig::operator=(ActivityConfig &&a) {
 
 ParamConfig *
 get_activity_param_config(int activity, int param_idx) {
+    
 
     if (!allowed_params_inited) init_allowed_params();
     if (!activity_config_list_inited) init_activity_config_list();
 
-    if (activity >= ACTIVITIES_COUNT) return nullptr;
-    if (param_idx >= ALLOWED_PARAM_COUNT) return nullptr;
+    int activity_god_mode = 0;
 
-    for (int j=0;j<ACTIVITY_CONFIG_LIST[activity].param_count;j++){
+    param_get(param_find("A_ACTIVITY_GOD"), &activity_god_mode);
 
-        if (ALLOWED_PARAMS[param_idx].id == ACTIVITY_CONFIG_LIST[activity].params[j].p_id) {
-            return &ACTIVITY_CONFIG_LIST[activity].params[j];
+    if (activity > ACTIVITIES_COUNT) return nullptr;
+
+    int param_id = ALLOWED_PARAMS[param_idx].id;
+    ParamConfig * ptr = nullptr;
+
+    for (int p=0;p<ACTIVITY_CONFIG_BASE.param_count;p++){
+        if (ACTIVITY_CONFIG_BASE.params[p].p_id == param_id) {
+            ptr = &ACTIVITY_CONFIG_BASE.params[p];
         }
     }
 
-    return &ACTIVITY_CONFIG_BASE.params[param_idx];
+    for (int p=0;p<ACTIVITY_CONFIG_LIST[activity].param_count;p++){
+        if (ACTIVITY_CONFIG_LIST[activity].params[p].p_id == param_id) {
+            ptr = &ACTIVITY_CONFIG_LIST[activity].params[p];
+        }
+    }
+
+    if (activity_god_mode) {
+        for (int p = 0;p < ACTIVITY_CONFIG_GOD.param_count;p++) {
+            if (ACTIVITY_CONFIG_GOD.params[p].p_id == param_id) {
+                ptr = &ACTIVITY_CONFIG_GOD.params[p];
+            }
+        }
+    }
+
+    return ptr;
+
 }
 
 int
@@ -197,68 +212,70 @@ init_activity_config_list(){
         999,
         "Base",
         {
-            //           Param name           Type         Device  Default Istart Iend  Step  Values
-            ParamConfig("A_ACTIVITY",         INVISIBLE,     ALL,    0,      -1,    -1,  -1,    {}                 ),
-            ParamConfig("A_SAH_NO_SPOT",      INVISIBLE,     DOG,    0,      -1,    -1,  -1,    {0,1}              ),
-            ParamConfig("NAV_AFOL_MODE",      VALUES_STR,    DOG,    1,      -1,    -1,  -1,    {0,1,2,3,4}        ),
-            ParamConfig("OFF_FR_ADD_ANG",     INTERVAL,      DOG,    0,      0,     6.28318f,   0.78539f,   {0,1} ), // TODO: VIRTUAL PARAM
-            ParamConfig("CBP_MAX_INIT_SPD",   INTERVAL,      DOG,    5,      1,     10,  1,     {}                 ),
-            ParamConfig("NAV_TAKEOFF_ALT",    INTERVAL,      DOG,    8,      5,     50,  1,     {}                 ),
-            ParamConfig("A_INIT_POS_D",       INTERVAL,      DOG,    8,      5,     100, 1,     {}                 ),
-            ParamConfig("A_BSC_SAF_ACT",      VALUES_STR,    DOG,    1,      -1,    -1,  -1,    {1,2}              ),
-            ParamConfig("A_FOL_IMDTLY",       VALUES_STR,    DOG,    0,      -1,    -1,  -1,    {0,1}              ),
-            ParamConfig("RTL_RET_ALT",        INTERVAL,      DOG,    20,     10,    100, 5,     {}                 ),
-            ParamConfig("FOL_RPT_ALT",        VALUES_STR,    DOG,    1,      -1,    -1,  -1,    {0,1}              ),
-            ParamConfig("FOL_VEL_FF_XY",      INVISIBLE,     DOG,    1,       0,    2,   0.05f, {}                 ),
-            ParamConfig("FOL_LPF_XY",         INVISIBLE,     DOG,    1.5,     0,    2,   0.05f, {}                 ),
-            ParamConfig("A_INIT_POS_U",       VALUES_STR,    DOG,    0,       -1,   -1,  -1,    {0,1}              ),
-            ParamConfig("V_REACTION",         VALUES_STR,    DOG,    2,       -1,   -1,  -1,    {0,1,2}            ),
-            ParamConfig("SENS_SON_MIN",       INTERVAL,      DOG,    5,       3,    20,  0.5f,  {}                 ),
-            ParamConfig("AIRD_TRAJ_RAD",      INTERVAL,      ALL,    5,       3,    20,  1,     {}                 ),
-            ParamConfig("FOL_FF_GRAD_END",    INVISIBLE,     DOG,    150,     10,   200, 5,     {}                 ),
-            ParamConfig("FOL_FF_GRAD_STRT",   INVISIBLE,     DOG,    20,      0,    150, 5,     {}                 ),
-            ParamConfig("FOL_FF_GRAD_USE",    INVISIBLE,     DOG,    1,       -1,   -1,  -1,    {0,1}              ),
-            ParamConfig("FOL_USE_ALT",        INVISIBLE,     DOG,    1,       -1,   -1,  -1,    {0,1}              ),
-            ParamConfig("INAV_INIT_EPH",      INVISIBLE,     DOG,    2.5,     1,    5,   0.1f,  {}                 ),
-            ParamConfig("INAV_INIT_EPV",      INVISIBLE,     DOG,    3.5,     1,    10,  0.1f,  {}                 ),
-            ParamConfig("INAV_INIT_WAIT",     INVISIBLE,     DOG,    15000,   4000, 300000, 1000,   {}             ),
-            ParamConfig("MPC_PITCH_LPF",      INVISIBLE,     DOG,    50,      0,    500, 5,     {}                 ),
-            ParamConfig("MPC_XY_FF",          INVISIBLE,     DOG,    1,       0,    1,   0.05f, {}                 ),
-            ParamConfig("MPC_XY_P",           INVISIBLE,     DOG,    0.5,     0,    1,   0.05f, {}                 ),
-            ParamConfig("MPC_XY_VEL_D",       INVISIBLE,     DOG,    0.0007,  0,    1,   0.0001f,  {}              ),
-            ParamConfig("MPC_XY_VEL_I",       INVISIBLE,     DOG,    0.0015,  0,    1,   0.0001f,  {}              ),
-            ParamConfig("MPC_XY_VEL_MAX",     INVISIBLE,     DOG,    20,      5,    25,  1,     {}                 ),
-            ParamConfig("MPC_XY_VEL_P",       INVISIBLE,     DOG,    0.1,     0,    6,   0.05f, {}                 ),
-            ParamConfig("MPC_Z_FF",           INVISIBLE,     DOG,    0.3,     0,    1,   0.05f, {}                 ),
-            ParamConfig("MPC_Z_P",            INVISIBLE,     DOG,    1.1,     0,    6,   0.05f, {}                 ),
-            ParamConfig("MPC_Z_VEL_D",        INVISIBLE,     DOG,    0.01,    0,    5,   0.01f, {}                 ),
-            ParamConfig("MPC_Z_VEL_I",        INVISIBLE,     DOG,    0.05,    0,    5,   0.01f, {}                 ),
-            ParamConfig("MPC_Z_VEL_MAX",      INVISIBLE,     DOG,    4,       1,    6,   0.5f,  {}                 ),
-            ParamConfig("MPC_Z_VEL_P",        INVISIBLE,     DOG,    0.28f,   0,    5,   0.01f, {}                 ),
-            ParamConfig("PAFOL_GT_AC_DST",    INVISIBLE,     DOG,    2,       1,    10,  1,     {}                 ),
-            ParamConfig("SDLOG_ON_BOOT",      INVISIBLE,     DOG,    1,      -1,    -1,  -1,    {0,1}              ),
-            ParamConfig("SENS_SON_ON",        INVISIBLE,     DOG,    1,      -1,    -1,  -1,    {0,1}              ),
-            ParamConfig("UBX_ENABLE_SBAS",    INVISIBLE,     DOG,    1,      -1,    -1,  -1,    {0,1}              ),
-            ParamConfig("UBX_GPS_MAX_CHN",    INVISIBLE,     DOG,    16,      8,    24,  1,     {}                 ),
-            ParamConfig("UBX_GPS_MIN_CHN",    INVISIBLE,     DOG,    8,       1,    16,  1,     {}                 ),
-            ParamConfig("INAV_W_Z_GPS_P",     INVISIBLE,     DOG,    0.001,   0,    1,   0.001f,{}                 ),
-            ParamConfig("INAV_W_Z_BARO",      INVISIBLE,     DOG,    0.5,     0,    1,   0.05f, {}                 ),
-            ParamConfig("NAV_CP_FIR_AL",      INVISIBLE,     DOG,    12,     -1,    -1,  -1,    {}                 ),
-            ParamConfig("NAV_CP_FIR_LA",      INVISIBLE,     DOG,    0,      -1,    -1,  -1,    {}                 ),
-            ParamConfig("NAV_CP_FIR_LO",      INVISIBLE,     DOG,    0,      -1,    -1,  -1,    {}                 ),
-            ParamConfig("NAV_CP_LAS_AL",      INVISIBLE,     DOG,    12,     -1,    -1,  -1,    {}                 ),
-            ParamConfig("NAV_CP_LAS_LA",      INVISIBLE,     DOG,    0,      -1,    -1,  -1,    {}                 ),
-            ParamConfig("NAV_CP_LAS_LO",      INVISIBLE,     DOG,    0,      -1,    -1,  -1,    {}                 ),
-            ParamConfig("BAT_FLAT_LVL",       INVISIBLE,     DOG,    0.15,   -1,    -1,  -1,    {}                 ),
+            //           Param name           Type         Device  Istart Iend  Step  Values
+            ParamConfig("A_SAH_NO_SPOT",     VALUES_STR,    DOG,   -1,    -1,  -1,    {0,1}              ),
+            ParamConfig("NAV_AFOL_MODE",     VALUES_STR,    DOG,   -1,    -1,  -1,    {0,1,2,3,4}        ),
+            ParamConfig("OFF_FR_ADD_ANG",     VALUES_STR,    DOG,   -1,    -1,  -1,    {0,1,2,3,4,5,6,7}  ),
+            ParamConfig("CBP_MAX_INIT_SPD",   INTERVAL,      DOG,   1,     10,  1,     {}                 ),
+            ParamConfig("NAV_TAKEOFF_ALT",    INTERVAL,      DOG,   5,     50,  1,     {}                 ),
+            ParamConfig("A_INIT_POS_D",       INTERVAL,      DOG,   5,     100, 1,     {}                 ),
+            ParamConfig("A_BSC_SAF_ACT",      VALUES_STR,    DOG,   -1,    -1,  -1,    {1,2}              ),
+            ParamConfig("A_FOL_IMDTLY",       VALUES_STR,    DOG,   -1,    -1,  -1,    {0,1}              ),
+            ParamConfig("RTL_RET_ALT",        INTERVAL,      DOG,   10,    100, 5,     {}                 ),
+            ParamConfig("FOL_RPT_ALT",        VALUES_STR,    DOG,   -1,    -1,  -1,    {0,1}              ),
+            ParamConfig("FOL_VEL_FF_XY",      INTERVAL,      DOG,    0,    2,   0.05f, {}                 ),
+            ParamConfig("FOL_LPF_XY",         INTERVAL,      DOG,    0,    2,   0.05f, {}                 ),
+            ParamConfig("A_INIT_POS_U",       VALUES_STR,    DOG,   -1,   -1,  -1,     {0,1}              ),
+            ParamConfig("V_REACTION",         VALUES_STR,    DOG,   -1,   -1,  -1,     {0,1,2}            ),
+            ParamConfig("SENS_SON_MIN",       INTERVAL,      DOG,    3,    20,  0.5f,  {}                 ),
+            ParamConfig("AIRD_TRAJ_RAD",      INTERVAL,      ALL,    3,    20,  1,     {}                 ),
         });
+
+
+    ACTIVITY_CONFIG_GOD = ActivityConfig(
+        1000,
+        "God",
+        {
+            //           Param name           Type         Device  Default Istart Iend  Step  Values
+            
+            ParamConfig("AIRD_TRAJ_RAD",      INTERVAL,     ALL,   3,    20,  1,     {}                 ),
+            ParamConfig("FOL_FF_GRAD_END",    INTERVAL,     DOG,   10,   200, 5,     {}                 ),
+            ParamConfig("FOL_FF_GRAD_STRT",   INTERVAL,     DOG,    0,    150, 5,     {}                 ),
+            ParamConfig("FOL_FF_GRAD_USE",    VALUES_STR,   DOG,   -1,   -1,  -1,    {0,1}              ),
+            ParamConfig("FOL_USE_ALT",        VALUES_STR,   DOG,   -1,   -1,  -1,    {0,1}              ), 
+            ParamConfig("INAV_INIT_EPH",      INTERVAL,     DOG,    1,    5,   0.1f,  {}                 ),
+            ParamConfig("INAV_INIT_EPV",      INTERVAL,     DOG,    1,    10,  0.1f,  {}                 ),
+            ParamConfig("INAV_INIT_WAIT",     INTERVAL,     DOG,    4000, 300000, 1000,   {}             ),
+            ParamConfig("MPC_PITCH_LPF",      INTERVAL,     DOG,    0,    500, 5,     {}                 ),
+            ParamConfig("MPC_XY_FF",          INTERVAL,     DOG,    0,    1,   0.05f, {}                 ),
+            ParamConfig("MPC_XY_P",           INTERVAL,     DOG,    0,    1,   0.05f, {}                 ),
+            ParamConfig("MPC_XY_VEL_D",       INTERVAL_HP,  DOG,    0,    1,   0.0001f,  {}              ),
+            ParamConfig("MPC_XY_VEL_I",       INTERVAL_HP,  DOG,    0,    1,   0.0001f,  {}              ),
+            ParamConfig("MPC_XY_VEL_MAX",     INTERVAL,     DOG,    5,    25,  1,     {}                 ),
+            ParamConfig("MPC_XY_VEL_P",       INTERVAL,     DOG,    0,    6,   0.05f, {}                 ),
+            ParamConfig("MPC_Z_FF",           INTERVAL,     DOG,    0,    1,   0.05f, {}                 ),
+            ParamConfig("MPC_Z_P",            INTERVAL,     DOG,    0,    6,   0.05f, {}                 ),
+            ParamConfig("MPC_Z_VEL_D",        INTERVAL,     DOG,    0,    5,   0.01f, {}                 ),
+            ParamConfig("MPC_Z_VEL_I",        INTERVAL,     DOG,    0,    5,   0.01f, {}                 ),
+            ParamConfig("MPC_Z_VEL_MAX",      INTERVAL,     DOG,    1,    6,   0.5f,  {}                 ),
+            ParamConfig("MPC_Z_VEL_P",        INTERVAL,     DOG,    0,    5,   0.01f, {}                 ),
+            ParamConfig("PAFOL_GT_AC_DST",    INTERVAL,     DOG,    1,    10,  1,     {}                 ),
+            ParamConfig("SDLOG_ON_BOOT",      VALUES_STR,   DOG,   -1,    -1,  -1,    {0,1}              ),
+            ParamConfig("SENS_SON_ON",        VALUES_STR,   DOG,   -1,    -1,  -1,    {0,1}              ),
+            ParamConfig("UBX_ENABLE_SBAS",    VALUES_STR,   DOG,   -1,    -1,  -1,    {0,1}              ),
+            ParamConfig("UBX_GPS_MAX_CHN",    INTERVAL,     DOG,   8,    24,  1,     {}                 ),
+            ParamConfig("UBX_GPS_MIN_CHN",    INTERVAL,     DOG,   1,    16,  1,     {}                 ),
+            ParamConfig("INAV_W_Z_GPS_P",     INTERVAL_HP,  DOG,   0,    1,   0.001f,{}                 ),
+            ParamConfig("INAV_W_Z_BARO",      INTERVAL,     DOG,   0,    1,   0.05f, {}                 ),
+            ParamConfig("BAT_WARN_LVL",       INTERVAL,     DOG,   0,    1,   0.05,  {}                 ),
+       });
 
     ACTIVITY_CONFIG_LIST[0] = ActivityConfig(
             ACTIVITY_TEST,
             activityNames[ACTIVITY_TEST],
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values
-                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1,4}            ),
-                ParamConfig("A_SAH_NO_SPOT",      VALUES_STR,  DOG,    0,      -1,    -1,   -1,   {0,1}              ),
+                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,    DOG,      -1,    -1,  -1,    {0,1,3,4}        ),
             });
 
     ACTIVITY_CONFIG_LIST[1] = ActivityConfig(
@@ -266,8 +283,10 @@ init_activity_config_list(){
             activityNames[ACTIVITY_SURF],
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values
-                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    3,      -1,    -1,   -1,   {3}                ),
-                ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                ),
+                ParamConfig("A_SAH_NO_SPOT",      INTERVAL,     DOG,      -1,    -1,  -1,    {1}              ),
+                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,    DOG,      -1,    -1,  -1,    {0,3}            ),
+                ParamConfig("A_BSC_SAF_ACT",      VALUES_STR,    DOG,      -1,    -1,  -1,    {1}              ),
+                ParamConfig("FOL_RPT_ALT",        VALUES_STR,    DOG,      -1,    -1,  -1,    {0}              ),
             });
 
     ACTIVITY_CONFIG_LIST[2] = ActivityConfig(
@@ -275,11 +294,10 @@ init_activity_config_list(){
             activityNames[ACTIVITY_SKI],
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values
-                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                 ),
-                ParamConfig("RTL_RET_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
-                ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}               ),
-                ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                 ),
-                ParamConfig("SENS_SON_MIN",       INTERVAL,    DOG,    7.0f,    3,    20, 0.5f,   {}                  ),
+                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,    DOG,      -1,    -1,  -1,    {1,3}              ),
+                ParamConfig("OFF_FR_ADD_ANG",     VALUES_STR,    DOG,      -1,    -1,  -1,    {0,4}              ),
+                ParamConfig("A_BSC_SAF_ACT",      VALUES_STR,    DOG,      -1,    -1,  -1,    {2}                ),
+                ParamConfig("FOL_RPT_ALT",        VALUES_STR,    DOG,      -1,    -1,  -1,    {1}                ),
             });
 
     ACTIVITY_CONFIG_LIST[3] = ActivityConfig(
@@ -287,9 +305,8 @@ init_activity_config_list(){
             activityNames[ACTIVITY_SKATE],
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values
-                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,      DOG,    0,      -1,    -1,   -1,   {0}                ),
-                ParamConfig("A_INIT_POS_U",       VALUES_STR,      DOG,    1,      -1,    -1,   -1,   {1}                ),
-                ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    0,      -1,    -1,   -1,   {0}                ),
+                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,    DOG,      -1,    -1,  -1,    {0}                ),
+                ParamConfig("FOL_RPT_ALT",        VALUES_STR,    DOG,      -1,    -1,  -1,    {0}                ),
             });
 
     ACTIVITY_CONFIG_LIST[4] = ActivityConfig(
@@ -297,11 +314,9 @@ init_activity_config_list(){
             activityNames[ACTIVITY_CYCLE],
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values
-                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    1,       -1,    -1,   -1,   {1}                ),
-                ParamConfig("RTL_RET_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
-                ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,       -1,    -1,   -1,   {0,1}              ),
-                ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    1,       -1,    -1,   -1,   {1}                ),
-                ParamConfig("SENS_SON_MIN",       INTERVAL,    DOG,    7.0f,     3,    20, 0.5f,   {}                 ),
+                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,    DOG,      -1,    -1,  -1,    {0,1,3}            ),
+                ParamConfig("A_BSC_SAF_ACT",      VALUES_STR,    DOG,      -1,    -1,  -1,    {2}                ),
+                ParamConfig("FOL_RPT_ALT",        VALUES_STR,    DOG,      -1,    -1,  -1,    {1}                ),
             });
 
     ACTIVITY_CONFIG_LIST[5] = ActivityConfig(
@@ -309,9 +324,10 @@ init_activity_config_list(){
             activityNames[ACTIVITY_WAKE],
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values
-                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    0,      -1,    -1,   -1,   {0,1,2,3,4}        ),
-                ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}              ),
-                ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    0,      -1,    -1,   -1,   {1}                ),
+                ParamConfig("A_SAH_NO_SPOT",      INTERVAL,     DOG,      -1,    -1,  -1,    {1}                ),
+                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,    DOG,      -1,    -1,  -1,    {1,3}              ),
+                ParamConfig("A_BSC_SAF_ACT",      VALUES_STR,    DOG,      -1,    -1,  -1,    {1}                ),
+                ParamConfig("FOL_RPT_ALT",        VALUES_STR,    DOG,      -1,    -1,  -1,    {0}                ),
             });
 
     ACTIVITY_CONFIG_LIST[6] = ActivityConfig(
@@ -319,10 +335,8 @@ init_activity_config_list(){
             activityNames[ACTIVITY_BIKE],
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values
-                ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}              ),
-                ParamConfig("RTL_RET_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
-                ParamConfig("SENS_SON_MIN",       INTERVAL,    DOG,    7.0f,    3,    20, 0.5f,   {}                 ),
-                ParamConfig("AIRD_TRAJ_RAD",      INVISIBLE,   ALL,    6.0f,    3,    20,    1,   {}                 ),
+                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,    DOG,      -1,    -1,  -1,    {1,3}             ),
+                ParamConfig("OFF_FR_ADD_ANG",     VALUES_STR,    DOG,      -1,    -1,  -1,    {0,1,2,3,4,5,6,7} ),
             });
 
     ACTIVITY_CONFIG_LIST[7] = ActivityConfig(
@@ -330,17 +344,20 @@ init_activity_config_list(){
             activityNames[ACTIVITY_SNOWBOARD],
             {
                 //           Param name           Type         Device  Default Istart Iend  Step  Values
-                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                 ),
-                ParamConfig("RTL_RET_ALT",        INTERVAL,    DOG,    35.0f,  10,   100,    5,   {}                 ),
-                ParamConfig("A_INIT_POS_U",       VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {0,1}               ),
-                ParamConfig("FOL_RPT_ALT",        VALUES_STR,  DOG,    1,      -1,    -1,   -1,   {1}                 ),
-                ParamConfig("SENS_SON_MIN",       INTERVAL,    DOG,    7.0f,    3,    20, 0.5f,   {}                  ),
+                ParamConfig("A_SAH_NO_SPOT",      INTERVAL,     DOG,      -1,    -1,  -1,    {1}                ),
+                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,    DOG,      -1,    -1,  -1,    {2}                ),
+                ParamConfig("A_BSC_SAF_ACT",      VALUES_STR,    DOG,      -1,    -1,  -1,    {1}                ),
+                ParamConfig("FOL_RPT_ALT",        VALUES_STR,    DOG,      -1,    -1,  -1,    {0}                ),
             });
 
     ACTIVITY_CONFIG_LIST[8] = ActivityConfig(
             ACTIVITY_KITE,
             activityNames[ACTIVITY_KITE],
             {
+                ParamConfig("A_SAH_NO_SPOT",      INTERVAL,      DOG,      -1,    -1,  -1,    {1}                ),
+                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,    DOG,      -1,    -1,  -1,    {0}                ),
+                ParamConfig("A_BSC_SAF_ACT",      VALUES_STR,    DOG,      -1,    -1,  -1,    {1}                ),
+                ParamConfig("FOL_RPT_ALT",        VALUES_STR,    DOG,      -1,    -1,  -1,    {0}                ),
             }
             );
 
@@ -348,58 +365,25 @@ init_activity_config_list(){
             ACTIVITY_CUSTOM,
             activityNames[ACTIVITY_CUSTOM],
             {
-                //           Param name           Type         Device  Default Istart Iend  Step  Values
-                ParamConfig("A_ACTIVITY",         INVISIBLE,    ALL,    0,      -1,    -1,  -1,    {}                 ),
-                ParamConfig("A_SAH_NO_SPOT",      VALUES_STR,     DOG,    0,      -1,    -1,  -1,    {0,1}              ),
-                ParamConfig("NAV_AFOL_MODE",      VALUES_STR,   DOG,    1,      -1,    -1,  -1,    {0,1,2,3,4}        ),
-                ParamConfig("OFF_FR_ADD_ANG",     INTERVAL,     DOG,    0,      0,     6.28318f,   0.78539f,   {0,1} ), // TODO: VIRTUAL PARAM
-                ParamConfig("CBP_MAX_INIT_SPD",   INTERVAL,     DOG,    5,      1,     10,  1,     {}                 ),
-                ParamConfig("NAV_TAKEOFF_ALT",    INTERVAL,     DOG,    8,      5,     50,  1,     {}                 ),
-                ParamConfig("A_INIT_POS_D",       INTERVAL,     DOG,    8,      5,     100, 1,     {}                 ),
-                ParamConfig("A_BSC_SAF_ACT",      VALUES_STR,   DOG,    1,      -1,    -1,  -1,    {1,2}              ),
-                ParamConfig("A_FOL_IMDTLY",       VALUES_STR,   DOG,    0,      -1,    -1,  -1,    {0,1}              ),
-                ParamConfig("RTL_RET_ALT",        INTERVAL,     DOG,    20,     10,    100, 5,     {}                 ),
-                ParamConfig("FOL_RPT_ALT",        VALUES_STR,   DOG,    1,      -1,    -1,  -1,    {0,1}              ),
-                ParamConfig("FOL_VEL_FF_XY",      INTERVAL,     DOG,    1,       0,    2,   0.05f, {}                 ),
-                ParamConfig("FOL_LPF_XY",         INTERVAL,     DOG,    1.5,     0,    2,   0.05f, {}                 ),
-                ParamConfig("A_INIT_POS_U",       VALUES_STR,   DOG,    0,       -1,   -1,  -1,    {0,1}              ),
-                ParamConfig("V_REACTION",         VALUES_STR,   DOG,    2,       -1,   -1,  -1,    {0,1,2}            ),
-                ParamConfig("SENS_SON_MIN",       INTERVAL,     DOG,    5,       3,    20,  0.5f,  {}                 ),
-                ParamConfig("AIRD_TRAJ_RAD",      INTERVAL,     ALL,    5,       3,    20,  1,     {}                 ),
-                ParamConfig("FOL_FF_GRAD_END",    INTERVAL,     DOG,    150,     10,   200, 5,     {}                 ),
-                ParamConfig("FOL_FF_GRAD_STRT",   INTERVAL,     DOG,    20,      0,    150, 5,     {}                 ),
-                ParamConfig("FOL_FF_GRAD_USE",    VALUES_STR,   DOG,    1,       -1,   -1,  -1,    {0,1}              ),
-                ParamConfig("FOL_USE_ALT",        VALUES_STR,   DOG,    1,       -1,   -1,  -1,    {0,1}              ), 
-                ParamConfig("INAV_INIT_EPH",      INTERVAL,     DOG,    2.5,     1,    5,   0.1f,  {}                 ),
-                ParamConfig("INAV_INIT_EPV",      INTERVAL,     DOG,    3.5,     1,    10,  0.1f,  {}                 ),
-                ParamConfig("INAV_INIT_WAIT",     INTERVAL,     DOG,    15000,   4000, 300000, 1000,   {}             ),
-                ParamConfig("MPC_PITCH_LPF",      INTERVAL,     DOG,    50,      0,    500, 5,     {}                 ),
-                ParamConfig("MPC_XY_FF",          INTERVAL,     DOG,    1,       0,    1,   0.05f, {}                 ),
-                ParamConfig("MPC_XY_P",           INTERVAL,     DOG,    0.5,     0,    1,   0.05f, {}                 ),
-                ParamConfig("MPC_XY_VEL_D",       INTERVAL_HP,  DOG,    0.0007,  0,    1,   0.0001f,  {}              ),
-                ParamConfig("MPC_XY_VEL_I",       INTERVAL_HP,  DOG,    0.0015,  0,    1,   0.0001f,  {}              ),
-                ParamConfig("MPC_XY_VEL_MAX",     INTERVAL,     DOG,    20,      5,    25,  1,     {}                 ),
-                ParamConfig("MPC_XY_VEL_P",       INTERVAL,     DOG,    0.1,     0,    6,   0.05f, {}                 ),
-                ParamConfig("MPC_Z_FF",           INTERVAL,     DOG,    0.3,     0,    1,   0.05f, {}                 ),
-                ParamConfig("MPC_Z_P",            INTERVAL,     DOG,    1.1,     0,    6,   0.05f, {}                 ),
-                ParamConfig("MPC_Z_VEL_D",        INTERVAL,     DOG,    0.01,    0,    5,   0.01f, {}                 ),
-                ParamConfig("MPC_Z_VEL_I",        INTERVAL,     DOG,    0.05,    0,    5,   0.01f, {}                 ),
-                ParamConfig("MPC_Z_VEL_MAX",      INTERVAL,     DOG,    4,       1,    6,   0.5f,  {}                 ),
-                ParamConfig("MPC_Z_VEL_P",        INTERVAL,     DOG,    0.28f,   0,    5,   0.01f, {}                 ),
-                ParamConfig("PAFOL_GT_AC_DST",    INTERVAL,     DOG,    2,       1,    10,  1,     {}                 ),
-                ParamConfig("SDLOG_ON_BOOT",      VALUES_STR,   DOG,    1,      -1,    -1,  -1,    {0,1}              ),
-                ParamConfig("SENS_SON_ON",        VALUES_STR,   DOG,    1,      -1,    -1,  -1,    {0,1}              ),
-                ParamConfig("UBX_ENABLE_SBAS",    VALUES_STR,   DOG,    1,      -1,    -1,  -1,    {0,1}              ),
-                ParamConfig("UBX_GPS_MAX_CHN",    INTERVAL,     DOG,    16,      8,    24,  1,     {}                 ),
-                ParamConfig("UBX_GPS_MIN_CHN",    INTERVAL,     DOG,    8,       1,    16,  1,     {}                 ),
-                ParamConfig("INAV_W_Z_GPS_P",     INTERVAL_HP,  DOG,    0.001,   0,    1,   0.001f,{}                 ),
-                ParamConfig("INAV_W_Z_BARO",      INTERVAL,     DOG,    0.5,     0,    1,   0.05f, {}                 ),
-                ParamConfig("BAT_FLAT_LVL",       INTERVAL,     DOG,    0.15,    0,    1,   0.05,  {}                 ),
             });
 
     activity_config_list_inited = true;
     return true;
 
+
+    };
+
+    float DEFAULT_VALUES[ACTIVITIES_COUNT][ALLOWED_PARAM_COUNT] = {
+    {0,0,1,0,5,10,12,1,0,20,0,1,1.2,0,2,6,5,150,20,1,1,2.5,3.5,15000,50,1,0.5,0.0007,0.0015,20,0.1,0.3,1.1,0.01,0.05,4,0.28,2,1,1,1,16,8,0.001,0.5,12,0,0,12,0,0,0.15},
+    {1,1,3,0,5,7,12,1,1,20,0,1,1.5,0,2,5,5,150,20,1,1,2.5,3.5,15000,50,1,0.5,0.0007,0.0015,20,0.1,0.3,1.1,0.01,0.05,4,0.28,2,1,1,1,16,8,0.001,0.5,12,0,0,12,0,0,0.15},
+    {2,0,1,4,5,10,12,2,0,35,1,1,1.5,0,2,7,5,150,20,1,1,2.5,3.5,15000,50,1,0.5,0.0007,0.0015,20,0.1,0.3,1.1,0.01,0.05,4,0.28,2,1,1,1,16,8,0.001,0.5,12,0,0,12,0,0,0.15},
+    {3,0,0,0,5,10,12,1,0,20,0,1,1,0,2,3,5,150,20,1,1,2.5,3.5,15000,50,1,0.5,0.0007,0.0015,20,0.1,0.3,1.1,0.01,0.05,4,0.28,2,1,1,1,16,8,0.001,0.5,12,0,0,12,0,0,0.15},
+    {4,0,1,4,5,10,10,2,0,30,1,1,1.5,0,2,6,5,150,20,1,1,2.5,3.5,15000,50,1,0.5,0.0007,0.0015,20,0.1,0.3,1.1,0.01,0.05,4,0.28,2,1,1,1,16,8,0.001,0.5,12,0,0,12,0,0,0.15},
+    {5,1,3,0,5,10,12,1,1,20,0,1,1.5,0,2,5,5,150,20,1,1,2.5,3.5,15000,50,1,0.5,0.0007,0.0015,20,0.1,0.3,1.1,0.01,0.05,4,0.28,2,1,1,1,16,8,0.001,0.5,12,0,0,12,0,0,0.15},
+    {6,1,1,4,5,12,12,1,1,35,1,1,1.5,0,2,7,5,150,20,1,1,2.5,3.5,15000,50,1,0.5,0.0007,0.0015,20,0.1,0.3,1.1,0.01,0.05,4,0.28,2,1,1,1,16,8,0.001,0.5,12,0,0,12,0,0,0.15},
+    {7,1,1,0,5,10,8,1,1,20,0,1,1.2,0,2,4,5,150,20,1,1,2.5,3.5,15000,50,1,0.5,0.0007,0.0015,20,0.1,0.3,1.1,0.01,0.05,4,0.28,2,1,1,1,16,8,0.001,0.5,12,0,0,12,0,0,0.15},
+    {8,1,0,0,5,8,15,1,0,40,0,1,1.7,0,2,5,5,150,20,1,1,2.5,3.5,15000,50,1,0.5,0.0007,0.0015,20,0.1,0.3,1.1,0.01,0.05,4,0.28,2,1,1,1,16,8,0.001,0.5,12,0,0,12,0,0,0.15},
+    {9,0,1,0,5,8,10,1,0,20,0,1,1.5,0,2,5,5,150,20,1,1,2.5,3.5,15000,50,1,0.5,0.0007,0.0015,20,0.1,0.3,1.1,0.01,0.05,4,0.28,2,1,1,1,16,8,0.001,0.5,12,0,0,12,0,0,0.15}
     };
 
 }

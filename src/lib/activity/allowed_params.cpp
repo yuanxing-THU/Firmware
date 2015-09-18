@@ -36,14 +36,15 @@ const char * const DISPLAY_VALUES_ON_OFF[]        = {"Off", "On", nullptr};
 const char * const DISPLAY_VALUES_YES_NO[]        = {"No", "Yes", nullptr};
 const char * const DISPLAY_VALUES_REACTION[]      = {"Easy", "Medium", "Aggresive", nullptr};
 const char * const DISPLAY_VALUES_RTH_SPOT[]      = {"ERROR", "Home", "Spot", nullptr};
+const char * const DISPLAY_VALUES_ADAPTIVE_ANG[]  = {"Front", "Front R", "R", "Rear R", "Rear", "Rear L", "Left", "Front L", nullptr};
 
 bool 
 init_allowed_params() {
 
     ALLOWED_PARAMS[0] =  AllowedParam(0,     "A_ACTIVITY",           ALL,  "",    "Activity",              DISPLAY_VALUES_EMPTY);
-    ALLOWED_PARAMS[1] =  AllowedParam(16,    "A_SAH_NO_SPOT",        DOG,  "",    "Force HOME landing",    DISPLAY_VALUES_ON_OFF);
+    ALLOWED_PARAMS[1] =  AllowedParam(16,    "A_SAH_NO_SPOT",        DOG,  "",    "Home landing",          DISPLAY_VALUES_ON_OFF);
     ALLOWED_PARAMS[2] =  AllowedParam(1,     "NAV_AFOL_MODE",        DOG,  "",    "Flight mode",           DISPLAY_VALUES_NAV_AFOL_MODE);
-    ALLOWED_PARAMS[3] =  AllowedParam(17,    "OFF_FR_ADD_ANG",       DOG,  "rad", "Adaptive angle",        DISPLAY_VALUES_ON_OFF);
+    ALLOWED_PARAMS[3] =  AllowedParam(17,    "OFF_FR_ADD_ANG",       DOG,  "",    "Camera angle",          DISPLAY_VALUES_ADAPTIVE_ANG);
     ALLOWED_PARAMS[4] =  AllowedParam(18,    "CBP_MAX_INIT_SPD",     DOG,  "m/s", "Go to line speed",      DISPLAY_VALUES_EMPTY);
     ALLOWED_PARAMS[5] =  AllowedParam(3,     "NAV_TAKEOFF_ALT",      DOG,  "m",   "Takeoff alt",           DISPLAY_VALUES_EMPTY);
     ALLOWED_PARAMS[6] =  AllowedParam(6,     "A_INIT_POS_D",         DOG,  "m",   "Follow distance",       DISPLAY_VALUES_EMPTY);
@@ -53,7 +54,7 @@ init_allowed_params() {
     ALLOWED_PARAMS[10] = AllowedParam(8,     "FOL_RPT_ALT",          DOG,  "m",   "Follow terrain",        DISPLAY_VALUES_ON_OFF);
     ALLOWED_PARAMS[11] = AllowedParam(13,    "FOL_VEL_FF_XY",        DOG,  "",    "Acceleration",          DISPLAY_VALUES_EMPTY);
     ALLOWED_PARAMS[12] = AllowedParam(12,    "FOL_LPF_XY",           DOG,  "",    "Reaction",              DISPLAY_VALUES_EMPTY);
-    ALLOWED_PARAMS[13] = AllowedParam(5,     "A_INIT_POS_U",         DOG,  "",    "Iitial distance",       DISPLAY_VALUES_ON_OFF);
+    ALLOWED_PARAMS[13] = AllowedParam(5,     "A_INIT_POS_U",         DOG,  "",    "Initial distance",       DISPLAY_VALUES_ON_OFF);
     ALLOWED_PARAMS[14] = AllowedParam(7,     "V_REACTION",           DOG,  "",    "Reaction",              DISPLAY_VALUES_REACTION);
     ALLOWED_PARAMS[15] = AllowedParam(9,     "SENS_SON_MIN",         DOG,  "m",   "Lidar alt",             DISPLAY_VALUES_NAV_AFOL_MODE);
     ALLOWED_PARAMS[16] = AllowedParam(11,    "AIRD_TRAJ_RAD",        ALL,  "m",   "Follow Path rad",       DISPLAY_VALUES_ON_OFF);

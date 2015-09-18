@@ -293,10 +293,16 @@ PARAM_DEFINE_INT32(A_ACTIVITY, 0);
 
 
 /**
- * Activity manager is turned on
+ * Activity affects params
  * @group airdog
  */
 PARAM_DEFINE_INT32(A_ACTIVITY_ON, 1);
+
+/**
+ * Activity manager in god mode. 
+ * @group airdog
+ */
+PARAM_DEFINE_INT32(A_ACTIVITY_GOD, 0);
 
 /**
  * EPH limit after which GPS will be considered invalid and GPS-failsafe will be enabled

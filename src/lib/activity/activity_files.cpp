@@ -319,28 +319,8 @@ reset_activity_params_file(int activity) {
 
     printf("Resetting activity params file %s\n", activity_file_pathname);
 
-    ParamConfig * pc = nullptr;
-
-    for (int i=0;i<ALLOWED_PARAM_COUNT;i++) {
-
-        pc = get_activity_param_config(activity, i);
-
-        if (pc == nullptr) {
-            fclose(activity_file);
-            return false;
-        }
-
-        float default_value;
-        if (i==0)
-            default_value = activity;
-        else 
-            default_value = pc->default_value;
-
-        int param_id = ALLOWED_PARAMS[i].id;
-
-        fprintf(activity_file, "%i:%.6f\n", param_id, (double)default_value); 
-
-    }
+    for (int p=0;p<ALLOWED_PARAM_COUNT;p++) 
+        fprintf(activity_file, "%i:%.6f\n", ALLOWED_PARAMS[p].id, (double)DEFAULT_VALUES[activity][p]); 
 
     fclose(activity_file);
     return true;
