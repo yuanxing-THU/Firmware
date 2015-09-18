@@ -58,10 +58,10 @@ static struct {
     int active;
     float intensity;
 } leds[LED_SIZE] = {
-{ 0, 100 },
-{ 0, 100 },
-{ 0, 100 },
-{ 0, 100 }
+{ 0, 9 },
+{ 0, 9 },
+{ 0, 9 },
+{ 0, 9 }
 };
 
 /*
@@ -121,11 +121,6 @@ void led_init(void)
 
     // enable the timer
     REG(STM32_TIM1_CR1) = GTIM_CR1_CEN;
-
-    led_set_intensity(LED_FL, 0);
-    led_set_intensity(LED_FR, 0);
-    led_set_intensity(LED_RL, 0);
-    led_set_intensity(LED_RR, 0);
 
     led_on(LED_FL);
     led_on(LED_FR);

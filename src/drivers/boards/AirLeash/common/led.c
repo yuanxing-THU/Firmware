@@ -49,19 +49,15 @@
 #include "board_config.h"
 #include "board_leds.h"
 
-#define REG(_reg)	(*(volatile uint32_t *)(_reg))
+#define REG(_reg)   (*(volatile uint32_t *)(_reg))
 #define TIMER_CR1_EN (1 << 0)
 
 static struct {
     int active;
     float intensity;
 } leds[LED_SIZE] = {
-{
-    0, 100
-},
-{
-    0, 100
-}
+    { 0,  7 }, // red, look a little more bright than blue
+    { 0,  9 }, // blue
 };
 
 /*
@@ -114,9 +110,6 @@ void led_init()
 
     // enable the timer
     REG(STM32_TIM1_CR1) = GTIM_CR1_CEN;
-
-    led_set_intensity(LED_RED, 2);
-    led_set_intensity(LED_BLUE, 2);
 
     led_on(LED_BLUE);
     led_on(LED_RED);

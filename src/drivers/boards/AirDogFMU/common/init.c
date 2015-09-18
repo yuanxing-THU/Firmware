@@ -46,6 +46,7 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
+#include "board_config.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -61,7 +62,6 @@
 #include <nuttx/gran.h>
 
 #include <stm32.h>
-#include "board_config.h"
 #include <stm32_uart.h>
 
 #include <arch/board/board.h>
@@ -72,6 +72,7 @@
 #include <systemlib/cpuload.h>
 #include <systemlib/perf_counter.h>
 
+#include "board_leds.h"
 #include "../frame_button/driver.h"
 
 /****************************************************************************
@@ -95,19 +96,6 @@
 #    define message printf
 #  endif
 #endif
-
-/*
- * Ideally we'd be able to get these from up_internal.h,
- * but since we want to be able to disable the NuttX use
- * of leds for system indication at will and there is no
- * separate switch, we need to build independent of the
- * CONFIG_ARCH_LEDS configuration switch.
- */
-__BEGIN_DECLS
-extern void led_init(void);
-extern void led_on(int led);
-extern void led_off(int led);
-__END_DECLS
 
 /****************************************************************************
  * Protected Functions
@@ -214,6 +202,7 @@ stm32_boardinitialize(void)
 
 	/* configure LEDs */
 	up_ledinit();
+	led_init();
 }
 
 /****************************************************************************
@@ -266,9 +255,6 @@ __EXPORT int nsh_archinitialize(void)
 		       ts_to_abstime(&ts),
 		       (hrt_callout)stm32_serial_dma_poll,
 		       NULL);
-
-	/* initial LED state */
-	led_off(LED_AMBER);
 
 	/* Configure SPI-based devices */
 
