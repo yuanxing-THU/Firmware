@@ -27,12 +27,18 @@ ModeConnect::ModeConnect(State Current) :
     forcing_pairing(false),
     startTime(0)
 {
-    printf("ModeConnect create: %d\n", (int)Current);
-    setState(Current);
-
-    if (Current != State::PAIRING)
+    if (Current == State::UNKNOWN)
     {
-        doEvent(-1);
+        getConState();
+    }
+    else
+    {
+        setState(Current);
+
+        if (Current != State::PAIRING)
+        {
+            doEvent(-1);
+        }
     }
 }
 

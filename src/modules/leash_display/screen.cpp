@@ -624,9 +624,9 @@ void Screen::showInfo(int info, int error, int leashBattery)
 
         case INFO_ESTABLISHING_CONNECTION:
             text[0].text = "Establishing";
-            text[0].font = &Font::LucideGrandeMed;
+            text[0].font = &Font::LucideGrandeSmall;
             text[1].text = "connection";
-            text[1].font = &Font::LucideGrandeMed;
+            text[1].font = &Font::LucideGrandeSmall;
             break;
 
         case INFO_GETTING_ACTIVITIES:

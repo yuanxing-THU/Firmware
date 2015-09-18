@@ -425,14 +425,14 @@ Base* Menu::makeAction()
             sendAirDogCommnad(VEHICLE_CMD_NAV_REMOTE_CMD, REMOTE_CMD_SWITCH_ACTIVITY,
                     current_activity, 0, 0, 0, 0, 0);
             dm->activityManager.set_waiting_for_params();
-            nextMode = new ModeConnect(); //Connect will wait for new params
+            nextMode = new ModeConnect(ModeConnect::State::GETTING_ACTIVITIES); //Connect will wait for new params
             break;
 
         case MENUENTRY_SAVE:
             if (dm->activityManager.save_params())
             {
                 backToCustomize(true);
-                nextMode = new ModeConnect(); //Connect will wait for new params
+                nextMode = new ModeConnect(ModeConnect::State::GETTING_ACTIVITIES); //Connect will wait for new params
             }
             else
             {
