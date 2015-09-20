@@ -205,7 +205,6 @@ void Screen::showMain(int mode, const char *presetName, int leashBattery, int ai
         display_draw_line(0, 19, 0, 63);
 
         display_draw_line(64, 19, 64, 63);
-        display_draw_line(64, 41, 113, 41);
 
         display_draw_line(0, 29, 64, 29); // horizontal gps line
 
@@ -279,24 +278,36 @@ void Screen::showMain(int mode, const char *presetName, int leashBattery, int ai
 
         if (mode == MAINSCREEN_INFO_SUB)
         {
-            display_fill_rectangle(0, 19, 64, 63);
+            // draw joystick mode picture
+            display_draw_line(127, 19, 127, 63);
+
+            width = imageInfo[IMAGE_SCREENS_ICONS_JOYSTICK].w;
+            cx = (113 + imageInfo[IMAGE_SCREENS_LND_FOL].w + 64 - width) / 2 + 1;
+
+            BitmapBlock blockJoystick(cx, 22, IMAGE_SCREENS_ICONS_JOYSTICK);
+            blockJoystick.draw();
         }
+        else
+        {
 
-        // draw aidog land and follow modes
-        BitmapBlock blockLndFol(113, 19, IMAGE_SCREENS_LND_FOL);
-        blockLndFol.draw();
+            // draw aidog land and follow modes
+            display_draw_line(64, 41, 113, 41);
 
-        width = imageInfo[followImageId].w;
-        cx = (113 + 64 - width) / 2 + 1;
+            BitmapBlock blockLndFol(113, 19, IMAGE_SCREENS_LND_FOL);
+            blockLndFol.draw();
 
-        BitmapBlock blockFollow(cx, 26, followImageId);
-        blockFollow.draw();
+            width = imageInfo[followImageId].w;
+            cx = (113 + 64 - width) / 2 + 1;
 
-        width = imageInfo[landImageId].w;
-        cx = (113 + 64 - width) / 2 + 1;
+            BitmapBlock blockFollow(cx, 26, followImageId);
+            blockFollow.draw();
 
-        BitmapBlock blockLand(cx, 48, landImageId);
-        blockLand.draw();
+            width = imageInfo[landImageId].w;
+            cx = (113 + 64 - width) / 2 + 1;
+
+            BitmapBlock blockLand(cx, 48, landImageId);
+            blockLand.draw();
+        }
 
         // draw airdog battery level
         char buf[10];
