@@ -42,6 +42,8 @@ the output is either `ok, check the values` or `FAIL`.
 * [FRAM](#fram)
 * [GPS](#gps)
 * [IO chip](#io-chip)
+* [Sensors](#sensors)
+  * [Barometer MS5611](#sensor-barometer-ms5611)
 
 
 ### ADC
