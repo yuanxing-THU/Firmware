@@ -57,16 +57,21 @@ public:
 			if (_time_last == 0) {
 				_value = next_value; // init first sample
 			}
+			_time_last = t;
+			return _value;
 		}
-
-		_time_last = t;
-		return _value;
+		else {
+			return next_value;
+		}
 	}
 
 	/**
 	 * Reset the filter state to this value
 	 */
-	void reset(T value) { _value = value; }
+	void reset(uint64_t time, T value) {
+		_value = value;
+		_time_last = time;
+	}
 
 private:
 	float _rc;

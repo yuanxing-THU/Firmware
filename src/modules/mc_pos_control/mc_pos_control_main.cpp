@@ -1588,9 +1588,9 @@ MulticopterPositionControl::update_target_pos()
 					_tvel.zero();
 				}
 
-				_tvel_lpf_x.reset(_tvel(0));
-				_tvel_lpf_y.reset(_tvel(1));
-				_tvel_lpf_z.reset(_tvel(2));
+				_tvel_lpf_x.reset(_target_pos.timestamp, _tvel(0));
+				_tvel_lpf_y.reset(_target_pos.timestamp, _tvel(1));
+				_tvel_lpf_z.reset(_target_pos.timestamp, _tvel(2));
 			}
 
 			/* update target position predictor */

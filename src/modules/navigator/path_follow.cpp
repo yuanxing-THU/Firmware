@@ -132,7 +132,7 @@ void PathFollow::on_activation() {
     _fp_i = 0.0f;
     _fp_p = 0.0f;
     _fp_d = 0.0f;
-    _fp_d_lpf.reset(0.0f);
+    _fp_d_lpf.reset(hrt_absolute_time(), 0.0f);
 
     _fp_p_last = 0.0f;
 
