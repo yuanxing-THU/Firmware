@@ -14,6 +14,13 @@ the output is either `ok, check the values` or `FAIL`.
 * [eMMC](#emmc)
 * [FRAM](#fram)
 * [IO chip](#io-chip)
+* [Sensor Barometer MS5611](#sensor-barometer-ms5611)
+
+
+## AIRFMU + AIRSEN + AIRBOT + AIRMAG
+
+* [BT740](#bt740)
+* [Sensors](#sensors)
 
 
 ## ALMAIN checks
@@ -23,6 +30,7 @@ the output is either `ok, check the values` or `FAIL`.
 * [eMMC](#emmc)
 * [FRAM](#fram)
 * [GPS](#gps)
+* [Sensors](#sensors)
 
 
 ## Alfabetical list
@@ -356,6 +364,109 @@ px4io: px4io is not started, still attempting upgrade
 [PX4IO] update complete
 px4io checkcrc /etc/extras/px4io-v2_default.bin
 CRCs match
+===
+OK
+nsh>
+```
+
+
+### Sensors
+
+Here are two commands required:
+* `unset SENS`
+* `sh /etc/extras/bt740`
+
+AirDog output:
+
+```
+nsh> unset SENS
+nsh> sh /etc/extras/sens
+---
+sensors_probe
+dev #1 send 2:  8f 00
+dev #1 recv 2:  ff d4
+l3gd20: ok
+dev #2 send 2:  8f 00
+dev #2 recv 2:  ff 49
+lsm303d: ok
+dev #4 send 2:  8c 00
+dev #4 recv 2:  00 58
+mpu6000: ok
+dev #3 send 1:  1e
+dev #3 recv 1:  fe
+dev #3 send 3:  a0 00 00
+dev #3 recv 3:  00 00 00
+dev #3 send 3:  a2 00 00
+dev #3 recv 3:  00 00 00
+dev #3 send 3:  a4 00 00
+dev #3 recv 3:  00 00 00
+dev #3 send 3:  a6 00 00
+dev #3 recv 3:  fe 83 5f
+ms5611: ok
+dev #5 send 4:  ca 00 00 00
+dev #5 recv 4:  ff 48 34 33
+hmc5883: ok
+===
+OK
+nsh>
+```
+
+ALMAIN output:
+
+```
+nsh> unset SENS
+nsh> sh /etc/extras/sens
+---
+sensors_probe
+dev #1 send 2:  8f 00
+dev #1 recv 2:  00 d4
+l3gd20: ok
+dev #2 send 2:  8f 00
+dev #2 recv 2:  00 49
+lsm303d: ok
+dev #4 send 2:  8c 00
+dev #4 recv 2:  00 58
+mpu6000: ok
+dev #3 send 1:  1e
+dev #3 recv 1:  fe
+dev #3 send 3:  a0 00 00
+dev #3 recv 3:  00 00 00
+dev #3 send 3:  a2 00 00
+dev #3 recv 3:  00 00 00
+dev #3 send 3:  a4 00 00
+dev #3 recv 3:  00 00 00
+dev #3 send 3:  a6 00 00
+dev #3 recv 3:  fe 7e 6f
+ms5611: ok
+===
+OK
+```
+
+
+#### Sensor Barometer MS5611
+
+Here are two commands required:
+* `set SENS ms5611`
+* `sh /etc/extras/bt740`
+
+AirDog output:
+
+```
+nsh> set SENS ms5611
+nsh> sh /etc/extras/sens
+---
+sensors_probe ms5611
+dev #3 send 1:  1e
+dev #3 recv 1:  fe
+dev #3 send 3:  a0 00 00
+dev #3 recv 3:  00 00 00
+dev #3 send 3:  a2 00 00
+dev #3 recv 3:  00 00 00
+dev #3 send 3:  a4 00 00
+dev #3 recv 3:  00 00 00
+dev #3 send 3:  a6 00 00
+dev #3 recv 3:  fe 83 5f
+ms5611: ok
 ===
 OK
 nsh>

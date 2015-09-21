@@ -22,6 +22,11 @@ MODULES += systemcmds/mtd
 MODULES += drivers/gps
 
 #
+# Sensors
+#
+MODULES += modules/sensors_probe
+
+#
 # OTP write modules
 #
 MODULES += lib/airdog/hwinfo

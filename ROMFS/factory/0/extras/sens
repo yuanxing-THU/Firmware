@@ -1,0 +1,14 @@
+set R FAIL
+
+echo ---
+
+echo sensors_probe $SENS
+if sensors_probe $SENS
+then
+	set R OK
+fi
+
+echo ===
+
+echo $R
+
