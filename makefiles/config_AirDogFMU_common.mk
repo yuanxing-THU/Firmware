@@ -44,6 +44,7 @@ MODULES		+= modules/bgc
 MODULES		+= modules/cl_helper
 MODULES		+= modules/debug_button
 MODULES		+= modules/gpio_tool
+MODULES		+= modules/eparam
 MODULES		+= modules/fs_test
 MODULES		+= modules/indication
 MODULES		+= modules/kbd_test

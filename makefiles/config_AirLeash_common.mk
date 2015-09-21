@@ -35,6 +35,7 @@ MODULES		+= modules/airdog  # AIRD_LEASH_MODE parameter
 MODULES		+= modules/airdog/trajectory_calculator
 MODULES		+= modules/cl_helper
 MODULES		+= modules/display_tool
+MODULES		+= modules/eparam
 MODULES		+= modules/fs_test
 MODULES		+= modules/gpio_tool
 MODULES		+= modules/indication
