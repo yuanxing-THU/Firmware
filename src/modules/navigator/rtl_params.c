@@ -51,4 +51,4 @@
  * @min 1
  * @group Navigator
  */
-PARAM_DEFINE_FLOAT(RTL_RET_ALT, 30.00f);
+PARAM_DEFINE_FLOAT(RTL_RET_ALT, 20.00f);

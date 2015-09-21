@@ -21,7 +21,7 @@ PARAM_DEFINE_INT32(PAFOL_BUFF_SIZE, 60);
  * @max 100
  * @group PathFollow
  */
-PARAM_DEFINE_FLOAT(PAFOL_OPT_D, 10.0f);
+PARAM_DEFINE_FLOAT(PAFOL_OPT_D, 12.0f);
 
 
 /**
@@ -33,7 +33,7 @@ PARAM_DEFINE_FLOAT(PAFOL_OPT_D, 10.0f);
  * @group PathFollow
  */
 
-PARAM_DEFINE_FLOAT(PAFOL_ALT_OFF, 3.0f);
+PARAM_DEFINE_FLOAT(PAFOL_ALT_OFF, 2.0f);
 
 /**
  * Path follow acceptance radius
@@ -63,7 +63,7 @@ PARAM_DEFINE_FLOAT(PAFOL_GT_AC_DST, 2.0f);
  * @max 50
  * @group PathFollow
  */
-PARAM_DEFINE_FLOAT(PAFOL_GT_WIDTH, 8.0f);
+PARAM_DEFINE_FLOAT(PAFOL_GT_WIDTH, 1000.0f);
 
 
 /**
@@ -72,7 +72,7 @@ PARAM_DEFINE_FLOAT(PAFOL_GT_WIDTH, 8.0f);
  * @max 50
  * @group PathFollow
  */
-PARAM_DEFINE_FLOAT(PAFOL_VPID_I, 0.0f);
+PARAM_DEFINE_FLOAT(PAFOL_VPID_I, 0.1f);
 
 
 /**
@@ -81,7 +81,7 @@ PARAM_DEFINE_FLOAT(PAFOL_VPID_I, 0.0f);
  * @max 50
  * @group PathFollow
  */
-PARAM_DEFINE_FLOAT(PAFOL_VPID_P, 0.0f);
+PARAM_DEFINE_FLOAT(PAFOL_VPID_P, 0.6f);
 
 /**
  * Coefficient for dirivative part of velocity PID controller
@@ -89,7 +89,7 @@ PARAM_DEFINE_FLOAT(PAFOL_VPID_P, 0.0f);
  * @max 50
  * @group PathFollow
  */
-PARAM_DEFINE_FLOAT(PAFOL_VPID_D, 0.0f);
+PARAM_DEFINE_FLOAT(PAFOL_VPID_D, 0.2f);
 
 
 /**
@@ -97,7 +97,7 @@ PARAM_DEFINE_FLOAT(PAFOL_VPID_D, 0.0f);
  * when aditional decrease necessary.
  * @group PathFollow
  */
-PARAM_DEFINE_FLOAT(PAFOL_VPID_I_DR, 5.0f);
+PARAM_DEFINE_FLOAT(PAFOL_VPID_I_DR, 7.0f);
 
 /**
  * Follow path vel PID control integral part aditional increase rate
@@ -110,7 +110,7 @@ PARAM_DEFINE_FLOAT(PAFOL_VPID_I_IR, 5.0f);
  * Follow path vel PID control integral part upper limit.
  * @group PathFollow
  */
-PARAM_DEFINE_FLOAT(PAFOL_VPID_I_UL, 100.0f);
+PARAM_DEFINE_FLOAT(PAFOL_VPID_I_UL, 150.0f);
 
 /**
  * Follow path vel PID control integral part lower limit.

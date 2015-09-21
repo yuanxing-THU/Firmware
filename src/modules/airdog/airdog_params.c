@@ -29,24 +29,16 @@ PARAM_DEFINE_FLOAT(AIRD_MIN_MF_ALT, 3.0f);
 PARAM_DEFINE_FLOAT(AIRD_LOITER_STEP, 2.0f);
 
 /**
- * Airdog step to adjust position
- *
- * in LOITER mode
- *
- * @unit meters
+ * Airdog Battery Warning level in percent
  * @group AirDog
  */
-PARAM_DEFINE_FLOAT(AIRD_BAT_WARN, 40.0f);
+PARAM_DEFINE_FLOAT(AIRD_BAT_WARN, 30.0f);
 
 /**
- * Airdog step to adjust position
- *
- * in LOITER mode
- *
- * @unit meters
+ * Airdog Battery Failsafe level in percent
  * @group AirDog
  */
-PARAM_DEFINE_FLOAT(AIRD_BAT_FS, 10.0f);
+PARAM_DEFINE_FLOAT(AIRD_BAT_FS, 20.0f);
 
 /*Custom binded device id.*/
 PARAM_DEFINE_INT32(AIRD_BINDED_ID, 4);
@@ -60,13 +52,27 @@ PARAM_DEFINE_INT32(AIRD_TRAINER_ID, 10);
  *   1 is trainer,
  *   2 is target with trajectory
  */
-PARAM_DEFINE_INT32(AIRD_LEASH_MODE, 0);
+PARAM_DEFINE_INT32(AIRD_LEASH_MODE, 
+#ifdef CONFIG_ARCH_BOARD_AIRLEASH
+		5
+#else
+		0
+#endif
+);
+
 
 /* TODO Description. (It was wrong.) */
 PARAM_DEFINE_INT32(AIRD_PITCH_DOWN, 0);
 
 /*Enable if should check for external magnetometer*/
-PARAM_DEFINE_INT32(AIRD_CHECK_MAG, 0);
+PARAM_DEFINE_INT32(AIRD_CHECK_MAG, 
+#ifdef CONFIG_ARCH_BOARD_AIRLEASH
+		0
+#else
+		1
+#endif
+);
+
 
 /*Enable automatic magnetic declination setting from coordinates*/
 PARAM_DEFINE_INT32(AIRD_AUTO_MAG, 1);
@@ -95,7 +101,7 @@ PARAM_DEFINE_INT32(LAND_CORR_ON, 1);
  * @min:    0.0f <- We can only disarm when sensors show 0.0 which is practically not measurable
  * @max     1.0f <- Note that vehicle should be able to survive safely drop from this distance
  */
-PARAM_DEFINE_FLOAT(LAND_SAFE_H, 0.3f);
+PARAM_DEFINE_FLOAT(LAND_SAFE_H, 0.45f);
 
 /**
  * @descr:  Airdog param for custom landing with range finders
@@ -107,7 +113,7 @@ PARAM_DEFINE_FLOAT(LAND_SAFE_H, 0.3f);
  * @min:    0.5f <- Practically should be higher. The minimum should be configured in A_LAND_MIN_V
  * @max     4.0f <- Unlimited, but HIGHLY not recommended to increase more than that
  */
-PARAM_DEFINE_FLOAT(LAND_MAX_V, 2.0f);
+PARAM_DEFINE_FLOAT(LAND_MAX_V, 2.2f);
 
 /**
  * @descr:  Airdog param for custom landing with range finders
@@ -119,14 +125,14 @@ PARAM_DEFINE_FLOAT(LAND_MAX_V, 2.0f);
  * @min:    0.1f
  * @max     1.0f
  */
-PARAM_DEFINE_FLOAT(LAND_MIN_V, 0.3f);
+PARAM_DEFINE_FLOAT(LAND_MIN_V, 0.5f);
 
 /**
  * @descr: Parameter overriding max pwm set in rc scripts. If set to 0, script value will be used
  *
  * @min: 0
  */
-PARAM_DEFINE_INT32(A_MAX_PWM, 0);
+PARAM_DEFINE_INT32(A_MAX_PWM, 1920);
 
 PARAM_DEFINE_INT32(A_DO_FRAME_BUTT, 1);
 

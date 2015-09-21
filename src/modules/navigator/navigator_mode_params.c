@@ -55,7 +55,7 @@
  * @min 0
  * @group Navigator
  */
-PARAM_DEFINE_FLOAT(NAV_TAKEOFF_ALT, 10.0f);
+PARAM_DEFINE_FLOAT(NAV_TAKEOFF_ALT, 8.0f);
 
 /**
  * Acceptance radius to determine if setpoint have been reached
@@ -65,7 +65,7 @@ PARAM_DEFINE_FLOAT(NAV_TAKEOFF_ALT, 10.0f);
  * @max 50
  * @group Navigator
  */
-PARAM_DEFINE_FLOAT(NAV_ACC_RAD, 2.00f);
+PARAM_DEFINE_FLOAT(NAV_ACC_RAD, 2.0f);
 
 /**
  * Acceptance radius for takeoff setpoint
@@ -73,7 +73,7 @@ PARAM_DEFINE_FLOAT(NAV_ACC_RAD, 2.00f);
  * @unit meters
  * @group Navigator
  */
-PARAM_DEFINE_FLOAT(NAV_TAKEOFF_ACR, 2.00f);
+PARAM_DEFINE_FLOAT(NAV_TAKEOFF_ACR, 0.5f);
 
 /**
  * Auto follow mode: which auto follow mode to use
@@ -107,7 +107,7 @@ PARAM_DEFINE_FLOAT(A_DST_INV, 100.00f);
  * @max 100
  * @group Airdog
  */
-PARAM_DEFINE_FLOAT(A_INIT_POS_D, 5.00f);
+PARAM_DEFINE_FLOAT(A_INIT_POS_D, 12.00f);
 
 /**
  * Use initial drone distance on takeoff
@@ -116,7 +116,7 @@ PARAM_DEFINE_FLOAT(A_INIT_POS_D, 5.00f);
  * @max 1
  * @group Airdog
  */
-PARAM_DEFINE_INT32(A_INIT_POS_U, 1);
+PARAM_DEFINE_INT32(A_INIT_POS_U, 0);
 
 /**
  * Start follow mode immediately after take-off or initial positioning

@@ -45,12 +45,12 @@
  * Changes smaller that this will be considered as noise and LPFed with coeff SENS_LID_L_LPF
  * Changes higher that this will be considered as height change and LPFed with coeff SENS_LID_L_LPF
  */
-PARAM_DEFINE_FLOAT(SENS_LID_CUT, 0.3f);
+PARAM_DEFINE_FLOAT(SENS_LID_CUT, 0.7f);
 
 /* LPF coefficient to use for great incoming changes
  * (GREATER than SENS_LID_CUT)
  */
-PARAM_DEFINE_FLOAT(SENS_LID_H_LPF, 0.5f);
+PARAM_DEFINE_FLOAT(SENS_LID_H_LPF, 1.5f);
 
 /* LPF coefficient to use for small incoming changes
  * (SMALLER than SENS_LID_CUT)
@@ -86,7 +86,7 @@ PARAM_DEFINE_FLOAT(INAV_W_Z_BARO, 0.5f);
  * @max 10.0
  * @group Position Estimator INAV
  */
-PARAM_DEFINE_FLOAT(INAV_W_Z_GPS_P, 0.005f);
+PARAM_DEFINE_FLOAT(INAV_W_Z_GPS_P, 0.001f);
 
 /**
  * Z axis weight for vision
@@ -119,7 +119,14 @@ PARAM_DEFINE_FLOAT(INAV_W_Z_SONAR, 3.0f);
  * @max 10.0
  * @group Position Estimator INAV
  */
-PARAM_DEFINE_FLOAT(INAV_W_XY_GPS_P, 1.0f);
+PARAM_DEFINE_FLOAT(INAV_W_XY_GPS_P, 
+#ifdef CONFIG_ARCH_BOARD_AIRLEASH
+		1.0f
+#else
+		0.5f
+#endif
+);
+
 
 /**
  * XY axis weight for GPS velocity
@@ -130,7 +137,13 @@ PARAM_DEFINE_FLOAT(INAV_W_XY_GPS_P, 1.0f);
  * @max 10.0
  * @group Position Estimator INAV
  */
-PARAM_DEFINE_FLOAT(INAV_W_XY_GPS_V, 2.0f);
+PARAM_DEFINE_FLOAT(INAV_W_XY_GPS_V, 
+#ifdef CONFIG_ARCH_BOARD_AIRLEASH
+		2.0f
+#else
+		1.0f
+#endif
+);
 
 /**
  * XY axis weight for vision position
@@ -254,7 +267,7 @@ PARAM_DEFINE_FLOAT(INAV_LAND_DISP, 0.7f);
  * @max 1.0
  * @group Position Estimator INAV
  */
-PARAM_DEFINE_FLOAT(INAV_LAND_THR, 0.2f);
+PARAM_DEFINE_FLOAT(INAV_LAND_THR, 0.35f);
 
 /**
  * GPS delay
@@ -284,21 +297,35 @@ PARAM_DEFINE_INT32(CBRK_NO_VISION, 0);
  *
  * @group Position Estimator INAV
  */
-PARAM_DEFINE_FLOAT(INAV_INIT_EPH, 2.0f);
+PARAM_DEFINE_FLOAT(INAV_INIT_EPH,
+#ifdef CONFIG_ARCH_BOARD_AIRLEASH
+		3.5f
+#else
+		2.0f
+#endif
+);
+
 
 /**
  * EPV needed to init reference position
  *
  * @group Position Estimator INAV
  */
-PARAM_DEFINE_FLOAT(INAV_INIT_EPV, 2.5f);
+PARAM_DEFINE_FLOAT(INAV_INIT_EPV,
+#ifdef CONFIG_ARCH_BOARD_AIRLEASH
+		4.5f
+#else
+		2.5f
+#endif
+);
+
 
 /**
  * Minimal time ms needed to init reference position
  *
  * @group Position Estimator INAV
  */
-PARAM_DEFINE_INT32(INAV_INIT_WAIT, 4000);
+PARAM_DEFINE_INT32(INAV_INIT_WAIT, 15000);
 
 /**
  * Flight time EPH when GPS considered valid

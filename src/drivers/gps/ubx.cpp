@@ -298,7 +298,7 @@ int	UBX::configureGps()
 
 	param_get(param_find("UBX_ENABLE_GPS"), &enable_gps_qzss);
 	param_get(param_find("UBX_ENABLE_SBAS"), &enable_sbas);
-	param_get(param_find("UBX_ENABLE_GLONASS"), &enable_glonass);
+	param_get(param_find("UBX_ENABLE_GLONA"), &enable_glonass);
 	param_get(param_find("UBX_GPS_MIN_CHN"), &gps_min_channels);
 	param_get(param_find("UBX_GPS_MAX_CHN"), &gps_max_channels);
 

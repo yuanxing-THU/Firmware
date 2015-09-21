@@ -24,17 +24,17 @@ PARAM_DEFINE_INT32(A_BSC_BLOCK_MS, 20000);
 /**
  * Configure Rth Battery Low-Spare level. Limited to [BSC_RLO_LVL_MIN;BSC_RLO_LVL_MAX].
  */
-PARAM_DEFINE_FLOAT(A_BSC_RLO_LVL, 0.05f);
+PARAM_DEFINE_FLOAT(A_BSC_RLO_LVL, 0.04f);
 
 /**
  * Configure Rth Battery Mid-Spare level. Limited to [BSC_RMI_LVL_MIN;BSC_RMI_LVL_MAX].
  */
-PARAM_DEFINE_FLOAT(A_BSC_RMI_LVL, 0.15f);
+PARAM_DEFINE_FLOAT(A_BSC_RMI_LVL, 0.14f);
 
 /**
  * Configure Rth Battery High-Spare level. Limited to [BSC_RHI_LVL_MIN;BSC_RHI_LVL_MAX].
  */
-PARAM_DEFINE_FLOAT(A_BSC_RHI_LVL, 0.25f);
+PARAM_DEFINE_FLOAT(A_BSC_RHI_LVL, 0.16f);
 
 /**
  * Configure Land Battery Low-Spare level. Limited to [BSC_LLO_LVL_MIN;BSC_LLO_LVL_MAX].

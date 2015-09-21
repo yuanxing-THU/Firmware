@@ -52,7 +52,13 @@ PARAM_DEFINE_INT32(SYS_ACT, 0);
  *
  * @group System
  */
-PARAM_DEFINE_INT32(SYS_AUTOSTART, 0);
+PARAM_DEFINE_INT32(SYS_AUTOSTART, 
+#ifdef CONFIG_ARCH_BOARD_AIRLEASH
+		0
+#else
+		4001
+#endif
+);
 
 /**
  * Automatically configure default values.
@@ -86,4 +92,4 @@ PARAM_DEFINE_INT32(SYS_USE_IO, 1);
 * @max 2
 * @group System
 */
-PARAM_DEFINE_INT32(SYS_RESTART_TYPE, 2);
+PARAM_DEFINE_INT32(SYS_RESTART_TYPE, 0);

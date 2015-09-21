@@ -197,7 +197,7 @@ PARAM_DEFINE_FLOAT(SENS_SON_FILT, 0.8f);
  * @unit m
  * @group Position Estimator INAV
  */
-PARAM_DEFINE_FLOAT(SENS_SON_ERR, 0.5f);
+PARAM_DEFINE_FLOAT(SENS_SON_ERR, 0.7f);
 
 /**
  * Sonar sensor on/off trigger
@@ -205,7 +205,7 @@ PARAM_DEFINE_FLOAT(SENS_SON_ERR, 0.5f);
  * @off 0
  * @group Sensor Calibration
  */
-PARAM_DEFINE_INT32(SENS_SON_ON, 0);
+PARAM_DEFINE_INT32(SENS_SON_ON, 1);
 
 /**
  * Minimal distance to surface allowed by sonar
@@ -213,7 +213,7 @@ PARAM_DEFINE_INT32(SENS_SON_ON, 0);
  * @max unlimited;    max range of sonar, but there is no real maximal boundary
  * @group Sensor Calibration
  */
-PARAM_DEFINE_FLOAT(SENS_SON_MIN, 2.0f);
+PARAM_DEFINE_FLOAT(SENS_SON_MIN, 6.0f);
 
 /**
  * Sonar coefficient to multiply sonar minimal distance by, resulting in critical distance
@@ -223,7 +223,7 @@ PARAM_DEFINE_FLOAT(SENS_SON_MIN, 2.0f);
  * @max 0.0f
  * @unit meters
  */
-PARAM_DEFINE_FLOAT(SENS_SON_SMOT, 0.5f);
+PARAM_DEFINE_FLOAT(SENS_SON_SMOT, 1.0f);
 
 /**
  * TEMPORARY!!!
@@ -234,7 +234,7 @@ PARAM_DEFINE_FLOAT(SENS_SON_SMOT, 0.5f);
  * @max 1
  * @group Sensor Calibration
  */
-PARAM_DEFINE_INT32(A_CALIB_MODE, 0);
+PARAM_DEFINE_INT32(A_CALIB_MODE, 1);
 
 /**
  * Defines minimal difference in hours between current date and last calibration date
@@ -316,7 +316,15 @@ PARAM_DEFINE_FLOAT(SENS_ACC_CTEMP, -278.15f);
  *
  * @group Sensor Calibration
  */
-PARAM_DEFINE_INT32(SENS_ACC_RANGE, 8);
+PARAM_DEFINE_INT32(SENS_ACC_RANGE, 
+#ifdef CONFIG_ARCH_BOARD_AIRLEASH
+		16
+#else
+		8
+#endif
+);
+
+
 
 /**
  * Differential pressure sensor offset
@@ -386,7 +394,7 @@ PARAM_DEFINE_FLOAT(SENS_BARO_QNH, 1013.25f);
  *
  * @group Sensor Calibration
  */
-PARAM_DEFINE_INT32(SENS_BOARD_ROT, 0);
+PARAM_DEFINE_INT32(SENS_BOARD_ROT, 6);
 
 /**
  * Board rotation Y (Pitch) offset
@@ -416,7 +424,7 @@ PARAM_DEFINE_FLOAT(SENS_BOARD_X_OFF, 0.0f);
  *
  * @group Sensor Calibration
  */
-PARAM_DEFINE_FLOAT(SENS_BOARD_Z_OFF, 0.0f);
+PARAM_DEFINE_FLOAT(SENS_BOARD_Z_OFF, 180.0f);
 
 /**
  * External magnetometer rotation
@@ -427,7 +435,7 @@ PARAM_DEFINE_FLOAT(SENS_BOARD_Z_OFF, 0.0f);
  *
  * @group Sensor Calibration
  */
-PARAM_DEFINE_INT32(SENS_EXT_MAG_ROT, 0);
+PARAM_DEFINE_INT32(SENS_EXT_MAG_ROT, 2);
 
 /**
 * Set usage of external magnetometer
@@ -452,7 +460,7 @@ PARAM_DEFINE_INT32(SENS_EXT_MAG, 0);
  * @max 1500.0
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC1_MIN, 1000.0f);
+PARAM_DEFINE_FLOAT(RC1_MIN, 996.0f);
 
 /**
  * RC Channel 1 Trim
@@ -463,7 +471,7 @@ PARAM_DEFINE_FLOAT(RC1_MIN, 1000.0f);
  * @max 2200.0
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC1_TRIM, 1500.0f);
+PARAM_DEFINE_FLOAT(RC1_TRIM, 996.0f);
 
 /**
  * RC Channel 1 Maximum
@@ -474,7 +482,7 @@ PARAM_DEFINE_FLOAT(RC1_TRIM, 1500.0f);
  * @max 2200.0
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC1_MAX, 2000.0f);
+PARAM_DEFINE_FLOAT(RC1_MAX, 2011.0f);
 
 /**
  * RC Channel 1 Reverse
@@ -496,7 +504,7 @@ PARAM_DEFINE_FLOAT(RC1_REV, 1.0f);
  * @max 100.0
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC1_DZ, 10.0f);
+PARAM_DEFINE_FLOAT(RC1_DZ, 50.0f);
 
 /**
  * RC Channel 2 Minimum
@@ -507,7 +515,7 @@ PARAM_DEFINE_FLOAT(RC1_DZ, 10.0f);
  * @max 1500.0
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC2_MIN, 1000.0f);
+PARAM_DEFINE_FLOAT(RC2_MIN, 1002.0f);
 
 /**
  * RC Channel 2 Trim
@@ -529,7 +537,7 @@ PARAM_DEFINE_FLOAT(RC2_TRIM, 1500.0f);
  * @max 2200.0
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC2_MAX, 2000.0f);
+PARAM_DEFINE_FLOAT(RC2_MAX, 2006.0f);
 
 /**
  * RC Channel 2 Reverse
@@ -551,41 +559,41 @@ PARAM_DEFINE_FLOAT(RC2_REV, 1.0f);
  * @max 100.0
  * @group Radio Calibration
  */
-PARAM_DEFINE_FLOAT(RC2_DZ, 10.0f);
+PARAM_DEFINE_FLOAT(RC2_DZ, 100.0f);
 
-PARAM_DEFINE_FLOAT(RC3_MIN, 1000);
+PARAM_DEFINE_FLOAT(RC3_MIN, 1002);
 PARAM_DEFINE_FLOAT(RC3_TRIM, 1500);
-PARAM_DEFINE_FLOAT(RC3_MAX, 2000);
+PARAM_DEFINE_FLOAT(RC3_MAX, 2006);
 PARAM_DEFINE_FLOAT(RC3_REV, 1.0f);
-PARAM_DEFINE_FLOAT(RC3_DZ, 10.0f);
+PARAM_DEFINE_FLOAT(RC3_DZ, 100.0f);
 
-PARAM_DEFINE_FLOAT(RC4_MIN, 1000);
-PARAM_DEFINE_FLOAT(RC4_TRIM, 1500);
-PARAM_DEFINE_FLOAT(RC4_MAX, 2000);
+PARAM_DEFINE_FLOAT(RC4_MIN, 992);
+PARAM_DEFINE_FLOAT(RC4_TRIM, 1507);
+PARAM_DEFINE_FLOAT(RC4_MAX, 2016);
 PARAM_DEFINE_FLOAT(RC4_REV, 1.0f);
-PARAM_DEFINE_FLOAT(RC4_DZ, 10.0f);
+PARAM_DEFINE_FLOAT(RC4_DZ, 50.0f);
 
-PARAM_DEFINE_FLOAT(RC5_MIN, 1000);
-PARAM_DEFINE_FLOAT(RC5_TRIM, 1500);
-PARAM_DEFINE_FLOAT(RC5_MAX, 2000);
+PARAM_DEFINE_FLOAT(RC5_MIN, 1010);
+PARAM_DEFINE_FLOAT(RC5_TRIM, 1501);
+PARAM_DEFINE_FLOAT(RC5_MAX, 2011);
 PARAM_DEFINE_FLOAT(RC5_REV, 1.0f);
 PARAM_DEFINE_FLOAT(RC5_DZ,  10.0f);
 
 PARAM_DEFINE_FLOAT(RC6_MIN, 1000);
-PARAM_DEFINE_FLOAT(RC6_TRIM, 1500);
-PARAM_DEFINE_FLOAT(RC6_MAX, 2000);
+PARAM_DEFINE_FLOAT(RC6_TRIM, 1504);
+PARAM_DEFINE_FLOAT(RC6_MAX, 2012);
 PARAM_DEFINE_FLOAT(RC6_REV, 1.0f);
-PARAM_DEFINE_FLOAT(RC6_DZ, 10.0f);
+PARAM_DEFINE_FLOAT(RC6_DZ, 20.0f);
 
-PARAM_DEFINE_FLOAT(RC7_MIN, 1000);
+PARAM_DEFINE_FLOAT(RC7_MIN, 992);
 PARAM_DEFINE_FLOAT(RC7_TRIM, 1500);
-PARAM_DEFINE_FLOAT(RC7_MAX, 2000);
+PARAM_DEFINE_FLOAT(RC7_MAX, 2017);
 PARAM_DEFINE_FLOAT(RC7_REV, 1.0f);
 PARAM_DEFINE_FLOAT(RC7_DZ, 10.0f);
 
-PARAM_DEFINE_FLOAT(RC8_MIN, 1000);
+PARAM_DEFINE_FLOAT(RC8_MIN, 991);
 PARAM_DEFINE_FLOAT(RC8_TRIM, 1500);
-PARAM_DEFINE_FLOAT(RC8_MAX, 2000);
+PARAM_DEFINE_FLOAT(RC8_MAX, 2016);
 PARAM_DEFINE_FLOAT(RC8_REV, 1.0f);
 PARAM_DEFINE_FLOAT(RC8_DZ, 10.0f);
 
@@ -670,41 +678,31 @@ PARAM_DEFINE_INT32(RC_DSM_BIND, -1);
  */
 PARAM_DEFINE_INT32(BAT_V_SCALE_IO, 10000);
 
-#ifdef CONFIG_ARCH_BOARD_PX4FMU_V2
 /**
  * Scaling factor for battery voltage sensor on FMU v2.
  *
  * @group Battery Calibration
  */
-PARAM_DEFINE_FLOAT(BAT_V_SCALING, 0.0082f);
-#elif CONFIG_ARCH_BOARD_AEROCORE
-/**
- * Scaling factor for battery voltage sensor on AeroCore.
- *
- * For R70 = 133K, R71 = 10K --> scale = 1.8 * 143 / (4096*10) = 0.0063
- *
- * @group Battery Calibration
- */
-PARAM_DEFINE_FLOAT(BAT_V_SCALING, 0.0063f);
+PARAM_DEFINE_FLOAT(BAT_V_SCALING, 0.00615f);
+#ifdef CONFIG_ARCH_BOARD_AIRLEASH
+		0.00459341f
 #else
-/**
- * Scaling factor for battery voltage sensor on FMU v1.
- *
- * FMUv1 standalone: 1/(10 / (47+10)) * (3.3 / 4095) = 0.00459340659
- * FMUv1 with PX4IO: 0.00459340659
- * FMUv1 with PX4IOAR: (3.3f * 52.0f / 5.0f / 4095.0f) = 0.00838095238
- *
- * @group Battery Calibration
- */
-PARAM_DEFINE_FLOAT(BAT_V_SCALING, 0.00459340659f);
+		0.00615f
 #endif
+);
 
 /**
  * Scaling factor for battery current sensor.
  *
  * @group Battery Calibration
  */
-PARAM_DEFINE_FLOAT(BAT_C_SCALING, 0.0124);	/* scaling for 3DR power brick */
+PARAM_DEFINE_FLOAT(BAT_C_SCALING, 
+#ifdef CONFIG_ARCH_BOARD_AIRLEASH
+		0.0124f
+#else
+		0.020658f
+#endif
+);
 
 
 /**
@@ -718,7 +716,7 @@ PARAM_DEFINE_FLOAT(BAT_C_SCALING, 0.0124);	/* scaling for 3DR power brick */
  * @max 18
  * @group Radio Calibration
  */
-PARAM_DEFINE_INT32(RC_MAP_ROLL, 1);
+PARAM_DEFINE_INT32(RC_MAP_ROLL, 2);
 
 /**
  * Pitch control channel mapping.
@@ -731,7 +729,7 @@ PARAM_DEFINE_INT32(RC_MAP_ROLL, 1);
  * @max 18
  * @group Radio Calibration
  */
-PARAM_DEFINE_INT32(RC_MAP_PITCH, 2);
+PARAM_DEFINE_INT32(RC_MAP_PITCH, 3);
 
 /**
  * Failsafe channel mapping.
@@ -745,7 +743,7 @@ PARAM_DEFINE_INT32(RC_MAP_PITCH, 2);
  *
  *
  */
-PARAM_DEFINE_INT32(RC_MAP_FAILSAFE, 0);  //Default to throttle function
+PARAM_DEFINE_INT32(RC_MAP_FAILSAFE, 5);  //Default to throttle function
 
 /**
  * Throttle control channel mapping.
@@ -758,7 +756,7 @@ PARAM_DEFINE_INT32(RC_MAP_FAILSAFE, 0);  //Default to throttle function
  * @max 18
  * @group Radio Calibration
  */
-PARAM_DEFINE_INT32(RC_MAP_THROTTLE, 3);
+PARAM_DEFINE_INT32(RC_MAP_THROTTLE, 1);
 
 /**
  * Yaw control channel mapping.
@@ -785,7 +783,7 @@ PARAM_DEFINE_INT32(RC_MAP_YAW, 4);
  * @max 18
  * @group Radio Calibration
  */
-PARAM_DEFINE_INT32(RC_MAP_MODE_SW, 0);
+PARAM_DEFINE_INT32(RC_MAP_MODE_SW, 6);
 
 /**
  * Return switch channel mapping.
@@ -803,7 +801,7 @@ PARAM_DEFINE_INT32(RC_MAP_RETURN_SW, 0);
  * @max 18
  * @group Radio Calibration
  */
-PARAM_DEFINE_INT32(RC_MAP_POSCTL_SW, 0);
+PARAM_DEFINE_INT32(RC_MAP_POSCTL_SW, 5);
 
 /**
  * Loiter switch channel mapping.
@@ -839,7 +837,7 @@ PARAM_DEFINE_INT32(RC_MAP_OFFB_SW, 0);
  * @max 18
  * @group Radio Calibration
  */
-PARAM_DEFINE_INT32(RC_MAP_FOLLOW_SW, 0);
+PARAM_DEFINE_INT32(RC_MAP_FOLLOW_SW, 5);
 
 /**
  * Flaps channel mapping.
@@ -859,7 +857,7 @@ PARAM_DEFINE_INT32(RC_MAP_FLAPS, 0);
  * @max 18
  * @group Radio Calibration
  */
-PARAM_DEFINE_INT32(RC_MAP_AUX1, 0);
+PARAM_DEFINE_INT32(RC_MAP_AUX1, 7);
 
 /**
  * Auxiliary switch 2 channel mapping.
@@ -870,7 +868,7 @@ PARAM_DEFINE_INT32(RC_MAP_AUX1, 0);
  * @max 18
  * @group Radio Calibration
  */
-PARAM_DEFINE_INT32(RC_MAP_AUX2, 0);	/**< default function: camera roll */
+PARAM_DEFINE_INT32(RC_MAP_AUX2, 8);	/**< default function: camera roll */
 
 /**
  * Auxiliary switch 3 channel mapping.
@@ -891,7 +889,7 @@ PARAM_DEFINE_INT32(RC_MAP_AUX3, 0);
  * @max 2200
  * @group Radio Calibration
  */
-PARAM_DEFINE_INT32(RC_FAILS_THR, 0);
+PARAM_DEFINE_INT32(RC_FAILS_THR, 1000);
 
 /**
  * Threshold for selecting assist mode
@@ -907,7 +905,7 @@ PARAM_DEFINE_INT32(RC_FAILS_THR, 0);
  * 		negative : true when channel<th
  *
  */
-PARAM_DEFINE_FLOAT(RC_ASSIST_TH, 0.25f);
+PARAM_DEFINE_FLOAT(RC_ASSIST_TH, 0.3f);
 
 /**
  * Threshold for selecting auto mode
@@ -939,7 +937,7 @@ PARAM_DEFINE_FLOAT(RC_AUTO_TH, 0.75f);
  * 		negative : true when channel<th
  *
  */
-PARAM_DEFINE_FLOAT(RC_POSCTL_TH, 0.5f);
+PARAM_DEFINE_FLOAT(RC_POSCTL_TH, 0.3f);
 
 /**
  * Threshold for selecting return to launch mode

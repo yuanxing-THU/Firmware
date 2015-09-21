@@ -39,7 +39,7 @@ init()
 	status_sub = orb_subscribe(ORB_ID(vehicle_status));
 	airdog_sub = orb_subscribe(ORB_ID(airdog_status));
     leash_sub = orb_subscribe(ORB_ID(leash_status));
-	param_use_blue_led = param_find("LEASH_USE_BLUE_LED");
+	param_use_blue_led = param_find("LEASH_USE_BLUE_L");
 	force_update = true;
 	pos_valid = false;
 	link_valid = false;

@@ -56,7 +56,7 @@ PARAM_DEFINE_FLOAT(TRIM_YAW, 0.0f);
  *
  * @group Battery Calibration
  */
-PARAM_DEFINE_FLOAT(BAT_V_EMPTY, 3.4f);
+PARAM_DEFINE_FLOAT(BAT_V_EMPTY, 3.3f);
 
 /**
  * Full cell voltage.
@@ -84,7 +84,13 @@ PARAM_DEFINE_FLOAT(BAT_V_LOAD_DROP, 0.07f);
  *
  * @group Battery Calibration
  */
-PARAM_DEFINE_INT32(BAT_N_CELLS, 3);
+PARAM_DEFINE_INT32(BAT_N_CELLS, 
+#ifdef CONFIG_ARCH_BOARD_AIRLEASH
+		3
+#else
+		4
+#endif
+);
 
 /**
  * Battery capacity.
@@ -93,7 +99,14 @@ PARAM_DEFINE_INT32(BAT_N_CELLS, 3);
  *
  * @group Battery Calibration
  */
-PARAM_DEFINE_FLOAT(BAT_CAPACITY, -1.0f);
+PARAM_DEFINE_FLOAT(BAT_CAPACITY, 
+#ifdef CONFIG_ARCH_BOARD_AIRLEASH
+		-1.0f
+#else
+		5600.0f
+#endif
+);
+
 
 /**
  * Datalink loss mode enabled.
@@ -179,7 +192,7 @@ PARAM_DEFINE_FLOAT(COM_RC_LOSS_T, 0.5);
  * @min 0
  * @max 1
  */
-PARAM_DEFINE_FLOAT(BAT_WARN_LVL, 0.18f);
+PARAM_DEFINE_FLOAT(BAT_WARN_LVL, 0.2f);
 
 /**
  * Voltage when battery level is considered critical.
@@ -188,7 +201,7 @@ PARAM_DEFINE_FLOAT(BAT_WARN_LVL, 0.18f);
  * @min 0
  * @max 1
  */
-PARAM_DEFINE_FLOAT(BAT_CRIT_LVL, 0.09f);
+PARAM_DEFINE_FLOAT(BAT_CRIT_LVL, 0.1f);
 
 
 
@@ -199,7 +212,7 @@ PARAM_DEFINE_FLOAT(BAT_CRIT_LVL, 0.09f);
  * @min 0
  * @max 1
  */
-PARAM_DEFINE_FLOAT(BAT_FLAT_LVL, 0.02f);
+PARAM_DEFINE_FLOAT(BAT_FLAT_LVL, 0.15f);
 
 /**
  * Testing / simulator param for faking the battery level readings. Not used if negative, if positive, battery level is set to this.
@@ -244,13 +257,13 @@ PARAM_DEFINE_INT32(A_TRGT_DLINK_TO, 1000);
 PARAM_DEFINE_FLOAT(A_TRGT_VSB_TO_1, 1.0f);
 
 /**
- * Target visibility timeout 2. Length of time when no data from target received visibility will be considered lost to long and action should be taken.
+ * Target visibility timeout 2. Length of time when no data from target received visibility will be considered lost too long and action should be taken.
  *
  * @group Airdog
  * @min 0.1f
  * @max 30.0f
  */
-PARAM_DEFINE_FLOAT(A_TRGT_VSB_TO_2, 5.0f);
+PARAM_DEFINE_FLOAT(A_TRGT_VSB_TO_2, 45.0f);
 
 /**
  * Valid GPS position is required to arm copter
@@ -268,7 +281,7 @@ PARAM_DEFINE_INT32(A_REQUIRE_GPS, 1);
  * @group Airdog
  * @min -1.0f
  */
-PARAM_DEFINE_FLOAT(A_GOOD_TRG_EPH, 0.0f);
+PARAM_DEFINE_FLOAT(A_GOOD_TRG_EPH, 3.5f);
 
 /**
  * EPV value at which target position always will be considered valid
@@ -277,7 +290,7 @@ PARAM_DEFINE_FLOAT(A_GOOD_TRG_EPH, 0.0f);
  * @group Airdog
  * @min -1.0f
  */
-PARAM_DEFINE_FLOAT(A_GOOD_TRG_EPV, 0.0f);
+PARAM_DEFINE_FLOAT(A_GOOD_TRG_EPV, 8.0f);
 
 /**
  * Enable or disable gyroscope calibration on every arming

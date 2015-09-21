@@ -4,4 +4,4 @@
 /**
  * Drone reaction
  */
-PARAM_DEFINE_INT32(V_REACTION, 1);
+PARAM_DEFINE_INT32(V_REACTION, 2);
