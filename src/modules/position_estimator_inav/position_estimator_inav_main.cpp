@@ -73,8 +73,10 @@
 #include <lib/geo_lookup/geo_mag_declination.h>
 #include <systemlib/param/param.h>
 
+extern "C" {
 #include "position_estimator_inav_params.h"
 #include "inertial_filter.h"
+}
 
 #define MIN_VALID_W 0.00001f
 #define PUB_INTERVAL 10000	// limit publish rate to 100 Hz
@@ -104,7 +106,7 @@ static bool mag_declination_set = false;
 
 float corr_sonar_filtered;
 
-__EXPORT int position_estimator_inav_main(int argc, char *argv[]);
+extern "C" __EXPORT int position_estimator_inav_main(int argc, char *argv[]);
 
 int position_estimator_inav_thread_main(int argc, char *argv[]);
 float pwm_lpf_filtering(float , float , float , float );
@@ -142,7 +144,7 @@ static void usage(const char *reason)
  * The actual stack size should be set in the call
  * to task_create().
  */
-int position_estimator_inav_main(int argc, char *argv[])
+extern "C" __EXPORT int position_estimator_inav_main(int argc, char *argv[])
 {
 	if (argc < 1) {
 		usage("missing command");
@@ -202,7 +204,7 @@ static void write_debug_log(const char *msg, float dt, float x_est[2], float y_e
 	FILE *f = fopen("/fs/microsd/inav.log", "a");
 
 	if (f) {
-		char *s = malloc(256);
+		char *s = (char*) malloc(256);
 		unsigned n = snprintf(s, 256, "%llu %s\n\tdt=%.5f x_est=[%.5f %.5f] y_est=[%.5f %.5f] z_est=[%.5f %.5f] x_est_prev=[%.5f %.5f] y_est_prev=[%.5f %.5f] z_est_prev=[%.5f %.5f]\n",
                               hrt_absolute_time(), msg, (double)dt,
                               (double)x_est[0], (double)x_est[1], (double)y_est[0], (double)y_est[1], (double)z_est[0], (double)z_est[1],
@@ -370,9 +372,10 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 	/* first parameters update */
 	parameters_update(&pos_inav_param_handles, &params);
 
-	struct pollfd fds_init[1] = {
-		{ .fd = sensor_combined_sub, .events = POLLIN },
-	};
+	struct pollfd fds_init[1];
+	fds_init[0].fd = sensor_combined_sub;
+	fds_init[0].events = POLLIN;
+
 
 	/* wait for initial baro value */
 	bool wait_baro = true;
@@ -421,9 +424,9 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 	}
 
 	/* main loop */
-	struct pollfd fds[1] = {
-		{ .fd = vehicle_attitude_sub, .events = POLLIN },
-	};
+	struct pollfd fds[1];
+	fds[0].fd = vehicle_attitude_sub;
+	fds[0].events = POLLIN;
 
 	while (!thread_should_exit) {
 		int ret = poll(fds, 1, 20); // wait maximal 20 ms = 50 Hz minimum rate
@@ -1104,7 +1107,7 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 //            }
 //        }
         bool updated;
-        orb_check(ORB_ID(vehicle_status), &updated);
+        orb_check(vehicle_status_sub, &updated);
         if (updated) {
             orb_copy(ORB_ID(vehicle_status), vehicle_status_sub, &vehicle_status);
         }
