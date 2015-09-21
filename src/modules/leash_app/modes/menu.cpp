@@ -68,7 +68,7 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     Menu::MENUENTRY_CUSTOMIZE,
     Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_IGNORE,
-    Menu::MENUENTRY_PAIRING,
+    Menu::MENUENTRY_ACTION,
     Menu::MENUENTRY_EXIT,
 },
 
@@ -543,6 +543,7 @@ Base* Menu::makeAction()
             }
             break;
 
+
         case MENUENTRY_GYRO:
         {
             if (calibrateMode == CALIBRATE_LEASH)
@@ -579,6 +580,23 @@ Base* Menu::makeAction()
             {
                 nextMode = new Calibrate(CalibrationDevice::AIRDOG_MAGNETOMETER, MENUENTRY_COMPASS, CALIBRATE_AIRDOG);
             }
+            break;
+        }
+
+        case MENUENTRY_SETTINGS:
+        {
+            int entries[] = {
+                MENUENTRY_PAIRING,
+                MENUENTRY_CALIBRATION,
+                MENUENTRY_AIRDOG_CALIBRATION
+            };
+
+            // don't show airdog calibration if dron is not connect
+            int c = dm->activityManager.params_received() ? 3 : 2;
+
+            makeMenu(entries, c);
+
+            switchEntry(MENUENTRY_PAIRING);
             break;
         }
 
