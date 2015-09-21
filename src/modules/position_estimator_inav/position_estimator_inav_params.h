@@ -73,6 +73,9 @@ struct position_estimator_inav_params {
 	float gps_ok_eph;
 	float gps_ok_epv;
 	int32_t gps_init_wait;
+	float vel_x_cutoff;
+	float vel_y_cutoff;
+	float vel_z_cutoff;
 };
 
 struct position_estimator_inav_param_handles {
@@ -107,6 +110,9 @@ struct position_estimator_inav_param_handles {
 	param_t gps_ok_eph;
 	param_t gps_ok_epv;
 	param_t gps_init_wait;
+	param_t vel_x_cutoff;
+	param_t vel_y_cutoff;
+	param_t vel_z_cutoff;
 };
 
 #define CBRK_NO_VISION_KEY	328754

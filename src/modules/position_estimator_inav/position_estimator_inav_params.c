@@ -318,6 +318,28 @@ PARAM_DEFINE_FLOAT(INAV_GPS_OK_EPH, 12.0f);
  */
 PARAM_DEFINE_FLOAT(INAV_GPS_OK_EPV, 15.0f);
 
+/**
+ * LPF cutoff frequency for X velocity filtering
+ */
+PARAM_DEFINE_FLOAT(INAV_VEL_X_LPF, 0.0f);
+
+/**
+ * LPF cutoff frequency for Y velocity filtering
+ */
+PARAM_DEFINE_FLOAT(INAV_VEL_Y_LPF, 0.0f);
+
+/**
+ * LPF cutoff frequency for Z velocity filtering
+ */
+PARAM_DEFINE_FLOAT(INAV_VEL_Z_LPF,
+#ifdef CONFIG_ARCH_BOARD_AIRLEASH
+		10.0f
+#else
+		0.0f
+#endif
+);
+
+
 int parameters_init(struct position_estimator_inav_param_handles *h)
 {
     h->lid_cut = param_find("SENS_LID_CUT");
@@ -351,6 +373,9 @@ int parameters_init(struct position_estimator_inav_param_handles *h)
 	h->gps_init_wait = param_find("INAV_INIT_WAIT");
 	h->gps_ok_eph = param_find("INAV_GPS_OK_EPH");
 	h->gps_ok_epv = param_find("INAV_GPS_OK_EPV");
+	h->vel_x_cutoff = param_find("INAV_VEL_X_LPF");
+	h->vel_y_cutoff = param_find("INAV_VEL_Y_LPF");
+	h->vel_z_cutoff = param_find("INAV_VEL_Z_LPF");
 
 	return OK;
 }
@@ -388,6 +413,9 @@ int parameters_update(const struct position_estimator_inav_param_handles *h, str
 	param_get(h->gps_init_wait, &(p->gps_init_wait));
 	param_get(h->gps_ok_eph, &(p->gps_ok_eph));
 	param_get(h->gps_ok_epv, &(p->gps_ok_epv));
+	param_get(h->vel_x_cutoff, &(p->vel_x_cutoff));
+	param_get(h->vel_y_cutoff, &(p->vel_y_cutoff));
+	param_get(h->vel_z_cutoff, &(p->vel_z_cutoff));
 
 	return OK;
 }

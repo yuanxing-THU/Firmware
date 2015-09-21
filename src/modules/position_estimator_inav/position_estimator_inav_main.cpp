@@ -71,6 +71,7 @@
 #include <systemlib/systemlib.h>
 #include <drivers/drv_hrt.h>
 #include <lib/geo_lookup/geo_mag_declination.h>
+#include <mathlib/math/filter/LowPassFilter.hpp>
 #include <systemlib/param/param.h>
 
 extern "C" {
@@ -166,7 +167,7 @@ extern "C" __EXPORT int position_estimator_inav_main(int argc, char *argv[])
 
 		thread_should_exit = false;
 		position_estimator_inav_task = task_spawn_cmd("position_estimator_inav",
-					       SCHED_DEFAULT, SCHED_PRIORITY_MAX - 5, 5000,
+					       SCHED_DEFAULT, SCHED_PRIORITY_MAX - 5, 5500,
 					       position_estimator_inav_thread_main,
 					       (argv) ? (const char **) &argv[2] : (const char **) NULL);
 		exit(0);
@@ -386,6 +387,10 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 		wait_gps = true;
 	}
 	hrt_abstime gps_stabilized_last = 0;
+
+	math::LowPassFilter<double> lpos_vel_x_lpf(params.vel_x_cutoff);
+	math::LowPassFilter<double> lpos_vel_y_lpf(params.vel_y_cutoff);
+	math::LowPassFilter<double> lpos_vel_z_lpf(params.vel_z_cutoff);
 
 	thread_running = true;
 
@@ -726,8 +731,10 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 							/* set position estimate to (0, 0, 0), use GPS velocity for XY */
 							x_est[0] = 0.0f;
 							x_est[1] = gps.vel_n_m_s;
+							lpos_vel_x_lpf.reset(hrt_absolute_time(), (double) gps.vel_n_m_s);
 							y_est[0] = 0.0f;
 							y_est[1] = gps.vel_e_m_s;
+							lpos_vel_y_lpf.reset(hrt_absolute_time(), (double) gps.vel_e_m_s);
 
 							local_pos.ref_lat = lat;
 							local_pos.ref_lon = lon;
@@ -750,8 +757,10 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 						if (reset_est) {
 							x_est[0] = gps_proj[0];
 							x_est[1] = gps.vel_n_m_s;
+							lpos_vel_x_lpf.reset(hrt_absolute_time(), (double) gps.vel_n_m_s);
 							y_est[0] = gps_proj[1];
 							y_est[1] = gps.vel_e_m_s;
+							lpos_vel_y_lpf.reset(hrt_absolute_time(), (double) gps.vel_e_m_s);
 						}
 
 						/* calculate index of estimated values in buffer */
@@ -977,6 +986,7 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 			corr_baro = 0;
 
 		} else {
+			z_est[1] = (float) lpos_vel_z_lpf.apply(hrt_absolute_time(), (double) z_est[1]);
 			memcpy(z_est_prev, z_est, sizeof(z_est));
 		}
 
@@ -1032,6 +1042,8 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 				//memset(corr_flow, 0, sizeof(corr_flow));
 
 			} else {
+				x_est[1] = (float) lpos_vel_x_lpf.apply(hrt_absolute_time(), (double) x_est[1]);
+				y_est[1] = (float) lpos_vel_y_lpf.apply(hrt_absolute_time(), (double) y_est[1]);
 				memcpy(x_est_prev, x_est, sizeof(x_est));
 				memcpy(y_est_prev, y_est, sizeof(y_est));
 			}
