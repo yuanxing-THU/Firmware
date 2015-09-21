@@ -11,7 +11,7 @@ public:
 	/**
 	 * Constructor with filtering disabled
 	 */
-	LowPassFilter() : _rc(0.0f), _time_last(0)
+	LowPassFilter() : _rc(0.0), _time_last(0)
 	{
 	}
 
@@ -28,17 +28,17 @@ public:
 	 */
 	void set_cutoff_frequency(float cutoff_freq) {
 		if (cutoff_freq <= 0.0f)
-			_rc = 0.0f;
+			_rc = 0.0;
 		else
-			_rc = 1.0f / M_TWOPI_F / cutoff_freq;
+			_rc = 1.0 / M_TWOPI / (double) cutoff_freq;
 	}
 
 	/**
 	 * Return the cutoff frequency
 	 */
 	float get_cutoff_freq(void) const {
-		if (_rc > 0.0f)
-			return 1.0f / M_TWOPI_F / _rc;
+		if (_rc > 0.0)
+			return (float) (1.0 / M_TWOPI / _rc);
 		else
 			return 0.0f;
 	}
@@ -49,11 +49,11 @@ public:
 	 * @return retrieve the filtered result
 	 */
 	const T &apply(uint64_t t, const T &next_value) {
-		if (_rc > 0.0f) {
-			float dt = (t - _time_last) * 1.0e-6f;
-			float a = dt / (_rc + dt);
-			_value *= (1.0f - a);
-			_value += next_value * a;
+		if (_rc > 0.0) {
+			double dt = (t - _time_last) * 1.0e-6;
+			double a = dt / (_rc + dt);
+			_value *= (T) (1.0 - a);
+			_value += next_value * (T) a;
 			if (_time_last == 0) {
 				_value = next_value; // init first sample
 			}
@@ -74,7 +74,7 @@ public:
 	}
 
 private:
-	float _rc;
+	double _rc;
 	uint64_t _time_last;
 	T _value;
 };
