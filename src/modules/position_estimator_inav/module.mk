@@ -36,7 +36,7 @@
 #
 
 MODULE_COMMAND	 	= position_estimator_inav
-SRCS		 	= position_estimator_inav_main.c \
+SRCS		 	= position_estimator_inav_main.cpp \
 			position_estimator_inav_params.c \
 			inertial_filter.c
 
