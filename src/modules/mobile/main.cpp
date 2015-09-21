@@ -15,7 +15,7 @@ extern "C" __EXPORT int main(int argc, const char *argv[]);
 
 #include <systemlib/systemlib.h>
 
-#include "at.hpp"
+#include "at_bl600.hpp"
 #include "dispatch.hpp"
 #include "io_blocking.hpp"
 #include "io_tty.hpp"
