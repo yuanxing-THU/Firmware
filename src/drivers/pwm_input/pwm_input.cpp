@@ -81,6 +81,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#define MINIMAL_DISTANCE 200
+#define MAXIMAL_DISTANCE 10000
+
 #if HRT_TIMER == PWMIN_TIMER
 #error cannot share timer between HRT and PWMIN
 #endif
@@ -308,8 +311,8 @@ PWMIN::init()
 	CDev::init();
 
     data.type = RANGE_FINDER_TYPE_LASER;
-    data.minimum_distance = 0.20f;
-    data.maximum_distance = 7.0f;
+    data.minimum_distance = MINIMAL_DISTANCE * 1e-3f;
+    data.maximum_distance = MAXIMAL_DISTANCE * 1e-3f;
 
     range_finder_pub = orb_advertise(ORB_ID(sensor_range_finder), &data);
     DOG_PRINT("[pwm_input] advertising %d\n"
@@ -515,11 +518,12 @@ void PWMIN::_publish(uint16_t status, uint32_t period, uint32_t pulse_width)
     data.timestamp = pwmin_report.timestamp;
     data.error_count = error_count;
 
-    if (data.distance < data.minimum_distance || data.distance > data.maximum_distance) {
+    if (pulse_width < MINIMAL_DISTANCE || pulse_width > MAXIMAL_DISTANCE) {
         data.valid = false;
     } else {
         data.valid = true;
     }
+
     if (range_finder_pub > 0) {
         orb_publish(ORB_ID(sensor_range_finder), range_finder_pub, &data);
     }

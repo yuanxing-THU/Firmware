@@ -104,6 +104,8 @@ static const hrt_abstime xy_src_timeout = 2000000;	// estimate position during t
 static const uint32_t updates_counter_len = 1000000;
 //static const float max_flow = 1.0f;	// max flow value that can be used, rad/s
 static bool mag_declination_set = false;
+// Number of lidar measurments that proofed to be good before we use lidar
+static int rangeFinderTrust = 0;
 
 float corr_sonar_filtered;
 
@@ -523,7 +525,6 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
                         {
                             case RANGE_FINDER_TYPE_ULTRASONIC:
                             case RANGE_FINDER_TYPE_LASER: {
-
                                         prev_range = current_range;
 
                                         current_range.timestamp = t;
@@ -532,26 +533,58 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
                                         float new_distance = range_finder.distance * att.R[2][2];
                                         range_finder.distance = new_distance;
 
-                                        if (t > prev_range.timestamp + sonar_timeout && prev_range.valid == false) {
+                                        if (t > prev_range.timestamp + sonar_timeout) {
                                             // If we were not working some time already - don't consider first measurment true
                                             // We are resetting corr_sonar_filtered here
-                                            corr_sonar_filtered = current_range.distance = range_finder.distance;
+                                            corr_sonar_filtered = range_finder.distance;
                                             current_range.valid = false;
+                                            rangeFinderTrust = 0;
+                                            DOG_PRINT("[pos_est] rangeFinderTrust %d\n", rangeFinderTrust);
                                             break;
                                         }
-
-                                        if (fabsf(range_finder.distance - prev_range.distance) < params.sonar_err) {
+                                        else if (rangeFinderTrust < 10)
+                                        {
+                                            // We are already estimating distance to bottom, but not using it yet
+                                            pwm_lpf_filtering(range_finder.distance,
+                                                    params.lid_l_lpf,
+                                                    params.lid_h_lpf,
+                                                    params.lid_cut);
+                                            current_range.distance = range_finder.distance;
+                                            current_range.valid = false;
+                                            if (fabsf(range_finder.distance - prev_range.distance) < params.sonar_err)
+                                            {
+                                                rangeFinderTrust++;
+                                                DOG_PRINT("[pos_est] rangeFinderTrust incresed to %d distance %d\n",
+                                                        rangeFinderTrust,
+                                                        (int)(range_finder.distance * 1e3f));
+                                            }
+                                            else
+                                            {
+                                                rangeFinderTrust = 0;
+                                                DOG_PRINT("[pos_est] rangeFinderTrust dropped to %d distance %d\n",
+                                                        rangeFinderTrust,
+                                                        (int)(range_finder.distance * 1e3f));
+                                            }
+                                            break;
+                                        }
+                                        else if (fabsf(range_finder.distance - prev_range.distance) < params.sonar_err) {
                                             // Accepted difference - enabling LPF and stuff
 
-                                            // TODO[Max] there should be parameters for leidar noise, l_lpf and h_lpf
-                                            current_range.distance = pwm_lpf_filtering(range_finder.distance, params.lid_l_lpf, params.lid_h_lpf, params.lid_cut);
+                                            current_range.distance = pwm_lpf_filtering(range_finder.distance,
+                                                    params.lid_l_lpf,
+                                                    params.lid_h_lpf,
+                                                    params.lid_cut);
                                             current_range.valid = true;
                                         }
                                         else {
                                             // This difference in not accepted, considering as a spike for now
                                             if (fabsf(corr_sonar_filtered - range_finder.distance) < params.sonar_err) {
                                                 // No, this is not spike, the spike was last time!
-                                                current_range.distance = pwm_lpf_filtering(range_finder.distance, params.lid_l_lpf, params.lid_h_lpf, params.lid_cut);                                            current_range.valid = true;
+                                                current_range.distance = pwm_lpf_filtering(range_finder.distance,
+                                                        params.lid_l_lpf,
+                                                        params.lid_h_lpf,
+                                                        params.lid_cut);
+                                                current_range.valid = true;
                                             }
                                             else {
                                                 // This is spike! Busted!
