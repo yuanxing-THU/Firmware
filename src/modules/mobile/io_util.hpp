@@ -2,9 +2,9 @@
 
 #include "io_blocking.hpp"
 
-template <typename Device, int TIMEOUT_MS>
+template <typename Device, int TIMEOUT_MS, typename ... Ts>
 ssize_t
-read_guaranteed(BlockingDevice<Device, TIMEOUT_MS> & d, void * buf, size_t buf_size)
+read_guaranteed(BlockingDevice<Device, TIMEOUT_MS, Ts...> & d, void * buf, size_t buf_size)
 {
 	ssize_t r = read(d, buf, buf_size);
 	dbg("read(%u) -> %i.\n", (unsigned)buf_size, (int)r);

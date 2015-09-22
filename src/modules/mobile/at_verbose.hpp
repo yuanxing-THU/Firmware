@@ -12,6 +12,9 @@ struct VerboseAT
 	int log;
 
 	VerboseAT(Device & d, int l) : n(0), dev(d), log(l) {}
+
+	friend int
+	fileno(VerboseAT & v) { return fileno(v.dev); }
 };
 
 struct PrintableASCII

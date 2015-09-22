@@ -70,3 +70,21 @@ repr_n(InputIt first, Size n, OuputIt out)
 
 	return out;
 }
+
+template <typename Input, typename Size, typename Output>
+Output
+hexify_n(Input first, Size n, Output out)
+{
+	while (n > 0)
+	{
+		auto x = *first;
+		++first;
+		--n;
+
+		*out = hex_digit(x >> 4);
+		++out;
+		*out = hex_digit(x);
+		++out;
+	}
+	return out;
+}

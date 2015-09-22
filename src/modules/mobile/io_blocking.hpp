@@ -1,6 +1,12 @@
 #pragma once
 
-template <typename Device, int TIMEOUT_MS>
+struct ReadReadyNever
+{
+	inline bool
+	operator () (const void * buf, size_t size) { return false; }
+};
+
+template <typename Device, int TIMEOUT_MS, typename ReadReady>
 struct BlockingDevice
 {
 	Device & dev;
@@ -25,6 +31,9 @@ struct BlockingDevice
 
 		while (i < size)
 		{
+			ReadReady ready;
+			if (ready(buf, i)) { return i; }
+
 			struct pollfd p;
 			p.fd = fileno(self.dev);
 			p.events = POLLIN;
@@ -93,6 +102,11 @@ struct BlockingDevice
 };
 
 template < size_t TIMEOUT_MS, typename Device >
-BlockingDevice< Device, TIMEOUT_MS >
+BlockingDevice< Device, TIMEOUT_MS , ReadReadyNever >
 make_it_blocking(Device & d)
-{ return BlockingDevice< Device, TIMEOUT_MS >( d ); }
+{ return BlockingDevice< Device, TIMEOUT_MS, ReadReadyNever >( d ); }
+
+template < size_t TIMEOUT_MS, typename ReadReady, typename Device >
+BlockingDevice< Device, TIMEOUT_MS, ReadReady >
+make_it_blocking(Device & d)
+{ return BlockingDevice< Device, TIMEOUT_MS, ReadReady >( d ); }

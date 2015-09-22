@@ -15,8 +15,9 @@ extern "C" __EXPORT int main(int argc, const char *argv[]);
 
 #include <systemlib/systemlib.h>
 
-#include "at_bl600.hpp"
 #include "at_verbose.hpp"
+#include "bl600_at.hpp"
+#include "bl600_gpio.hpp"
 #include "dispatch.hpp"
 #include "io_blocking.hpp"
 #include "io_tty.hpp"
@@ -101,16 +102,25 @@ exec_all_AT(const char devname[], int argc, const char * const arg[], char buf[]
 	unique_file serial = open_serial(devname);
 	if (fileno(serial) == -1) { return false; }
 
-	auto log = make_verbose_at(serial, 2);
-	auto & dev = log;
+	//DevLog lowlog { fileno(serial), 2, "uart read  ", "uart write " };
+	auto & lowlog = serial;
 
+	auto dev = make_it_blocking< 1000/*ms*/, bl600::AT_ReadReady >(lowlog);
+	//auto & dev = lowlog;
+
+	auto verbose = make_verbose_at(dev, 2);
+	//auto & verbose = dev;
+
+
+	bool ok = true;
 	for (int i = 0; i < argc; ++i )
 	{
-		ssize_t r = exec_AT(dev, arg[i], buf, size);
+		ssize_t r = exec_AT(verbose, arg[i], buf, size);
 		if (r == -1) { return false; }
+		ok = AT_OK(buf, r) and ok;
 	}
 
-	return true;
+	return ok;
 }
 
 static bool
@@ -219,7 +229,6 @@ version_firmware_check(const char devname[])
 	return ok;
 }
 
-
 static bool
 set_license(const char devname[], const char mac[], const char license[])
 {
@@ -271,6 +280,37 @@ set_license(const char devname[], const char mac[], const char license[])
 	return ok;
 }
 
+static bool
+fs_erase(const char devname[])
+{
+	const char * const at[] = { "ATZ", "AT&F 1", nullptr };
+	return exec_all_AT(devname, 2, at);
+}
+
+static bool
+file_load(const char devname[], const char module_fname[], const char path[])
+{
+	if (not maintenance_allowed()) { return false; }
+
+	unique_file serial = open_serial(devname);
+	if (fileno(serial) == -1) { return false; }
+
+	//DevLog lowlog { fileno(serial), 2, "uart read  ", "uart write " };
+	auto & lowlog = serial;
+
+	auto dev = make_it_blocking< 100/*ms*/, bl600::AT_ReadReady >(lowlog);
+	//auto & dev = lowlog;
+
+	//auto verbose = make_verbose_at(dev, 2);
+	auto & verbose = dev;
+
+	unique_file f = open(path, O_RDONLY);
+	if (fileno(f) == -1) { return false; }
+
+	bool ok = bl600::file_load(verbose, module_fname, f);
+	return ok;
+}
+
 static inline bool
 streq(const char a[], const char b[]) { return std::strcmp(a, b) == 0; }
 
@@ -285,6 +325,8 @@ usage(const char name[])
 	fprintf(stderr, "\t%s at TTY command [command...]\n", name);
 	fprintf(stderr, "\t%s firmware-version TTY\n", name);
 	fprintf(stderr, "\t%s set-license TTY MAC-12 LICENCE-20\n", name);
+	fprintf(stderr, "\t%s fs-erase TTY\n", name);
+	fprintf(stderr, "\t%s file-load TTY MODULE_FILE_NAME PATH\n", name);
 	fprintf(stderr, "\n");
 }
 
@@ -370,6 +412,18 @@ main(int argc, const char *argv[])
 	{
 		bool ok = maintenance_allowed()
 			and set_license(argv[2], argv[3], argv[4]);
+		if (not ok) { return 1; }
+	}
+	else if (argc == 3 and streq(argv[1], "fs-erase"))
+	{
+		bool ok = maintenance_allowed()
+			and fs_erase(argv[2]);
+		if (not ok) { return 1; }
+	}
+	else if (argc == 5 and streq(argv[1], "file-load"))
+	{
+		bool ok = maintenance_allowed()
+			and file_load(argv[2], argv[3], argv[4]);
 		if (not ok) { return 1; }
 	}
 	else
