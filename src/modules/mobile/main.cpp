@@ -22,6 +22,8 @@ extern "C" __EXPORT int main(int argc, const char *argv[]);
 #include "read_write_log.hpp"
 #include "unique_file.hpp"
 
+#include "hack_nuttx_uart.hpp"
+
 namespace
 {
 
@@ -63,7 +65,9 @@ daemon(int argc, char *argv[])
 #else
 	auto & log = d;
 #endif
-	auto f = make_it_blocking< 1000/*ms*/ >(log);
+	using namespace NuttxUART;
+	auto dev = make_hack<WriteVariant::AS_MUCH_AS_POSSIBLE>(log);
+	auto f = make_it_blocking< 1000/*ms*/ >(dev);
 
 	FileWriteState write_state;
 
