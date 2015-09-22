@@ -117,7 +117,7 @@ OffsetFollow::on_active_front_follow() {
 
     _offset_goal_angle = atan2( target_vel(1), target_vel(0));
 
-    _offset_goal_angle += _front_follow_aditional_angle;
+    _offset_goal_angle += _front_follow_additional_angle;
 
     normalize_angle(_offset_goal_angle);
     
@@ -277,10 +277,10 @@ OffsetFollow::execute_vehicle_command_front_follow() {
                 break;
 
             case REMOTE_CMD_LEFT: 
-                offset_rotation_step(-1, _front_follow_aditional_angle);
+                offset_rotation_step(-1, _front_follow_additional_angle);
                 break;
             case REMOTE_CMD_RIGHT: 
-                offset_rotation_step(1, _front_follow_aditional_angle);
+                offset_rotation_step(1, _front_follow_additional_angle);
                 break;
 
             case REMOTE_CMD_CLOSER: 
@@ -370,7 +370,7 @@ OffsetFollow::init_base_offset() {
 
     _base_offset_inited = true;
 
-    _front_follow_aditional_angle = NavigatorMode::parameters.front_follow_additional_angle;
+    _front_follow_additional_angle = _pi/4.0f * float(NavigatorMode::parameters.front_follow_additional_angle);
 
 }
 

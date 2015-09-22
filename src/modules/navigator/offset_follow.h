@@ -113,7 +113,7 @@ private:
 
     bool _base_offset_inited;
 
-    float _front_follow_aditional_angle;
+    float _front_follow_additional_angle;
 
 };
 
