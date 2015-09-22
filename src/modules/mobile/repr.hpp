@@ -4,6 +4,12 @@
 
 #include "debug.hpp"
 
+struct PrintableNone
+{
+	bool
+	operator() (char) { return false; }
+};
+
 inline char
 hex_digit(char x)
 {
@@ -11,44 +17,34 @@ hex_digit(char x)
 	return x + (x < 10 ? '0' : 'a' - 10);
 }
 
-template <typename Device>
+template <typename Printable, typename Device>
 void
-write_repr_char(Device &dev, char ch, bool put_space_before)
+write_repr_char(Device &dev, char ch)
 {
-	//if (put_space_before) { write(dev, " ", 1); }
-	//if (ch <= ' ' or ch == '\\') {
-	//	char buf[] = {'\\', 'x', hex_digit(ch >> 4), hex_digit(ch)};
-	//	write(dev, buf, sizeof(buf));
-	//}
-	//else { write(dev, (const void *)&ch, 1); }
-
-	//char buf[] = {' ', '\\', 'x', hex_digit(ch >> 4), hex_digit(ch)};
+	Printable is_print;
+	if (is_print(ch) and ch != '\\') { write(dev, (const void *)&ch, 1); }
+	else
 	{
-		char buf[3] = {' ', hex_digit(ch >> 4), hex_digit(ch)};
-		ssize_t r = ::write(dev, buf, sizeof(buf));
-		if (r < 0) { dbg_perror("write_repr_char a"); }
+		char buf[] = {'\\', 'x', hex_digit(ch >> 4), hex_digit(ch)};
+		write(dev, buf, sizeof(buf));
 	}
-	if (' ' <= ch and ch < '\x7f') {
-		char buf[3] = {'(', ch, ')'};
-		ssize_t r = ::write(dev, buf, sizeof(buf));
-		if (r < 0) { dbg_perror("write_repr_char b"); }
-	}
+}
+
+template <typename Printable, typename Device>
+void
+write_repr(const Device &dev, const void *buf, std::size_t buf_size)
+{
+	auto p = static_cast<const char *>(buf);
+	for(std::size_t i = 0; i < buf_size; ++i)
+		write_repr_char<Printable>(dev, p[i]);
+	char nl = '\n';
+	write(dev, &nl, 1);
 }
 
 template <typename Device>
 void
 write_repr(const Device &dev, const void *buf, std::size_t buf_size)
-{
-	auto p = static_cast<const char *>(buf);
-	if (buf_size > 0) {
-		write_repr_char(dev, *p, false);
-		for(std::size_t i = 1; i < buf_size; ++i)
-			write_repr_char(dev, p[i], true);
-		char nl = '\n';
-		ssize_t r = write(dev, &nl, 1);
-		if (r < 0) { dbg_perror("write_repr"); }
-	}
-}
+{ write_repr<PrintableNone, Device>(dev, buf, buf_size); }
 
 template <typename InputIt, typename Size, typename OuputIt>
 OuputIt

@@ -16,6 +16,7 @@ extern "C" __EXPORT int main(int argc, const char *argv[]);
 #include <systemlib/systemlib.h>
 
 #include "at_bl600.hpp"
+#include "at_verbose.hpp"
 #include "dispatch.hpp"
 #include "io_blocking.hpp"
 #include "io_tty.hpp"
@@ -100,15 +101,12 @@ exec_all_AT(const char devname[], int argc, const char * const arg[], char buf[]
 	unique_file serial = open_serial(devname);
 	if (fileno(serial) == -1) { return false; }
 
-	auto & log = serial;
-	//DevLog log (fileno(serial), 2, "at read  ", "at write ");
+	auto log = make_verbose_at(serial, 2);
 	auto & dev = log;
 
 	for (int i = 0; i < argc; ++i )
 	{
-		printf("%i# ", i);
-
-		ssize_t r = exec_AT_verbose(dev, stdout, arg[i], buf, size);
+		ssize_t r = exec_AT(dev, arg[i], buf, size);
 		if (r == -1) { return false; }
 	}
 
