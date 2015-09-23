@@ -393,6 +393,7 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 	math::LowPassFilter<double> lpos_vel_x_lpf(params.vel_x_cutoff);
 	math::LowPassFilter<double> lpos_vel_y_lpf(params.vel_y_cutoff);
 	math::LowPassFilter<double> lpos_vel_z_lpf(params.vel_z_cutoff);
+	float lpfed_vel_x = 0.0f, lpfed_vel_y = 0.0f, lpfed_vel_z = 0.0f;
 
 	thread_running = true;
 
@@ -765,9 +766,11 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 							x_est[0] = 0.0f;
 							x_est[1] = gps.vel_n_m_s;
 							lpos_vel_x_lpf.reset(hrt_absolute_time(), (double) gps.vel_n_m_s);
+							lpfed_vel_x = gps.vel_n_m_s;
 							y_est[0] = 0.0f;
 							y_est[1] = gps.vel_e_m_s;
 							lpos_vel_y_lpf.reset(hrt_absolute_time(), (double) gps.vel_e_m_s);
+							lpfed_vel_y = gps.vel_e_m_s;
 
 							local_pos.ref_lat = lat;
 							local_pos.ref_lon = lon;
@@ -791,9 +794,11 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 							x_est[0] = gps_proj[0];
 							x_est[1] = gps.vel_n_m_s;
 							lpos_vel_x_lpf.reset(hrt_absolute_time(), (double) gps.vel_n_m_s);
+							lpfed_vel_x = gps.vel_n_m_s;
 							y_est[0] = gps_proj[1];
 							y_est[1] = gps.vel_e_m_s;
 							lpos_vel_y_lpf.reset(hrt_absolute_time(), (double) gps.vel_e_m_s);
+							lpfed_vel_y = gps.vel_e_m_s;
 						}
 
 						/* calculate index of estimated values in buffer */
@@ -1019,7 +1024,7 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 			corr_baro = 0;
 
 		} else {
-			z_est[1] = (float) lpos_vel_z_lpf.apply(hrt_absolute_time(), (double) z_est[1]);
+			lpfed_vel_z = (float) lpos_vel_z_lpf.apply(hrt_absolute_time(), (double) z_est[1]);
 			memcpy(z_est_prev, z_est, sizeof(z_est));
 		}
 
@@ -1075,8 +1080,8 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 				//memset(corr_flow, 0, sizeof(corr_flow));
 
 			} else {
-				x_est[1] = (float) lpos_vel_x_lpf.apply(hrt_absolute_time(), (double) x_est[1]);
-				y_est[1] = (float) lpos_vel_y_lpf.apply(hrt_absolute_time(), (double) y_est[1]);
+				lpfed_vel_x = (float) lpos_vel_x_lpf.apply(hrt_absolute_time(), (double) x_est[1]);
+				lpfed_vel_y = (float) lpos_vel_y_lpf.apply(hrt_absolute_time(), (double) y_est[1]);
 				memcpy(x_est_prev, x_est, sizeof(x_est));
 				memcpy(y_est_prev, y_est, sizeof(y_est));
 			}
@@ -1263,11 +1268,11 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 			local_pos.xy_global = local_pos.xy_valid && use_gps_xy;
 			local_pos.z_global = local_pos.z_valid && use_gps_z;
 			local_pos.x = x_est[0];
-			local_pos.vx = x_est[1];
+			local_pos.vx = lpfed_vel_x;
 			local_pos.y = y_est[0];
-			local_pos.vy = y_est[1];
+			local_pos.vy = lpfed_vel_y;
 			local_pos.z = z_est[0];
-			local_pos.vz = z_est[1];
+			local_pos.vz = lpfed_vel_z;
 			local_pos.landed = landed;
 			local_pos.yaw = att.yaw;
 			local_pos.dist_bottom = current_range.distance;
