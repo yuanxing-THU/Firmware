@@ -137,6 +137,14 @@ struct log_LPOS_s {
 	float epv;
 };
 
+/* --- LRAW - Raw local position --- */
+#define LOG_LRAW_MSG 80
+struct log_LRAW_s {
+	float vx;
+	float vy;
+	float vz;
+};
+
 /* --- LPSP - LOCAL POSITION SETPOINT --- */
 #define LOG_LPSP_MSG 7
 struct log_LPSP_s {
@@ -574,7 +582,8 @@ struct log_TGPS_s {
 //	uint32_t bytes_received[7];
 //};
 
-/* !!! ID 79 used up by raw sensors
+/* !!! ID 79 used up by raw sensors */
+/* !!! ID 80 used up by raw local position */
 
 /********** SYSTEM MESSAGES, ID > 0x80 **********/
 
@@ -611,6 +620,7 @@ static const struct log_format_s log_formats[] = {
 	LOG_FORMAT(SRAW, "hhhhhhhhh", "AccX,AccY,AccZ,GyroX,GyroY,GyroZ,MagX,MagY,MagZ"),
 	LOG_FORMAT(SENS, "fffffff",		"BrPres,BrAlt,BrTemp,DiffPres,DiffPresFilt,AccTemp,GyroTemp"),
 	LOG_FORMAT(LPOS, "ffffffffLLfBBBff",	"X,Y,Z,Dist,DistR,VX,VY,VZ,RLat,RLon,RAlt,PFlg,LFlg,GFlg,EPH,EPV"),
+	LOG_FORMAT(LRAW, "fff", "VX,VY,VZ"),
 	LOG_FORMAT(LPSP, "ffff",		"X,Y,Z,Yaw"),
 	LOG_FORMAT(GPS, "QBffLLfffffBHHH",	"GPSTime,Fix,EPH,EPV,Lat,Lon,Alt,VelN,VelE,VelD,Cog,nSat,SNR,N,J"),
 	LOG_FORMAT(ATTC, "ffff",		"Roll,Pitch,Yaw,Thrust"),

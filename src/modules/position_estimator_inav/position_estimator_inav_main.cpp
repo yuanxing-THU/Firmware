@@ -1269,10 +1269,13 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
 			local_pos.z_global = local_pos.z_valid && use_gps_z;
 			local_pos.x = x_est[0];
 			local_pos.vx = lpfed_vel_x;
+			local_pos.raw_vx = x_est[1];
 			local_pos.y = y_est[0];
 			local_pos.vy = lpfed_vel_y;
+			local_pos.raw_vy = y_est[1];
 			local_pos.z = z_est[0];
 			local_pos.vz = lpfed_vel_z;
+			local_pos.raw_vz = z_est[1];
 			local_pos.landed = landed;
 			local_pos.yaw = att.yaw;
 			local_pos.dist_bottom = current_range.distance;

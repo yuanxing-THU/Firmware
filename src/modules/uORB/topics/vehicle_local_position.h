@@ -68,6 +68,10 @@ struct vehicle_local_position_s {
 	float vx; 				/**< Ground X Speed (Latitude), m/s in NED */
 	float vy;				/**< Ground Y Speed (Longitude), m/s in NED */
 	float vz;				/**< Ground Z Speed (Altitude), m/s	in NED */
+	/* Raw velocity before the LPF */
+	float raw_vx;
+	float raw_vy;
+	float raw_vz;
 	/* Heading */
 	float yaw;
 	/* Reference position in GPS / WGS84 frame */

@@ -1064,6 +1064,7 @@ int sdlog2_thread_main(int argc, char *argv[])
 			struct log_SENS_s log_SENS;
 			struct log_SRAW_s log_SRAW;
 			struct log_LPOS_s log_LPOS;
+			struct log_LRAW_s log_LRAW;
 			struct log_LPSP_s log_LPSP;
 			struct log_GPS_s log_GPS;
 			struct log_ATTC_s log_ATTC;
@@ -1605,6 +1606,13 @@ int sdlog2_thread_main(int argc, char *argv[])
 			log_msg.body.log_LPOS.eph = buf.local_pos.eph;
 			log_msg.body.log_LPOS.epv = buf.local_pos.epv;
 			LOGBUFFER_WRITE_AND_COUNT(LPOS);
+
+			/* Raw local position */
+			log_msg.msg_type = LOG_LRAW_MSG;
+			log_msg.body.log_LRAW.vx = buf.local_pos.raw_vx;
+			log_msg.body.log_LRAW.vy = buf.local_pos.raw_vy;
+			log_msg.body.log_LRAW.vz = buf.local_pos.raw_vz;
+			LOGBUFFER_WRITE_AND_COUNT(LRAW);
 		}
 
 		/* --- LOCAL POSITION SETPOINT --- */
