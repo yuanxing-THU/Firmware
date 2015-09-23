@@ -15,55 +15,12 @@ __EXPORT int eparam_main(int argc, char *argv[]);
 
 static FILE *gFile = NULL;
 
-static int ecompare(const char *search_string, const char *name)
-{
-    int result = 1;
-
-    if (!(search_string == NULL)) {
-        /* start search */
-        const char *ss = search_string;
-        const char *pp = name;
-
-        /* XXX this comparison is only ok for trailing wildcards */
-        while (*ss != '\0' && *pp != '\0')
-        {
-            if (*ss == *pp)
-            {
-                ss++;
-                pp++;
-            }
-            else if (*ss == '*')
-            {
-                pp++;
-            }
-            else
-            {
-                /* param not found */
-                result = 0;
-                break;
-            }
-        }
-
-        /* the search string must have been consumed */
-        if (!(*ss == '\0' || *ss == '*'))
-        {
-            result = 0;
-        }
-    }
-    else
-    {
-        result = 0;
-    }
-
-    return result;
-}
-
 static void do_save(void *arg, param_t param)
 {
     const char *search_string = (const char*)arg;
     const char *name = (const char*)param_name(param);
 
-    if (ecompare(search_string, name))
+    if (strncmp(search_string, name, strlen(search_string)) == 0)
     {
         const size_t value_size = param_size(param);
 
@@ -98,10 +55,10 @@ static void do_save(void *arg, param_t param)
     }
 }
 
-int eparam_save(const char *search_string, const char *filename)
+int eparam_save(const char *search_string, const char *filename, const char *mode)
 {
     int result = 0;
-    FILE *f = fopen(filename, "w");
+    FILE *f = fopen(filename, mode);
 
     if (f == NULL)
     {
@@ -238,26 +195,28 @@ int eparam_load(const char *filename)
 int
 eparam_main(int argc, char *argv[])
 {
-    if (argc == 4)
+    if (argc >= 4 && strcmp(argv[1], "save") == 0)
     {
-        if (!strcmp(argv[1], "save"))
+        int i = 0;
+        const char *filename = argv[2];
+        const char *search_string = argv[3];
+
+        eparam_save(search_string, filename, "w");
+        for (i = 4; i < argc; i++)
         {
-            const char *search_string = argv[2];
-            const char *filename = argv[3];
-            eparam_save(search_string, filename);
+            search_string = argv[i];
+            eparam_save(search_string, filename, "a");
         }
     }
-    else if (argc == 3)
+    else if (argc == 3 && strcmp(argv[1], "load") == 0)
     {
-        if (!strcmp(argv[1], "load"))
-        {
-            const char *filename = argv[2];
-            eparam_load(filename);
-        }
+        const char *filename = argv[2];
+        eparam_load(filename);
     }
     else
     {
-        printf("eparam save <search_string> <filename>");
+        printf("eparam save <filename> <search_string1> [<search_string2> ...]\n");
+        printf("eparam load <filename>\n");
     }
 
     return 0;
