@@ -114,7 +114,7 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     Menu::MENUENTRY_AIRDOG_CALIBRATION,
     Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_IGNORE,
-    Menu::MENUENTRY_ACTION,
+    Menu::MENUENTRY_ACTION_CONFIRM,
     Menu::MENUENTRY_SETTINGS,
 },
 {
@@ -404,7 +404,7 @@ Base* Menu::doEvent(int orbId)
     {
         if (key_pressed(BTN_OK))
         {
-            makeAction();
+            nextMode = makeAction();
             confirmAction = false;
         }
         else if (key_pressed(BTN_BACK))

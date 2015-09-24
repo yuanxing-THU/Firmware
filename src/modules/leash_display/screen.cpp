@@ -771,6 +771,8 @@ void Screen::showInfo(int info, int error, int leashBattery)
             text[0].font = &Font::LucideGrandeMed;
             text[1].text = "sure?";
             text[1].font = &Font::LucideGrandeMed;
+            text[2].text = "Menu to cancel";
+            text[2].font = &Font::LucideGrandeTiny;
             break;
 
         case INFO_ERROR:
