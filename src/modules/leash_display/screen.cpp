@@ -464,6 +464,11 @@ void Screen::showMenu(int buttons, int type, int value, const char *presetName, 
             text = "Gyro";
             break;
 
+        case MENUTYPE_RESET:
+            imageId = IMAGE_SCREENS_ICONS_SETTINGS;
+            text = "Reset";
+            break;
+
         case MENUTYPE_SELECT:
             label = presetName;
             text = "Select";
@@ -759,6 +764,13 @@ void Screen::showInfo(int info, int error, int leashBattery)
             text[1].font = &Font::LucideGrandeMed;
             text[2].text = "And hold still";
             text[2].font = &Font::LucideGrandeSmall;
+            break;
+
+        case INFO_ARE_YOU_SURE:
+            text[0].text = "Are you";
+            text[0].font = &Font::LucideGrandeMed;
+            text[1].text = "sure?";
+            text[1].font = &Font::LucideGrandeMed;
             break;
 
         case INFO_ERROR:

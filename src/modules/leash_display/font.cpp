@@ -47,6 +47,10 @@ int Font::getSymbolImageId(char c) const
     {
         id = firstSymbolImageId + symbolOffset + 2;
     }
+    else if (c == '?')
+    {
+        id = firstSymbolImageId + symbolOffset + 3;
+    }
 
     return id;
 }

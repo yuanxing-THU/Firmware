@@ -21,6 +21,7 @@ public:
 protected:
     enum {
         // functional entries
+        MENUENTRY_ACTION_CONFIRM = - 5,
         MENUENTRY_ACTION = - 4,
         MENUENTRY_PREVIOUS = -3,
         MENUENTRY_IGNORE = -2,
@@ -48,6 +49,7 @@ protected:
         MENUENTRY_COMPASS,
         MENUENTRY_ACCELS,
         MENUENTRY_GYRO,
+        MENUENTRY_RESET,
 
         // Customize menu
         MENUENTRY_GENERATED,
@@ -80,6 +82,7 @@ protected:
         CALIBRATE_AIRDOG,
     };
 
+    bool confirmAction;
     int calibrateMode;
     int currentEntry;
     int previousEntry;

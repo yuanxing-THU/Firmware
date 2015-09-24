@@ -4,10 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-//#include <systemlib/systemlib.h>
 #include <systemlib/param/param.h>
-//#include <systemlib/err.h>
-
 
 #include "eparam.h"
 

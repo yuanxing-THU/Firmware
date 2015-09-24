@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include <uORB/topics/vehicle_command.h>
+#include <systemlib/param/param.h>
 
 #include "main.h"
 #include "connect.h"
@@ -151,7 +152,7 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     MENUBUTTON_LEFT | MENUBUTTON_RIGHT,
     nullptr, // use previous preset name
     Menu::MENUENTRY_ACCELS,
-    Menu::MENUENTRY_GYRO,
+    Menu::MENUENTRY_RESET,
     Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_ACTION,
@@ -176,14 +177,26 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     0,
     MENUBUTTON_LEFT | MENUBUTTON_RIGHT,
     nullptr, // use previous preset name
-    Menu::MENUENTRY_COMPASS,
+    Menu::MENUENTRY_RESET,
     Menu::MENUENTRY_ACCELS,
     Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_ACTION,
     Menu::MENUENTRY_PREVIOUS,
 },
-
+{
+    // Menu::MENUENTRY_RESET,
+    MENUTYPE_RESET,
+    0,
+    MENUBUTTON_LEFT | MENUBUTTON_RIGHT,
+    nullptr, // use previous preset name
+    Menu::MENUENTRY_COMPASS,
+    Menu::MENUENTRY_GYRO,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_IGNORE,
+    Menu::MENUENTRY_ACTION_CONFIRM,
+    Menu::MENUENTRY_PREVIOUS,
+},
 // -------- Customize menu
 {
     // Menu::MENUENTRY_GENERATED,
@@ -253,6 +266,7 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
 };
 
 Menu::Menu(int entry, int param) :
+    confirmAction(false),
     current_activity(0),
     activity_param(nullptr)
 {
@@ -386,7 +400,20 @@ Base* Menu::doEvent(int orbId)
 
     printf("buttons %x \n", DataManager::instance()->kbd_handler.buttons);
 
-    if (key_pressed(BTN_OK))
+    if (confirmAction)
+    {
+        if (key_pressed(BTN_OK))
+        {
+            makeAction();
+            confirmAction = false;
+        }
+        else if (key_pressed(BTN_BACK))
+        {
+            showEntry();
+            confirmAction = false;
+        }
+    }
+    else if (key_pressed(BTN_OK))
     {
         if (entries[currentEntry].ok >= 0)
         {
@@ -583,6 +610,23 @@ Base* Menu::makeAction()
             break;
         }
 
+        case MENUENTRY_RESET:
+        {
+            if (calibrateMode == CALIBRATE_LEASH)
+            {
+                param_reset_all();
+                param_save_default();
+
+                showEntry();
+            }
+            else if (calibrateMode == CALIBRATE_AIRDOG)
+            {
+                sendAirDogCommnad(VEHICLE_CMD_NAV_REMOTE_CMD, REMOTE_CMD_PARAM_RESET);
+                showEntry();
+            }
+            break;
+        }
+
         case MENUENTRY_SETTINGS:
         {
             int entries[] = {
@@ -658,6 +702,11 @@ Base* Menu::switchEntry(int newEntry)
     if (newEntry == MENUENTRY_PREVIOUS)
     {
         switchEntry(previousEntry);
+    }
+    if (newEntry == MENUENTRY_ACTION_CONFIRM)
+    {
+        confirmAction = true;
+        DisplayHelper::showInfo(INFO_ARE_YOU_SURE, 0);
     }
     else if (newEntry == MENUENTRY_ACTION)
     {

@@ -713,9 +713,27 @@ bool handle_command(struct vehicle_status_s *status_local
                     activity_manager->set_activity((int32_t)cmd->param2);
             
             }
+            else if (cmd->param1 == REMOTE_CMD_PARAM_RESET) {
+                // save params
+                int SYS_ACT = 0;
 
+                if (param_get(param_find("SYS_ACT"), &SYS_ACT))
+                {
+                    printf("failed to get SYS_ACT value");
+                }
+
+                param_reset_all();
+
+                // restore params
+                if (param_set(param_find("SYS_ACT"), &SYS_ACT))
+                {
+                    printf("failed to set SYS_ACT value");
+                }
+
+                param_save_default();
+            }
             /* process user camera controll */
-            if (cmd->param1 == REMOTE_CMD_CAM_UP
+            else if (cmd->param1 == REMOTE_CMD_CAM_UP
                     || cmd->param1 == REMOTE_CMD_CAM_DOWN
                     || cmd->param1 == REMOTE_CMD_CAM_LEFT
                     || cmd->param1 == REMOTE_CMD_CAM_RIGHT
