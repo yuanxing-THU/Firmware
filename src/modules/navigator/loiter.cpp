@@ -523,16 +523,11 @@ Loiter::execute_command_in_aim_and_shoot(vehicle_command_s cmd){
 				break;
 			}
 			case REMOTE_CMD_COME_TO_ME: {
-
-                double lat = cmd.param5;
-                double lon = cmd.param6;
-
-				pos_sp_triplet->current.lat = lat;
-				pos_sp_triplet->current.lon = lon;
-				pos_sp_triplet->current.type = SETPOINT_TYPE_POSITION;
-				pos_sp_triplet->current.position_valid = true;
-
-				set_sub_mode(LOITER_SUB_MODE_GO_TO_POSITION, 0);
+                
+                commander_request_s *commander_request = _navigator->get_commander_request();
+                commander_request->request_type = V_MAIN_STATE_CHANGE;
+                commander_request->main_state = MAIN_STATE_CTM;
+                _navigator->set_commander_request_updated();
 
 				break;
 			}

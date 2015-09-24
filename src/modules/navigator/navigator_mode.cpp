@@ -168,6 +168,8 @@ NavigatorMode::updateParamHandles() {
 
     NavigatorMode::parameter_handles.offset_initial_distance = param_find("OFF_INTL_DST");
 
+    NavigatorMode::parameter_handles.follow_talt_offs = param_find("FOL_TALT_OFF");
+
 }
 
 void
@@ -240,6 +242,9 @@ NavigatorMode::updateParamValues() {
     param_get(NavigatorMode::parameter_handles.max_offset_sp_angle_err, &(NavigatorMode::parameters.max_offset_sp_angle_err));
 
     param_get(NavigatorMode::parameter_handles.offset_initial_distance, &(NavigatorMode::parameters.offset_initial_distance));
+
+    param_get(NavigatorMode::parameter_handles.follow_talt_offs, &(NavigatorMode::parameters.follow_talt_offs));
+
 }
 
 

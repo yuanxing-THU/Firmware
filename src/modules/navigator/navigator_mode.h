@@ -124,6 +124,8 @@ struct PARAMETERS {
     
     float offset_initial_distance;
 
+    float follow_talt_offs;
+
 };
 
 
@@ -201,6 +203,7 @@ struct PARAM_HANDLES {
 
     param_t offset_initial_distance;
 
+    param_t follow_talt_offs;
 };
 
 class Navigator;

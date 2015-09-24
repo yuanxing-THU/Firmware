@@ -135,6 +135,17 @@ Leashed::execute_vehicle_command() {
 				_navigator->set_commander_request_updated();
 				break;
 			}
+
+			case REMOTE_CMD_COME_TO_ME: {
+                
+                commander_request_s *commander_request = _navigator->get_commander_request();
+                commander_request->request_type = V_MAIN_STATE_CHANGE;
+                commander_request->main_state = MAIN_STATE_CTM;
+                _navigator->set_commander_request_updated();
+
+				break;
+			}
+
             case REMOTE_CMD_UP: {
                 double first[3];
                 //double last[3];

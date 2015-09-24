@@ -350,6 +350,13 @@ main_state_transition(struct vehicle_status_s *status, main_state_t new_main_sta
 		}
 		break;
 
+	case MAIN_STATE_CTM:
+		/* need global position estimate and target position */
+		if (status->condition_global_position_valid && status->condition_target_position_valid) {
+			ret = TRANSITION_CHANGED;
+		}
+		break;
+
 	case MAIN_STATE_AUTO_MISSION:
 	    /* need global position and home position */
 		if (status->condition_global_position_valid && status->condition_home_position_valid) {
@@ -360,6 +367,7 @@ main_state_transition(struct vehicle_status_s *status, main_state_t new_main_sta
 		/* Currently RTL is used as default failsafe mode thus all validations to be done in navigation state transition */
 		ret = TRANSITION_CHANGED;
 		break;
+
 
     case MAIN_STATE_EMERGENCY_RTL:
         if (status->condition_global_position_valid && status->condition_home_position_valid) {
@@ -729,6 +737,27 @@ bool set_nav_state(struct vehicle_status_s *status, const bool data_link_loss_en
 			}
 			break;
 
+        case MAIN_STATE_CTM:
+			if (status->engine_failure) {
+				status->nav_state = NAVIGATION_STATE_AUTO_LANDENGFAIL;
+			} else if (status->data_link_lost && data_link_loss_enabled) {
+				status->failsafe = true;
+
+				if (status->condition_global_position_valid && status->condition_home_position_valid) {
+					status->nav_state = NAVIGATION_STATE_AUTO_RTGS;
+				} else if (status->condition_local_position_valid) {
+					status->nav_state = NAVIGATION_STATE_LAND;
+				} else if (status->condition_local_altitude_valid) {
+					status->nav_state = NAVIGATION_STATE_DESCEND;
+				} else {
+					status->nav_state = NAVIGATION_STATE_TERMINATION;
+				}
+
+			} else {
+				status->nav_state_fallback = false;
+				status->nav_state = NAVIGATION_STATE_CTM;
+			}
+			break;
 		case MAIN_STATE_LOITER:
 			/* go into failsafe on a engine failure */
 			if (status->engine_failure) {

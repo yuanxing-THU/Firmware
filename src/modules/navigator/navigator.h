@@ -61,6 +61,7 @@
 #include <uORB/topics/external_trajectory.h>
 #include <uORB/topics/vehicle_attitude.h>
 #include <uORB/topics/position_restriction.h>
+#include <uORB/topics/vehicle_local_position.h>
 
 #include <commander/px4_custom_mode.h>
 
@@ -68,6 +69,7 @@
 #include "mission.h"
 #include "loiter.h"
 #include "rtl.h"
+#include "ctm.h"
 #include "datalinkloss.h"
 #include "enginefailure.h"
 #include "gpsfailure.h"
@@ -78,7 +80,7 @@
 #include "land.h"
 #include "offset_follow.h"
 
-#define NAVIGATOR_MODE_ARRAY_SIZE 11
+#define NAVIGATOR_MODE_ARRAY_SIZE 12
 
 class Navigator : public control::SuperBlock
 {
@@ -177,6 +179,10 @@ public:
 	struct target_global_position_s*    get_target_position() {return &_target_pos; }
 	struct external_trajectory_s*		get_target_trajectory() {return &_target_trajectory;}
 	struct vehicle_attitude_s*			get_vehicle_attitude() {return &_vehicle_attitude;}
+
+    float                               get_target_start_alt() {return _target_start_alt;}
+    float                               get_drone_start_alt() {return _drone_start_alt;}
+
 	int		get_onboard_mission_sub() { return _onboard_mission_sub; }
 	int		get_offboard_mission_sub() { return _offboard_mission_sub; }
 	int		get_vehicle_command_sub() { return _vcommand_sub; }
@@ -210,9 +216,11 @@ private:
 	int 	_target_pos_sub; 		/**< target position subscription */
 	int		_target_trajectory_sub;	/**< target trajectory subscription */
 	int		_vehicle_attitude_sub;	/**< vehicle attitude subscription - not polled as part of the main loop*/
+
     double   _first_leash_point[3];  /**< first point to draw path in cable park */
     double   _last_leash_point[3];   /**< last point to draw path in cable park */
     bool _flag_reset_pfol_offs;
+
 
 	orb_advert_t	_pos_sp_triplet_pub;		/**< publish position setpoint triplet */
     orb_advert_t    _pos_restrict_pub;          /**< publish position restriction */
@@ -242,6 +250,7 @@ private:
 	vehicle_attitude_s					_vehicle_attitude;	/**< vehicle attitude - not updated as part of the main loop*/
 	commander_request_s					_commander_request;
 
+    bool        _was_armed;                 /**< flags if vehicle was armed in the last iteration */  
 	bool 		_mission_item_valid;		/**< flags if the current mission item is valid */
 
 	perf_counter_t	_loop_perf;			/**< loop performance counter */
@@ -255,6 +264,7 @@ private:
 	Mission		_mission;			/**< class that handles the missions */
 	Loiter		_loiter;			/**< class that handles loiter */
 	RTL 		_rtl;				/**< class that handles RTL */
+	CTM 		_ctm;				/**< class that handles RTL */
 	RCLoss 		_rcLoss;				/**< class that handles RTL according to
 							  OBC rules (rc loss mode) */
 	DataLinkLoss	_dataLinkLoss;			/**< class that handles the OBC datalink loss mode */
@@ -273,10 +283,15 @@ private:
 	bool		_pos_sp_triplet_updated;		/**< flags if position SP triplet needs to be published */
 	bool		_commander_request_updated;		/**< flags if commander request needs to be published */
 
+
 	control::BlockParamFloat _param_loiter_radius;	/**< loiter radius for fixedwing */
 	control::BlockParamFloat _param_acceptance_radius;	/**< acceptance for takeoff */
 	control::BlockParamInt _param_datalinkloss_obc;	/**< if true: obc mode on data link loss enabled */
 	control::BlockParamInt _param_rcloss_obc;	/**< if true: obc mode on rc loss enabled */
+
+    float _drone_start_alt;
+    float _target_start_alt;
+
 	/**
 	 * Retrieve global position
 	 */

@@ -83,7 +83,8 @@ typedef enum {
     MAIN_STATE_FRONT_FOLLOW 	= 17,
     MAIN_STATE_LAND 			= 18,
     MAIN_STATE_ATTITUDE_HOLD	= 19,
-	MAIN_STATE_MAX 				= 20,
+    MAIN_STATE_CTM              = 20,
+	MAIN_STATE_MAX 				= 21,
 } main_state_t;
 
 typedef enum {
@@ -142,7 +143,8 @@ typedef enum {
     NAVIGATION_STATE_KITE_LITE			= 21,
     NAVIGATION_STATE_FRONT_FOLLOW		= 22,
     NAVIGATION_STATE_ATTITUDE_HOLD		= 23,
-	NAVIGATION_STATE_MAX				= 24,
+    NAVIGATION_STATE_CTM                = 24,
+	NAVIGATION_STATE_MAX				= 25,
 } navigation_state_t;
 
 enum VEHICLE_MODE_FLAG {

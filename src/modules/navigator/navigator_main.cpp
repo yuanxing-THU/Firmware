@@ -139,6 +139,7 @@ Navigator::Navigator() :
 	_att_sp{},
 	_target_trajectory{},
 	_vehicle_attitude{},
+    _was_armed(false),
 	_mission_item_valid(false),
 	_loop_perf(perf_alloc(PC_ELAPSED, "navigator")),
 	_geofence{},
@@ -148,6 +149,7 @@ Navigator::Navigator() :
 	_mission(this, "MIS"),
 	_loiter(this, "LOI"),
 	_rtl(this, "RTL"),
+    _ctm(this, "CTM"),
 	_rcLoss(this, "RCL"),
 	_dataLinkLoss(this, "DLL"),
 	_engineFailure(this, "EF"),
@@ -163,6 +165,7 @@ Navigator::Navigator() :
 	_param_acceptance_radius(this, "ACC_RAD"),
 	_param_datalinkloss_obc(this, "DLL_OBC"),
 	_param_rcloss_obc(this, "RCL_OBC")
+
 {
 	/* Create a list of our possible navigation types */
 	_navigation_mode_array[0] = &_mission;
@@ -176,6 +179,7 @@ Navigator::Navigator() :
 	_navigation_mode_array[8] = &_land;
     _navigation_mode_array[9] = &_cable_path;
     _navigation_mode_array[10] = &_offset_follow;
+    _navigation_mode_array[11] = &_ctm;
 
 	updateParams();
 
@@ -585,6 +589,14 @@ Navigator::task_main()
 			}
 		}
 
+        // Assuming that on takeoff target and drone positions will be valid
+        if (!_was_armed && _control_mode.flag_armed){
+            _target_start_alt = _target_pos.alt;
+            _drone_start_alt = _global_pos.alt;
+        }
+
+		_was_armed = _control_mode.flag_armed;
+
 		/* Do stuff according to navigation state set by commander */
 		switch (_vstatus.nav_state) {
 			case NAVIGATION_STATE_MANUAL:
@@ -649,6 +661,9 @@ Navigator::task_main()
 			case NAVIGATION_STATE_AUTO_LANDGPSFAIL:
 				_navigation_mode = &_gpsFailure;
 				break;
+            case NAVIGATION_STATE_CTM:
+                _navigation_mode = &_ctm;
+                break;
 			default:
 				_navigation_mode = nullptr;
 				_can_loiter_at_sp = false;
