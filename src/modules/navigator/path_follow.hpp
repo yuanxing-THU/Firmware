@@ -151,6 +151,9 @@ private:
 
     bool _follow_path_startup;
 
+    bool _last_ret_z_set;
+    float _last_ret_z;
+
 	// Updates saved trajectory and trajectory distance with a new point
 	void update_traj_point_queue();
 

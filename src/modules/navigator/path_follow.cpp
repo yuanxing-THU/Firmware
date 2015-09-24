@@ -46,7 +46,9 @@ PathFollow::PathFollow(Navigator *navigator, const char *name):
         _follow_path_data_pub(-1),
         _first_tp_flag(false),
         _second_tp_flag(false),
-        _follow_path_startup(true)
+        _follow_path_startup(true),
+        _last_ret_z_set(false),
+        _last_ret_z(0.0f)
         {
 }
 PathFollow::~PathFollow() {
@@ -106,11 +108,9 @@ void PathFollow::on_activation() {
         _vertical_offset = _drone_local_pos.z - _target_local_pos.z;
     }
 
-
     _z_start = _drone_local_pos.z - _vertical_offset;
     _y_start = _drone_local_pos.y;
     _x_start = _drone_local_pos.x;
-
 
 	if (!_inited) {
 		mavlink_log_critical(_mavlink_fd, "Follow Path mode wasn't initialized! Aborting...");
@@ -712,14 +712,23 @@ PathFollow::calculate_desired_z() {
         }
     }
 
+    _last_ret_z = ret_z;
+    _last_ret_z_set = true;
+
     return ret_z + _vertical_offset;
 }
-
+
 void
 PathFollow::calculate_alt_values(bool tp_just_reached){
 
-    if (!tp_just_reached)
-        _z_start = _drone_local_pos.z - _vertical_offset;
+    if (!tp_just_reached) {
+
+        if (_last_ret_z_set)
+            _z_start = _last_ret_z;
+        else
+            _z_start = _drone_local_pos.z - _vertical_offset;
+
+    }
 
     _x_start = _drone_local_pos.x;
     _y_start = _drone_local_pos.y;
