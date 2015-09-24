@@ -692,6 +692,9 @@ PathFollow::calculate_desired_z() {
             length_full = _z_start_dst_to_gate - NavigatorMode::parameters.pafol_acc_dst_to_gate;
             length_left = _dst_to_gate - NavigatorMode::parameters.pafol_acc_dst_to_gate;
             rate_left = length_left / length_full;
+
+            if (rate_left > 1.0f) rate_left = 1.0f;
+
             rate_done = 1.0f - rate_left;
 
             if (rate_done < 0.0f) rate_done = 0.0f;
@@ -704,6 +707,9 @@ PathFollow::calculate_desired_z() {
             length_full = euclidean_distance(_x_start, _y_start, _target_local_pos.x, _target_local_pos.y);
             length_left = euclidean_distance(_drone_local_pos.x, _drone_local_pos.y, _target_local_pos.x, _target_local_pos.y);
             rate_left = length_left / length_full;
+
+            if (rate_left > 1.0f) rate_left = 1.0f;
+
             rate_done = 1.0f - rate_left;
 
             if (rate_done < 0.0f) rate_done = 0.0f;
@@ -739,6 +745,7 @@ PathFollow::calculate_alt_values(bool tp_just_reached){
 
         float dst_to_reaching_point = _dst_to_gate - NavigatorMode::parameters.pafol_acc_dst_to_gate;
         float rate = dst_to_reaching_point / _dst_to_gate;
+        if (rate > 1.0f) rate = 1.0f;
 
         _z_goal = _z_start + (_first_tp.z - _z_start) * rate;
 
