@@ -84,11 +84,18 @@ class NSH:
 
 
 	def ls_dir(self, dir, timeout=1.0):
-		res = []
-		dir = dir.rstrip("/")
-		for line in self.exec_cmd("ls " + dir, timeout).splitlines()[1:]:
-			res.append(line[1:])
-		return res
+		i = 0
+		while i < 5:
+			try:
+				res = []
+				dir = dir.rstrip("/")
+				for line in self.exec_cmd("ls " + dir, timeout).splitlines()[1:]:
+					res.append(line[1:])
+				return res
+			except Exception: # TODO! Bad practice, consider changing the class of the exception
+				i += 1
+				print "Timeout while waiting for directory listing!"
+		raise Exception("Too many timeouts while waiting for directory listing!")
 
 	def get_dir_files(self, directory="/"):
 		res = []
