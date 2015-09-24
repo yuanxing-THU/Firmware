@@ -6,7 +6,6 @@
 template <typename Device>
 bool
 wait_enq(Device & d) {
-	dbg("Waiting ENQ.\n");
 	char ch = 0;
 	ssize_t s = read(d, &ch, 1);
 	while (ch != ENQ)

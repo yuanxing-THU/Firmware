@@ -90,9 +90,10 @@ dump_unknown_command(command_id_t cmd)
 
 template <typename Device>
 void
-process_one_command(Device & f, FileWriteState & receive_file)
+process_one_command(bool is_mobile, Device & f, FileWriteState & receive_file)
 {
 	command_id_t cmd;
+	dbg("%s is waiting ENQ.\n", is_mobile ? "mobile" : "desktop");
 	bool ok = wait_enq(f);
 	if (not ok) { return; }
 
@@ -103,7 +104,51 @@ process_one_command(Device & f, FileWriteState & receive_file)
 		dump_unknown_command(cmd);
 		return;
 	}
-	switch (cmd) {
+
+	bool handled = true;
+
+	if (is_mobile)
+	{
+		/*
+		 * Mobile commands.
+		 */
+		switch (cmd)
+		{
+		case CMD_ACTIVATION_WRITE:
+			handle< CMD_ACTIVATION_WRITE >(f);
+			break;
+		default:
+			handled = false;
+			break;
+		}
+	}
+	else
+	{
+		/*
+		 * Desktop commands.
+		 */
+		switch (cmd)
+		{
+		case CMD_REBOOT:
+			handle< CMD_REBOOT >(f);
+			break;
+		case CMD_LOG_SET:
+			handle< CMD_LOG_SET >(f);
+			break;
+		default:
+			handled = false;
+			break;
+		}
+	}
+
+	if (handled) { return; }
+
+	switch (cmd)
+	{
+
+	/*
+	 * Bye and Handshake.
+	 */
 	case CMD_BYE:
 		/*
 		 * No reply is awaited by the phone.
@@ -113,6 +158,10 @@ process_one_command(Device & f, FileWriteState & receive_file)
 	case CMD_HANDSHAKE:
 		handle< CMD_HANDSHAKE >(f);
 		break;
+
+	/*
+	 * Fixed information.
+	 */
 	case CMD_VERSION_FIRMWARE:
 		handle< CMD_VERSION_FIRMWARE >(f);
 		break;
@@ -125,6 +174,10 @@ process_one_command(Device & f, FileWriteState & receive_file)
 	case CMD_INFO_CERT:
 		handle< CMD_INFO_CERT >(f);
 		break;
+
+	/*
+	 * Files.
+	 */
 	case CMD_FILE_INFO:
 		handle< CMD_FILE_INFO >(f);
 		break;
@@ -142,29 +195,13 @@ process_one_command(Device & f, FileWriteState & receive_file)
 		break;
 
 	/*
-	 * Mobile commands
+	 * Etc.
 	 */
-
-	case CMD_STATUS_OVERALL:
-		handle< CMD_STATUS_OVERALL >(f);
-		break;
 	case CMD_ACTIVATION_READ:
 		handle< CMD_ACTIVATION_READ >(f);
 		break;
-	case CMD_ACTIVATION_WRITE:
-		handle< CMD_ACTIVATION_WRITE >(f);
-		break;
-
-	/*
-	 * Desktop commands
-	 */
-
-	case CMD_REBOOT:
-		handle< CMD_REBOOT >(f);
-		break;
-
-	case CMD_LOG_SET:
-		handle< CMD_LOG_SET >(f);
+	case CMD_STATUS_OVERALL:
+		handle< CMD_STATUS_OVERALL >(f);
 		break;
 
 	default:
