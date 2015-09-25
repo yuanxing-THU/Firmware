@@ -45,6 +45,7 @@
 #include <version/version.h>
 #include <systemlib/err.h>
 #include <systemlib/mcu_version.h>
+#include <stm32f4/flash.h>
 
 /* string constants for version commands */
 static const char sz_ver_hw_str[] 	= "hw";
@@ -54,6 +55,7 @@ static const char sz_ver_bdate_str[] = "bdate";
 static const char sz_ver_gcc_str[] 	= "gcc";
 static const char sz_ver_all_str[] 	= "all";
 static const char mcu_ver_str[]		= "mcu";
+static const char serial_ver_str[]		= "serial";
 
 static void usage(const char *reason)
 {
@@ -141,6 +143,15 @@ int ver_main(int argc, char *argv[])
 				ret = 0;
 			}
 
+			if (show_all || !strncmp(argv[1], serial_ver_str, sizeof(serial_ver_str))) {
+				unsigned char serial[12];
+				flash_getSerial(serial);
+				printf("Serial: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+						serial[0], serial[1], serial[2], serial[3],
+						serial[4], serial[5], serial[6], serial[7],
+						serial[8], serial[9], serial[10], serial[11]);
+				ret = 0;
+			}
 			if (ret == 1) {
 				errx(1, "unknown command.\n");
 			}

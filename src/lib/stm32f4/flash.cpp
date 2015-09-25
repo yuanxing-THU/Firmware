@@ -3,7 +3,12 @@
 #include <systemlib/otp.h>
 
 #include "flash.hpp"
+#include "flash.h"
 
+void flash_getSerial(unsigned char serial[12])
+{
+	memcpy(serial, &stm32f42::flash::mcu_udid, sizeof(stm32f42::flash::mcu_udid));
+}
 
 namespace stm32f4_23
 {

@@ -154,6 +154,7 @@ MODULES		+= lib/mathlib/math/filter
 MODULES		+= lib/geo
 MODULES		+= lib/geo_lookup
 MODULES		+= lib/conversion
+MODULES		+= lib/stm32f4
 #MODULES		+= lib/ecl
 #MODULES		+= lib/external_lgpl
 #MODULES		+= lib/launchdetection
