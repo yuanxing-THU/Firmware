@@ -10,8 +10,6 @@ set GPS_FAKE no
 
 set SENSORS_OK unknown
 
-set EXIT_ON_END no
-
 #
 # Alarms are always useful.
 #
@@ -236,8 +234,4 @@ else
 	echo "Failed to start usb sercon."
 fi
 
-if [ $EXIT_ON_END == yes ]
-then
-	echo "[init] Exit from nsh"
-	exit
-fi
+free

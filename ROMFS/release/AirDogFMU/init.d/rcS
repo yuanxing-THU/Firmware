@@ -115,14 +115,6 @@ else
 	set IO_PRESENT $DEBUG_MODE
 fi
 
-if [ $DEBUG_MODE = yes ]
-then
-	set EXIT_ON_END no
-	tone_alarm MFO3L4ABCABC
-else
-	set EXIT_ON_END yes
-fi
-
 #
 # Look for an init script on the microSD card.
 # Disable autostart if the script found.
@@ -500,11 +492,7 @@ then
 		echo "sercon FAILED" >> $LOG_FILE
 	fi
 
-	if [ $EXIT_ON_END == yes ]
-	then
-		echo "[init] Exit from nsh"
-		exit
-	fi
-
 # End of autostart
 fi
+
+free
