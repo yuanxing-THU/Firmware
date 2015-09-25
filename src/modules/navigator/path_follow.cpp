@@ -186,8 +186,11 @@ void PathFollow::on_active() {
         _last_passed_point = _first_tp;
         _first_tp_flag = false;
 
-        // Trajectory point has been reached. Current z is starting z for next trajectory segment.
-        _z_start = _z_goal;
+        if (_last_ret_z_set)
+            _z_start = _last_ret_z;
+        else
+            _z_start = _z_goal;
+
         _x_start = _drone_local_pos.x;
         _y_start = _drone_local_pos.y;
 
