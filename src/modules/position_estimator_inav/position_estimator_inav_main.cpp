@@ -543,7 +543,7 @@ int position_estimator_inav_thread_main(int argc, char *argv[])
                                             DOG_PRINT("[pos_est] rangeFinderTrust %d\n", rangeFinderTrust);
                                             break;
                                         }
-                                        else if (rangeFinderTrust < 10)
+                                        else if (rangeFinderTrust < 25)
                                         {
                                             // We are already estimating distance to bottom, but not using it yet
                                             pwm_lpf_filtering(range_finder.distance,
