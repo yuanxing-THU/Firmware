@@ -19,6 +19,14 @@ else
 	echo "[rcS] USB interface failed."
 fi
 
+## Do not run qlog unless needed.
+# if qlog start
+# then
+# 	echo "[rcS] qlog ok."
+# else
+# 	echo "[rcS] qlog failed."
+# fi
+
 if test -e /etc/extras/rcS
 then
 	sh /etc/extras/rcS &

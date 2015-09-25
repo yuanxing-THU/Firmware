@@ -7,6 +7,9 @@ following `OK` or `FAIL` for binary checks.
 When you need to analyze the output yourself,
 the output is either `ok, check the values` or `FAIL`.
 
+Commands are run via _nsh_ shell. Its command line prompt is `nsh> \033[K`.
+Therefore each command output is followed by the sequence.
+
 
 ## AIRFMU checks
 
@@ -17,9 +20,11 @@ the output is either `ok, check the values` or `FAIL`.
 * [Sensor Barometer MS5611](#sensor-barometer-ms5611)
 
 
-## AIRFMU + AIRSEN + AIRBOT + AIRMAG
+## AIRFMU + AIRSEN + AIRBOT + AIRMAG + AIRBGC + Battery
 
+* [BGC](#bgc)
 * [BT740](#bt740)
+* [GPS](#gps)
 * [Sensors](#sensors)
 
 
@@ -36,6 +41,7 @@ the output is either `ok, check the values` or `FAIL`.
 ## Alfabetical list
 
 * [ADC](#adc)
+* [BGC](#bgc)
 * [BL600](#bl600)
 * [BT740](#bt740)
 * [eMMC](#emmc)
@@ -69,6 +75,63 @@ sensors_switch factory-adc-check
 channel 2 raw 0xaf8 value 4.11
 ===
 ok, check the values.
+nsh>
+```
+
+
+### BGC
+
+Successfull case:
+
+```
+nsh> sh /etc/extras/bgc
+---
+bgc test
+[BGC_uart] Discover_attributes
+[BGC_uart] trying attributes: speed=256000 parity=0
+[BGC_uart] Get_board_info
+[BGC_uart] Get_board_info - SBGC_CMD_BOARD_INFO
+[BGC_uart] board ver        = 3.1
+[BGC_uart] firmware ver     = 2.43b9
+[BGC_uart] debug mode       = 0
+[BGC_uart] board features   = 0000
+[BGC_uart] connection flags = 00
+[BGC_uart] discovered attributes: speed=256000 parity=0
+[BGC] discovered BGC_uart attributes: speed=256000 parity=0
+[BGC] sent CMD_TRIGGER_PIN 18/1
+[BGC Factory Check] version ok.
+===
+OK
+nsh>
+```
+
+No communication:
+
+```
+nsh> sh /etc/extras/bgc
+---
+bgc test
+[BGC_uart] Get_board_info
+[BGC_uart] Get_board_info
+[BGC_uart] Get_board_info
+[BGC] couldn't use old BGC_uart attributes: speed=256000 parity=0
+[BGC_uart] Discover_attributes
+[BGC_uart] trying attributes: speed=256000 parity=0
+[BGC_uart] Get_board_info
+[BGC_uart] Get_board_info
+[BGC_uart] Get_board_info
+[BGC_uart] trying attributes: speed=115200 parity=0
+[BGC_uart] Get_board_info
+...
+[BGC_uart] Get_board_info
+[BGC_uart] trying attributes: speed=57600 parity=16
+[BGC_uart] Get_board_info
+[BGC_uart] Get_board_info
+[BGC_uart] Get_board_info
+[BGC] failed to discover BGC_uart attributes
+[BGC Factory Check] communication failed.
+===
+FAIL
 nsh>
 ```
 
@@ -376,7 +439,7 @@ nsh>
 
 Here are two commands required:
 * `unset SENS`
-* `sh /etc/extras/bt740`
+* `sh /etc/extras/sens`
 
 AirDog output:
 
@@ -449,7 +512,7 @@ OK
 
 Here are two commands required:
 * `set SENS ms5611`
-* `sh /etc/extras/bt740`
+* `sh /etc/extras/sens`
 
 AirDog output:
 

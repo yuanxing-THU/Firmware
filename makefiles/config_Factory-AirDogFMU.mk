@@ -7,6 +7,13 @@ MODULES += drivers/px4io
 MODULES += modules/i2c_exchange
 
 #
+# BGC
+#
+export DOG_DEBUG += bgc
+MODULES += modules/bgc
+MODULES += modules/quick_log
+
+#
 # Mobile
 #
 MODULES += lib/activity

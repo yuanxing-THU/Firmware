@@ -1,10 +1,13 @@
 #include <nuttx/config.h>
 
-#include "bgc.hpp"
+#include <cstdio>
+#include <cstring>
+#include <poll.h>
 
 #include <quick_log/quick_log.hpp>
 #include <systemlib/systemlib.h>
-#include <poll.h>
+
+#include "bgc.hpp"
 
 #include "bgc_uart.hpp"
 #include "bgc_uart_msg.hpp"
@@ -69,6 +72,39 @@ int BGC::Thread_main(int argc, char *argv[]) {
     }
     s_thread_running = false;
     return 0;
+}
+
+bool BGC::Factory_check() {
+    if ( s_thread_running ) {
+        printf("[BGC Factory Check] stop daemon first.\n");
+        return false;
+    }
+    BGC x;
+    if ( !x.bgc_uart.Open() ) {
+        printf("[BGC Factory Check] open BGC uart failed.\n");
+        return false;
+    }
+    if ( !x.Run_setup() ) {
+        printf("[BGC Factory Check] communication failed.\n");
+        return false;
+    }
+    BGC_uart_msg out_msg;
+    out_msg.Build_OUT_CMD_BOARD_INFO();
+    if ( !out_msg.Is_first_byte_present() || !x.bgc_uart.Send(out_msg) ) {
+        printf("[BGC Factory Check] board info command failed.\n");
+        return false;
+    }
+    if ( out_msg.Get_IN_CMD_BOARD_INFO_Firmware_ver() < 2439 ) {
+        printf("[BGC Factory Check] wrong version.\n");
+        return false;
+    }
+    printf("[BGC Factory Check] version ok.\n");
+    out_msg.Build_OUT_CMD_MOTORS_OFF();
+    if ( !out_msg.Is_first_byte_present() || !x.bgc_uart.Send(out_msg) ) {
+        printf("[BGC Factory Check] motors off command failed.\n");
+        return false;
+    }
+    return true;
 }
 
 BGC::BGC()

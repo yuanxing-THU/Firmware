@@ -2,8 +2,8 @@ set R FAIL
 
 echo ---
 
-echo sensors_probe $SENS
-if sensors_probe $SENS
+echo bgc test
+if bgc test
 then
 	set R OK
 fi
