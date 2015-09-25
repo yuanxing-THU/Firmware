@@ -152,7 +152,7 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     MENUBUTTON_LEFT | MENUBUTTON_RIGHT,
     nullptr, // use previous preset name
     Menu::MENUENTRY_ACCELS,
-    Menu::MENUENTRY_RESET,
+    Menu::MENUENTRY_GYRO,
     Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_ACTION,
@@ -177,7 +177,7 @@ struct Menu::Entry Menu::entries[Menu::MENUENTRY_SIZE] =
     0,
     MENUBUTTON_LEFT | MENUBUTTON_RIGHT,
     nullptr, // use previous preset name
-    Menu::MENUENTRY_RESET,
+    Menu::MENUENTRY_COMPASS,
     Menu::MENUENTRY_ACCELS,
     Menu::MENUENTRY_IGNORE,
     Menu::MENUENTRY_IGNORE,
