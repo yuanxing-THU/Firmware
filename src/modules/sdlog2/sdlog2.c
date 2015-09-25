@@ -363,8 +363,6 @@ static int write_version(int fd);
  */
 static int write_parameters(int fd);
 
-static int file_copy(const char *file_old, const char *file_new);
-
 //static void handle_command(struct vehicle_command_s *cmd);
 
 static void handle_command(struct airdog_path_log_s *cmd);
@@ -975,17 +973,6 @@ int sdlog2_thread_main(int argc, char *argv[])
 	if (mkdir_ret != 0 && errno != EEXIST) {
 		err(1, "failed creating log root dir: %s", sdlog2_root);
 	}
-
-	/* copy conversion scripts */
-	const char *converter_in = "/etc/logging/conv.zip";
-	char *converter_out = malloc(64);
-	snprintf(converter_out, 64, "%s/conv.zip", sdlog2_root);
-
-	if (file_copy(converter_in, converter_out) != OK) {
-		warn("unable to copy conversion scripts");
-	}
-
-	free(converter_out);
 
 	/* initialize log buffer with specified size */
 	warnx("log buffer size: %i bytes", log_buffer_size);
@@ -2038,46 +2025,6 @@ void sdlog2_status()
 	warnx("wrote %lu msgs, %4.2f MiB (average %5.3f KiB/s), skipped %lu msgs", log_msgs_written, (double)mebibytes, (double)(kibibytes / seconds), log_msgs_skipped);
 	warnx("extended logging: %s", (_extended_logging) ? "ON" : "OFF");
 	mavlink_log_info(mavlink_fd, "[sdlog2] wrote %lu msgs, skipped %lu msgs", log_msgs_written, log_msgs_skipped);
-}
-
-int file_copy(const char *file_old, const char *file_new)
-{
-	FILE *source, *target;
-	source = fopen(file_old, "r");
-	int ret = 0;
-
-	if (source == NULL) {
-		warnx("failed opening input file to copy. %s", file_old);
-		return 1;
-	}
-
-	target = fopen(file_new, "w");
-
-	if (target == NULL) {
-		fclose(source);
-		warnx("failed to open output file to copy. %s", file_new);
-		return 1;
-	}
-
-	char buf[128];
-	int nread;
-
-	while ((nread = fread(buf, 1, sizeof(buf), source)) > 0) {
-		ret = fwrite(buf, 1, nread, target);
-
-		if (ret <= 0) {
-			warnx("error writing file");
-			ret = 1;
-			break;
-		}
-	}
-
-	fsync(fileno(target));
-
-	fclose(source);
-	fclose(target);
-
-	return OK;
 }
 
 //void handle_command(struct vehicle_command_s *cmd)
