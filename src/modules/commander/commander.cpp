@@ -3069,7 +3069,6 @@ set_control_mode()
 
 	case NAVIGATION_STATE_AUTO_MISSION:
 	case NAVIGATION_STATE_LOITER:
-    case NAVIGATION_STATE_CTM:
 		control_mode.flag_control_manual_enabled = false;
 		control_mode.flag_control_auto_enabled = true;
 		control_mode.flag_control_rates_enabled = true;
@@ -3081,6 +3080,20 @@ set_control_mode()
 		control_mode.flag_control_termination_enabled = false;
 		if (!_custom_flag_control_point_to_target) {
 			control_mode.flag_control_point_to_target = false;
+		}
+		break;
+    case NAVIGATION_STATE_CTM:
+		control_mode.flag_control_manual_enabled = false;
+		control_mode.flag_control_auto_enabled = true;
+		control_mode.flag_control_rates_enabled = true;
+		control_mode.flag_control_attitude_enabled = true;
+		control_mode.flag_control_altitude_enabled = true;
+		control_mode.flag_control_climb_rate_enabled = true;
+		control_mode.flag_control_position_enabled = true;
+		control_mode.flag_control_velocity_enabled = true;
+		control_mode.flag_control_termination_enabled = false;
+		if (!_custom_flag_control_point_to_target) {
+			control_mode.flag_control_point_to_target = true;
 		}
 		break;
 	case NAVIGATION_STATE_RTL:
