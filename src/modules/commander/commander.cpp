@@ -196,6 +196,7 @@ static struct home_position_s _home;
 
 static unsigned _last_mission_instance = 0;
 static uint64_t last_manual_input = 0;
+static uint64_t _inair_last_time = 0;
 static switch_pos_t last_offboard_switch = 0;
 static switch_pos_t last_return_switch = 0;
 static switch_pos_t last_mode_switch = 0;
@@ -1639,6 +1640,16 @@ int commander_thread_main(int argc, char *argv[])
 				} else {
 					mavlink_log_critical(mavlink_fd, "TAKEOFF DETECTED");
 				}
+			}
+
+			if (land_detector.landed) {
+				if (_inair_last_time > 0 && ((hrt_absolute_time() - _inair_last_time) > 5 * 1000 * 1000)) {
+					mavlink_log_critical(mavlink_fd, "AUTO DISARMING AFTER LANDING");
+					arm_disarm(false, mavlink_fd, "auto disarm on land");
+					_inair_last_time = 0;
+				}
+			} else {
+				_inair_last_time = land_detector.timestamp;
 			}
 		}
 
