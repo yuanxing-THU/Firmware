@@ -27,14 +27,14 @@ then
 	cd Tools/jMAVSim
 	ant
 	java -Djava.ext.dirs= -cp lib/*:out/production/jmavsim.jar me.drton.jmavsim.Simulator -udp 127.0.0.1:14560 &
-	SIM_PID=echo $!
+	SIM_PID=$!
 	cd ../..
-elif [ "$3" == "gazebo" ]
+elif [ "$program" == "gazebo" ]
 then
 	if [ -x "$(command -v gazebo)" ]
 	then
 		gazebo ${SITL_GAZEBO_PATH}/worlds/iris.world &
-		SIM_PID=echo $!
+		SIM_PID=$!
 	else
 		echo "You need to have gazebo simulator installed!"
 		exit 1
