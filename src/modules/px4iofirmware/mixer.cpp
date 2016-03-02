@@ -289,7 +289,10 @@ mixer_tick(void)
 	if (mixer_servos_armed && (should_arm || should_arm_nothrottle)) {
 		/* update the servo outputs. */
 		for (unsigned i = 0; i < PX4IO_SERVO_COUNT; i++) {
-			up_pwm_servo_set(i, r_page_servos[i]);
+			/*star code */
+			r_page_servos[i] = (r_page_servos[i]-1000)*2.48 ;
+			/* end */
+			up_pwm_servo_set(i,r_page_servos[i]);
 		}
 
 		/* set S.BUS1 or S.BUS2 outputs */
@@ -302,9 +305,13 @@ mixer_tick(void)
 		}
 
 	} else if (mixer_servos_armed && should_always_enable_pwm) {
-		/* set the disarmed servo outputs. */
+
+		
 		for (unsigned i = 0; i < PX4IO_SERVO_COUNT; i++) {
-			up_pwm_servo_set(i, r_page_servo_disarmed[i]);
+			/*star code */
+			r_page_servo_disarmed[i] = 0;
+			/* end */
+			up_pwm_servo_set(i,r_page_servo_disarmed[i]);// r_page_servo_disarmed[i])
 		}
 
 		/* set S.BUS1 or S.BUS2 outputs */
